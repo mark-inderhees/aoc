@@ -58,8 +58,61 @@ uint32_t GetChecksum(char* x[], uint32_t length)
     return count2 * count3;
 }
 
+void FindNearlyMatchingInputs(char* x[], uint32_t length)
+{
+    uint32_t* miss = (uint32_t*)malloc(length * sizeof(uint32_t));
+    char* string1 = NULL;
+    char* string2 = NULL;
+    for (uint32_t stringI1 = 0; stringI1 < length; stringI1++)
+    {
+        string1 = x[stringI1];
+        memset(miss, 0, length * sizeof(uint32_t));
+        uint32_t charI = 0;
+        bool hit = false;
+        while (string1[charI] != '\0')
+        {
+            hit = false;
+            for (uint32_t stringI2 = stringI1 + 1; stringI2 < length; stringI2++)
+            {
+                if (miss[stringI2] < 2)
+                {
+                    hit = true;
+                    string2 = x[stringI2];
+                    if (string1[charI] != x[stringI2][charI])
+                    {
+                        miss[stringI2]++;
+                    }
+                }
+            }
+
+            if (!hit)
+            {
+                break;
+            }
+            charI++;
+        }
+
+        if (hit)
+        {
+            printf("Found match with %s\n", string1);
+            printf("%s\n", string1);
+            printf("%s\n", string2);
+            charI = 0;
+            while (string1[charI] != '\0')
+            {
+                if (string1[charI] == string2[charI])
+                {
+                    printf("%c", string1[charI]);
+                }
+                charI++;
+            }
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     printf("Checksum is %d\n", GetChecksum(input, ARRAY_SIZE(input)));
+    FindNearlyMatchingInputs(input, ARRAY_SIZE(input));
     return 0;
 }
