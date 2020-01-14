@@ -87,7 +87,6 @@ uint32_t CountOverlap(char* input[], uint32_t length)
     uint32_t count = 0;
     for (uint32_t i = 0; i < length; i++)
     {
-        printf("%d,%d %dx%d\n", startX[i], startY[i], widthX[i], widthY[i]);
         for (uint32_t x = startX[i]; x < startX[i] + widthX[i]; x++)
         {
             for (uint32_t y = startY[i]; y < startY[i] + widthY[i]; y++)
