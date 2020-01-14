@@ -1,7 +1,7 @@
 #include "../common.h"
 #include "03input.h"
 
-uint32_t CountOverlap(char* input[], uint32_t length)
+void CountOverlapAndFindPerfect(char* input[], uint32_t length)
 {
     // Parse input, eg: "#1 @ 108,350: 22x29"
     uint32_t* startX = malloc(length * sizeof(uint32_t));
@@ -100,11 +100,33 @@ uint32_t CountOverlap(char* input[], uint32_t length)
         }
     }
 
-    return count;
+    printf("Overlaped inces sqr: %d\n", count);
+
+    // Now find the perfect one
+    for (uint32_t i = 0; i < length; i++)
+    {
+        bool perfect = true;
+        for (uint32_t x = startX[i]; x < startX[i] + widthX[i] && perfect; x++)
+        {
+            for (uint32_t y = startY[i]; y < startY[i] + widthY[i] && perfect; y++)
+            {
+                if (inches[x][y] != 1)
+                {
+                    perfect = false;
+                }
+            }
+        }
+
+        if (perfect)
+        {
+            printf("Perfect one is %d\n", i + 1);
+            break;
+        }
+    }
 }
 
 int main(int argc, char* argv[])
 {
-    printf("Overlaped inces sqr: %d\n", CountOverlap(input, ARRAY_SIZE(input)));
+    CountOverlapAndFindPerfect(input, ARRAY_SIZE(input));
     return 0;
 }
