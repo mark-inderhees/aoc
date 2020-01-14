@@ -1,10 +1,11 @@
 #include "../common.h"
 #include "02input.h"
 
-uint32_t GetCharCount(char* string, char character)
+uint32_t GetFirstCharCount(char* string)
 {
-    uint32_t i = 0;
-    uint32_t count = 0;
+    char character = string[0];
+    uint32_t i = 1;
+    uint32_t count = 1;
     while (string[i] != '\0')
     {
         if (string[i] == character)
@@ -35,7 +36,7 @@ uint32_t GetChecksum(char* x[], uint32_t length)
             if (!triedChar[character - 'a'])
             {
                 triedChar[character - 'a'] = true;
-                uint32_t count = GetCharCount(string, character);
+                uint32_t count = GetFirstCharCount(&string[j]);
                 if (count == 2 && !counted2)
                 {
                     counted2 = true;
