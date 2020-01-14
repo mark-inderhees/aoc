@@ -305,6 +305,9 @@ void FindGuardSleepsMostAndWhatMin(char* x[], uint32_t length, uint32_t* sleepyI
     uint32_t mostSleep = 0;
     uint32_t sleepestGuardId = 0;
     uint32_t sleepestGuardSeenId = 0;
+    uint32_t maxMinuteCount = 0;
+    uint32_t maxMinuteGuardId = 0;
+    uint32_t maxMinute = 0;
     for (uint32_t actionI = 0; actionI < length; actionI++)
     {
         if (data[actionI].action == GuardBeginShift)
@@ -323,6 +326,12 @@ void FindGuardSleepsMostAndWhatMin(char* x[], uint32_t length, uint32_t* sleepyI
             for (uint32_t m = sleepStart; m < sleepEnd; m++)
             {
                 pGuardInfo[currentGuardI].minute[m]++;
+                if (pGuardInfo[currentGuardI].minute[m] > maxMinuteCount)
+                {
+                    maxMinuteCount = pGuardInfo[currentGuardI].minute[m];
+                    maxMinuteGuardId = pGuardInfo[currentGuardI].id;
+                    maxMinute = m;
+                }
             }
 
             if (pGuardInfo[currentGuardI].sleep > mostSleep)
@@ -349,6 +358,8 @@ void FindGuardSleepsMostAndWhatMin(char* x[], uint32_t length, uint32_t* sleepyI
 
     *sleepyId = sleepestGuardId;
     *sleepyMinute = largestMinute;
+
+    printf("Guard %d sleeps the most at a single minute %d --> %d\n", maxMinuteGuardId, maxMinute, maxMinute * maxMinuteGuardId);
 }
 
 int main(int argc, char* argv[])
