@@ -7,6 +7,4 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "01.h"
-
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))

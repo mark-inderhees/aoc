@@ -1,4 +1,8 @@
-#include "common.h"
+#include "../common.h"
+#include "01input.h"
+
+int32_t SumOfArray(int32_t x[], uint32_t length);
+int32_t FindFirstRepeatSum(int32_t x[], uint32_t length);
 
 int32_t SumOfArray(int32_t x[], uint32_t length)
 {
@@ -95,4 +99,11 @@ int32_t FindFirstRepeatSum(int32_t x[], uint32_t length)
 
     // Return larger number
     return diffX1 > diffX2 ? diffX1 : diffX2;
+}
+
+int main(int argc, char* argv[])
+{
+    printf("SumOfArray: %d\n", SumOfArray(input, ARRAY_SIZE(input)));
+    printf("FindFirstRepeatSum: %d\n", FindFirstRepeatSum(input, ARRAY_SIZE(input)));
+    return 0;
 }
