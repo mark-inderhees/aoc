@@ -6,6 +6,12 @@ typedef struct _item {
     uint32_t dependsCount;
 } item;
 
+typedef struct _worker
+{
+    uint32_t count;
+    uint32_t workingOn;
+} worker;
+
 void FindTheOrder(char* input[], uint32_t length)
 {
     // Populate data from input
@@ -30,36 +36,69 @@ void FindTheOrder(char* input[], uint32_t length)
     }
 
     // Do all the work!
-    uint32_t i = 0;
-    while (i < 26)
+    worker workers[5] = {0};
+    uint32_t doneCount = 0;
+    uint32_t time = 0;
+    while (doneCount != 26)
     {
-        if (todo[i])
+        // Check if the workers finished work
+        for (uint32_t workerI = 0; workerI < 5; workerI++)
         {
-            // Do this work!
-            printf("%c", i + 'A');
-            todo[i] = false;
-
-            // Mark this dependency clear from all that it provides
-            for (uint32_t p = 0; p < 26; p++)
+            if (workers[workerI].count > 0)
             {
-                if (items[i].provides[p])
+                // Complete one second of work
+                workers[workerI].count--;
+                if (workers[workerI].count == 0)
                 {
-                    items[p].dependsCount--;
+                    // Work is done!
+                    doneCount++;
+                    uint32_t itemDone = workers[workerI].workingOn;
+                    // printf("%d %c\n", time, itemDone + 'A');
 
-                    // If this provided item is ready for work, then set it up
-                    if (items[p].dependsCount == 0)
+                    // Mark this dependency clear from all that it provides
+                    for (uint32_t p = 0; p < 26; p++)
                     {
-                        todo[p] = true;
+                        if (items[itemDone].provides[p])
+                        {
+                            items[p].dependsCount--;
+
+                            // If this provided item is ready for work, then set it up
+                            if (items[p].dependsCount == 0)
+                            {
+                                todo[p] = true;
+                            }
+                        }
                     }
                 }
             }
-
-            // Start this work list from the begining
-            i = 0;
-            continue;
         }
-        i++;
+
+        // See if there is work to do
+        for (uint32_t workerI = 0; workerI < 5; workerI++)
+        {
+            if (workers[workerI].count == 0)
+            {
+                // find work to do
+                for (uint32_t todoI = 0; todoI < 26; todoI++)
+                {
+                    if (todo[todoI])
+                    {
+                        // Do this work!
+                        workers[workerI].workingOn = todoI;
+                        todo[todoI] = false;
+                        workers[workerI].count = 60 + todoI + 1;
+                        break;
+                    }
+                }
+            }
+        }
+        time++;
     }
+
+    // Step time back one
+    time--;
+
+    printf("Done in %d\n", time);
 }
 
 int main(int argc, char* argv[])
