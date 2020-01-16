@@ -1,100 +1,111 @@
 #include "..\common.h"
 #include "08input.h"
 
-uint32_t SumMetadata2(uint8_t x[], uint32_t length)
+typedef struct node node;
+struct node {
+    node* pParent;
+    uint8_t childrenCount;
+    node** pChildren;
+    uint8_t childI;
+    uint8_t childI2;
+    uint8_t dataCount;
+    uint8_t* data;
+    uint32_t dataSum;
+    uint32_t funkySum;
+    uint32_t id;
+};
+
+void CreateNode(node* pParent, uint8_t childrenCount, uint32_t dataCount)
 {
-    // First, figure out how many children and what the metadata are for root node
-    uint8_t rootChildCount = x[0];
-    uint8_t rootMetadataCount = x[1];
-
-    // Now get the metadata for the rootnode, it's at the way end
-    uint8_t* rootMetadata = malloc(rootMetadataCount);
-    for (uint32_t j = 0; j < rootMetadataCount; j++)
+    pParent->childrenCount = childrenCount;
+    if (childrenCount > 0)
     {
-        rootMetadata[j] = x[length - 1 - j];
+        pParent->pChildren = malloc(sizeof(node*) * childrenCount);
+        for (uint32_t i = 0; i < childrenCount; i++)
+        {
+            pParent->pChildren[i] = malloc(sizeof(node));
+            memset(pParent->pChildren[i], 0, sizeof(node));
+            pParent->pChildren[i]->pParent = pParent;
+        }
     }
+    pParent->dataCount = dataCount;
+    pParent->data = malloc(dataCount);
+}
 
-    // Now build a list for child metadata sums
-    uint8_t* rootChildMetadataSums = malloc(rootChildCount);
-    memset(rootChildMetadataSums, 0, rootChildCount);
-    uint32_t rootChildMetadataSumsI = 0;
-
-    // Walk the tree as an array
-    uint8_t* stackChildTodo = malloc(length);
-    uint8_t* stackMetadaCount = malloc(length);
-    uint32_t stackI = 0;
-    uint32_t sum = 0;
+void BuildATree(uint8_t x[], uint32_t length)
+{
+    node root = {0};
+    node* pNode = &root;
     uint32_t i = 0;
-    bool processStack = false;
-    uint32_t nodeI = 0;
+    bool createNode = true;
+    uint32_t sum = 0;
+    uint32_t id = 0;
     while (i < length)
     {
-        if (!processStack)
+        if (createNode)
         {
-            uint8_t children = x[i++];
-            uint8_t metadataCount = x[i++];
-            // printf("Node %c children %d metadataCount %d\n", nodeI + 'A', children, metadataCount);
-            nodeI++;
-            // Save work to do to the stack
-            stackChildTodo[stackI] = children == 0 ? 0 : children - 1;
-            stackMetadaCount[stackI] = metadataCount;
-            stackI++;
+            uint8_t childrenCount = x[i++];
+            uint8_t dataCount = x[i++];
+            CreateNode(pNode, childrenCount, dataCount);
+            pNode->id = id++;
+            createNode = false;
+        }
 
-            if (children == 0)
-            {
-                // Do work now
-                processStack = true;
-            }
-            
+        if (pNode->childI < pNode->childrenCount)
+        {
+            // There are more children to read in
+            pNode = pNode->pChildren[pNode->childI++];
+            createNode = true;
         }
         else
         {
-            processStack = false;
-            if (stackChildTodo[stackI - 1] > 0)
+            // Read data
+            for (uint32_t m = 0; m < pNode->dataCount; m++)
             {
-                // Look for another child now
-                stackChildTodo[stackI - 1]--;
+                pNode->data[m] = x[i++];
+                pNode->dataSum += pNode->data[m];
             }
-            else
-            {
-                // Pop the stack and read the values now
-                stackI--;
-                // printf("Reading %d now from stack work\n", stackMetadaCount[stackI]);
-                uint32_t tempSum = 0;
-                for (uint32_t m = 0; m < stackMetadaCount[stackI]; m++)
-                {
-                    tempSum += x[i++];
-                }
-                sum += tempSum;
-                processStack = true;
+            sum += pNode->dataSum;
 
-                if (stackI == 1)
-                {
-                    // We just read a root node child's sum, cache it
-                    printf("Found sum %d\n", tempSum);
-                    rootChildMetadataSums[rootChildMetadataSumsI++] = tempSum;
-                }
-            }
+            pNode = pNode->pParent;
         }
     }
 
-    // printf("stack %d\n", stackI);
-    printf("Sum was %d\n", sum);
-    printf("rootChildMetadataSumsI %d\n", rootChildMetadataSumsI);
+    printf("Add data sum %d\n", sum);
 
-    // Now find sums of desired children
-    uint32_t sum2 = 0;
-    for (uint32_t j = 0; j < rootMetadataCount; j++)
+    // Find the funky sum, walk the tree depth first
+    pNode = &root;
+    while (pNode != NULL)
     {
-        uint32_t nodeI = rootMetadata[j];
-        if (nodeI <= rootChildCount)
+        if (pNode->childI2 < pNode->childrenCount)
         {
-            printf("using sum %d\n", rootChildMetadataSums[nodeI-1]);
-            sum2 += rootChildMetadataSums[nodeI-1];
+            // Go to children
+            pNode = pNode->pChildren[pNode->childI2++];
+        }
+        else if (pNode->childrenCount == 0)
+        {
+            // Leaf node, use sum as funky sum
+            pNode->funkySum = pNode->dataSum;
+            // printf("Got Funky sum for leaf id %d = %d\n", pNode->id, pNode->funkySum);
+            pNode = pNode->pParent;
+        }
+        else
+        {
+            // Visited all the children, find the funky sum
+            for (uint32_t m = 0; m < pNode->dataCount; m++)
+            {
+                if (pNode->data[m] <= pNode->childrenCount)
+                {
+                    pNode->funkySum += pNode->pChildren[pNode->data[m] - 1]->funkySum;
+                }
+            }
+            // printf("Got Funky sum for id %d = %d\n", pNode->id, pNode->funkySum);
+
+            pNode = pNode->pParent;
         }
     }
-    
-    return sum2;
+
+    printf("Funky sum is %d\n", root.funkySum);
 }
 
 int main(int argc, char* argv[])
@@ -108,9 +119,11 @@ int main(int argc, char* argv[])
     // A----------------------------------------
     //     B----------------- C-----------
     //         x-----             D-----
-    uint8_t testData[] = {2,3,0,3,10,11,12,1,1,0,1,99,2,1,1,2};
+    // uint8_t testData[] = {2,3,0,3,10,11,12,1,1,0,1,99,2,1,1,2};
     // uint8_t testData[] = {2,3,1,3,0,1,1,10,11,12,1,1,0,1,99,2,1,1,2};
-    printf("Sum of metadata %d", SumMetadata2(testData, ARRAY_SIZE(testData)));
-    // printf("Sum of metadata %d", SumMetadata2(input, ARRAY_SIZE(input)));
+    // BuildATree(testData, ARRAY_SIZE(testData));
+
+    BuildATree(input, ARRAY_SIZE(input));
+
     return 0;
 }
