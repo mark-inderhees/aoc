@@ -5,20 +5,20 @@ typedef struct node node;
 struct node {
     node* pPrevious;
     node* pNext;
-    uint32_t marbleNumber;
+    uint64_t marbleNumber;
 };
 
-void MarbleGame(uint32_t playerCount, uint32_t maxMarble)
+void MarbleGame(uint32_t playerCount, uint64_t maxMarble)
 {
-    uint32_t* score = malloc(sizeof(uint32_t) * playerCount);
-    memset(score, 0, sizeof(uint32_t) * playerCount);
+    uint64_t* score = malloc(sizeof(uint64_t) * playerCount);
+    memset(score, 0, sizeof(uint64_t) * playerCount);
     node* marbles = malloc(sizeof(node) * (maxMarble + 1));
     uint32_t playerI = 1;
     node root = {0};
     node* pNode = &root;
     pNode->pPrevious = pNode;
     pNode->pNext = pNode;
-    for(uint32_t marbleI = 1; marbleI <= maxMarble; marbleI++)
+    for(uint64_t marbleI = 1; marbleI <= maxMarble; marbleI++)
     {
         if (marbleI % 23 != 0)
         {
@@ -54,7 +54,7 @@ void MarbleGame(uint32_t playerCount, uint32_t maxMarble)
         playerI = (playerI + 1) % playerCount;
     }
 
-    uint32_t maxScore = 0;
+    uint64_t maxScore = 0;
     for (uint32_t i = 0; i < playerCount; i++)
     {
         if (score[i] > maxScore)
@@ -63,12 +63,12 @@ void MarbleGame(uint32_t playerCount, uint32_t maxMarble)
         }
     }
 
-    printf("Max score is %d\n", maxScore);
+    printf("Max score is %lld\n", maxScore);
 }
 
 int main(int argc, char* argv[])
 {
-    MarbleGame(473, 70904);
+    MarbleGame(473, 70904 * 100);
     // MarbleGame(9, 25);
     return 0;
 }
