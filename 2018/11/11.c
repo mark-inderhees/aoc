@@ -16,34 +16,45 @@ void MaxPower(uint32_t serialNumber)
         }
     }
 
-    // Find the max 3x3
+    // Find the max subgrid
     int32_t max = INT32_MIN;
     uint32_t maxX = 0;
     uint32_t maxY = 0;
-    for (uint32_t x = 0; x < 300 - 2; x++)
+    uint32_t maxG = 0;
+    for (uint32_t g = 1; g <= 300; g++)
     {
-        for (uint32_t y = 0; y < 300 - 2; y++)
+        for (uint32_t x = 0; x < 300 - g + 1; x++)
         {
-            int32_t value =
-                grid[x][y]   + grid[x+1][y]   + grid[x+2][y] +
-                grid[x][y+1] + grid[x+1][y+1] + grid[x+2][y+1] +
-                grid[x][y+2] + grid[x+1][y+2] + grid[x+2][y+2];
-            if (value > max)
+            for (uint32_t y = 0; y < 300 - g + 1; y++)
             {
-                max = value;
-                maxX = x;
-                maxY = y;
+                int32_t value = 0;
+                for (uint32_t gx = 0; gx < g; gx++)
+                {
+                    for (uint32_t gy = 0; gy < g; gy++)
+                    {
+                        value += grid[x + gx][y + gy];
+                    }
+                }
+
+                if (value > max)
+                {
+                    max = value;
+                    maxX = x;
+                    maxY = y;
+                    maxG = g;
+                }
             }
         }
+        printf("%d ", g);
     }
 
-    printf("%d at %d,%d\n", max, maxX+1, maxY+1);
+    printf("\n%d at %d,%d,%d\n", max, maxX+1, maxY+1, maxG);
 }
 
 int main(int argc, char* argv[])
 {
-    MaxPower(18);
-    MaxPower(42);
+    // MaxPower(18);
+    // MaxPower(42);
     MaxPower(9221);
     return 0;
 }
