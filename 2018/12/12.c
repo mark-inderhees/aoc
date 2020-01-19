@@ -4,8 +4,9 @@
 void SpreadPlants(char* input[], uint32_t length)
 {
     // Get initial plan state
-    const uint32_t bucketZeroI = 100;
-    bool plants[300] = {0};
+    const uint32_t bucketZeroI = 10;
+    #define maxPlants 1000
+    bool plants[maxPlants] = {0};
     uint32_t bucketCount = strlen(&input[0][15]);
     for (uint32_t i = 0; i < bucketCount; i++)
     {
@@ -28,10 +29,11 @@ void SpreadPlants(char* input[], uint32_t length)
     }
 
     // Now do 20 generations! BUT don't change values until end of generation, need flip flop
-    bool plants2[300] = {0};
+    bool plants2[maxPlants] = {0};
     bool* plantsNow = plants;
     bool* plantsNext = plants2;
-    for (uint32_t i = 0; i < 20; i++)
+    uint32_t previousSum = 0;
+    for (uint32_t i = 0; i < 200; i++)
     {
         if (i % 2 == 0)
         {
@@ -45,7 +47,7 @@ void SpreadPlants(char* input[], uint32_t length)
         }
 
         // Loop through each plant and lookup its next value
-        for (uint32_t x = 2; x < 300 - 2; x++)
+        for (uint32_t x = 2; x < maxPlants - 2; x++)
         {
             uint32_t id = 0;
             for (int32_t j = -2; j <= 2; j++)
@@ -54,16 +56,40 @@ void SpreadPlants(char* input[], uint32_t length)
             }
             plantsNext[x] = lookup[id];
         }
+
+        // Now calculate the value of the plants
+        for (uint32_t m = i; m < i + 150; m++)
+        {
+            int32_t value = plantsNext[m] ? 1 : 0;
+            printf("%d", value);
+        }
+        int32_t sum = 0;
+        for (uint32_t m = 0; m < maxPlants; m++)
+        {
+            int32_t value = plantsNext[m] ? 1 : 0;
+            sum += value * (m - bucketZeroI);
+        }
+        printf(" Sum: %d (diff %d)\n", sum, sum - previousSum);
+        previousSum = sum;
     }
 
     // Now calculate the value of the plants
     int32_t sum = 0;
-    for (uint32_t i = 0; i < 300; i++)
+    for (uint32_t i = 0; i < maxPlants; i++)
     {
         int32_t value = plantsNext[i] ? 1 : 0;
+        printf("%d", value);
         sum += value * (i - bucketZeroI);
     }
     printf("Sum: %d\n", sum);
+
+
+    // This is generation 200. All future generations will shift right one:
+    // 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010110110110011011011011011011011011001101101000000000000000000001011011011010011011001101101101101101101000000010110110100000000000000000001011011011011011011011010000000101101101
+    // Bucket zero is at index 10
+    // Sum is 14775 at geneartion 200. Each generation, sum increases by 81
+    uint64_t sum2 = sum;
+    printf("Sum at 50 billion %lld\n", sum2 + (81ull * (50000000000ull - 200ull)));
 }
 
 int main(int argc, char* argv[])
