@@ -11,11 +11,12 @@ typedef enum _piece {
 } piece;
 
 typedef enum _direction {
-    direction_empty = 0,
+    directionMin = -1,
     up,
+    right,
     down,
     left,
-    right
+    directionMax
 } direction;
 
 typedef struct _cart {
@@ -23,149 +24,116 @@ typedef struct _cart {
     uint32_t count;
 } cart;
 
-cart ProcessTurn(piece* map, cart car, uint32_t x, uint32_t y, uint32_t width)
+void TurnRight(cart* cart)
+{
+    cart->d = (cart->d + 1) % directionMax;
+}
+
+void TurnLeft(cart* cart)
+{
+    cart->d -= 1;
+    if (cart->d == directionMin)
+    {
+        cart->d = left;
+    }
+}
+
+void ProcessTurn(piece* map, cart* cart, uint32_t x, uint32_t y, uint32_t width)
 {
     piece p = map[x + y * width];
     if (p == horizontalLeftTurn_verticalRightTurn)
     {
         // Piece '/'
-        if (car.d == up)
+        // printf(" /");
+        if (cart->d == right || cart->d == left)
         {
-            car.d = right;
-            return car;
+            TurnLeft(cart);
         }
-        else if (car.d == down)
+        else if (cart->d == up || cart->d == down)
         {
-            car.d = left;
-            return car;
+            TurnRight(cart);
         }
-        else if (car.d == left)
+        else
         {
-            car.d = down;
-            return car;
-        }
-        else if (car.d == right)
-        {
-            car.d = up;
-            return car;
+            assert(false);
         }
     }
     else if (p == horizontalRightTurn_verticalLeftTurn)
     {
         // Piece '\'
-        if (car.d == up)
+        // printf(" \\");
+        if (cart->d == right || cart->d == left)
         {
-            car.d = left;
-            return car;
+            TurnRight(cart);
         }
-        else if (car.d == down)
+        else if (cart->d == up || cart->d == down)
         {
-            car.d = right;
-            return car;
+            TurnLeft(cart);
         }
-        else if (car.d == left)
+        else
         {
-            car.d = up;
-            return car;
-        }
-        else if (car.d == right)
-        {
-            car.d = down;
-            return car;
+            assert(false);
         }
     }
     else if (p == intersection)
     {
-        switch (car.count % 3)
+        // printf(" +");
+        switch (cart->count % 3)
         {
         case 0:
         {
-            // Left turn
-            if (car.d == up)
-            {
-                car.d = left;
-                car.count++;
-                return car;
-            }
-            else if (car.d == down)
-            {
-                car.d = right;
-                car.count++;
-                return car;
-            }
-            else if (car.d == left)
-            {
-                car.d = down;
-                car.count++;
-                return car;
-            }
-            else if (car.d == right)
-            {
-                car.d = up;
-                car.count++;
-                return car;
-            }
+            TurnLeft(cart);
             break;
         }
 
         case 1:
         {
             // Go stright
-            car.count++;
-            return car;
             break;
         }
 
         case 2:
         {
-            // Right turn
-            if (car.d == up)
-            {
-                car.d = right;
-                car.count++;
-                return car;
-            }
-            else if (car.d == down)
-            {
-                car.d = left;
-                car.count++;
-                return car;
-            }
-            else if (car.d == left)
-            {
-                car.d = up;
-                car.count++;
-                return car;
-            }
-            else if (car.d == right)
-            {
-                car.d = down;
-                car.count++;
-                return car;
-            }
+            TurnRight(cart);
             break;
         }
 
         default:
+            assert(false);
             break;
         }
+
+        cart->count++;
+    }
+    else if (p == horizontal)
+    {
+        // printf(" -");
+        assert(cart->d == left || cart->d == right);
+    }
+    else if (p == vertical)
+    {
+        // printf(" |");
+        assert(cart->d == up || cart->d == down);
     }
     else
     {
-        // Do nothing
-        return car;
+        // printf("%d %d %d\n", p, x, y);
+        assert(false);
     }
+
+    // printf(" %d", cart->count % 3);
 }
 
-void DrawCars(cart* cars, piece* map, uint32_t width, uint32_t height)
+void DrawCars(uint32_t* cartsMap, cart carts[], piece* map, uint32_t width, uint32_t height)
 {
     printf("-------------------\n");
     for (uint32_t y = 0; y < height; y++)
     {
         for (uint32_t x = 0; x < width; x++)
         {
-            direction car = cars[x + y * width].d;
-            switch (car)
+            uint32_t cartId = cartsMap[x + y * width];
+            direction cartDir = carts[cartId].d;
+            switch (cartDir)
             {
             case up:
             {
@@ -193,8 +161,6 @@ void DrawCars(cart* cars, piece* map, uint32_t width, uint32_t height)
 
             default:
             {
-                printf(" ");
-                break;
                 piece p = map[x + y * width];
                 switch (p)
                 {
@@ -245,16 +211,21 @@ void DrawCars(cart* cars, piece* map, uint32_t width, uint32_t height)
 
 void FindTheCrash(char* input[], uint32_t height)
 {
-    // Populate map and cars
+    // Populate map and carts
     uint32_t width = strlen(input[0]);
     piece* map = malloc(sizeof(piece) * width * height);
     memset(map, 0, sizeof(piece) * width * height);
-    cart* cars = malloc(sizeof(cart) * width * height);
-    cart* cars2 = malloc(sizeof(cart) * width * height);
-    memset(cars, 0, sizeof(cart) * width * height);
-    memset(cars2, 0, sizeof(cart) * width * height);
+    uint32_t* cartsMap1 = malloc(sizeof(uint32_t) * width * height);
+    uint32_t* cartsMap2 = malloc(sizeof(uint32_t) * width * height);
+    memset(cartsMap1, 0, sizeof(uint32_t) * width * height);
+    memset(cartsMap2, 0, sizeof(uint32_t) * width * height);
+    uint32_t cartId = 1;
+    #define MAX_CARTS 100
+    cart carts[MAX_CARTS] = {0};
+    carts[0].d = directionMin; // cart zero is special, it is "no cart"
     for (uint32_t y = 0; y < height; y++)
     {
+        assert(strlen(input[y]) == width);
         for (uint32_t x = 0; x < width; x++)
         {
             char d = input[y][x];
@@ -299,28 +270,36 @@ void FindTheCrash(char* input[], uint32_t height)
             case '^':
             {
                 map[x + y * width] = vertical;
-                cars[x + y * width].d = up;
+                cartsMap1[x + y * width] = cartId;
+                carts[cartId].d = up;
+                cartId++;
                 break;
             }
 
             case 'v':
             {
                 map[x + y * width] = vertical;
-                cars[x + y * width].d = down;
+                cartsMap1[x + y * width] = cartId;
+                carts[cartId].d = down;
+                cartId++;
                 break;
             }
 
             case '<':
             {
                 map[x + y * width] = horizontal;
-                cars[x + y * width].d = left;
+                cartsMap1[x + y * width] = cartId;
+                carts[cartId].d = left;
+                cartId++;
                 break;
             }
 
             case '>':
             {
                 map[x + y * width] = horizontal;
-                cars[x + y * width].d = right;
+                cartsMap1[x + y * width] = cartId;
+                carts[cartId].d = right;
+                cartId++;
                 break;
             }
 
@@ -333,36 +312,45 @@ void FindTheCrash(char* input[], uint32_t height)
         }
     }
 
+    assert(cartId < MAX_CARTS);
+
     // Run until crash!
     uint32_t iteration = 0;
-    cart* carsNow = NULL;
-    cart* carsNext = NULL;
+    uint32_t* cartsNow = NULL;
+    uint32_t* cartsNext = NULL;
     uint32_t x2 = 0;
     uint32_t y2 = 0;
-    cart car = {0};
     while (true)
     {
         if (iteration % 2 == 0)
         {
-            carsNow = cars;
-            carsNext = cars2;
+            cartsNow = cartsMap1;
+            cartsNext = cartsMap2;
         }
         else
         {
-            carsNow = cars2;
-            carsNext = cars;
+            cartsNow = cartsMap2;
+            cartsNext = cartsMap1;
         }
-        memset(carsNext, 0, sizeof(cart) * width * height);
+        memset(cartsNext, 0, sizeof(uint32_t) * width * height);
 
-        // DrawCars(carsNow, map, width, height);
+        // DrawCars(cartsNow, carts, map, width, height);
 
-        // Move the cars
+        // Move the carts
         for (uint32_t y = 0; y < height; y++)
         {
             for (uint32_t x = 0; x < width; x++)
             {
-                car = carsNow[x + y * width];
-                switch (car.d)
+                cartId = cartsNow[x + y * width];
+                cartsNow[x + y * width] = 0;
+                if (cartId == 0)
+                {
+                    continue;
+                }
+
+                // printf("\n(%d, %d)", x, y);
+
+                switch (carts[cartId].d)
                 {
                 case up:
                 {
@@ -398,21 +386,58 @@ void FindTheCrash(char* input[], uint32_t height)
 
                 default:
                 {
-                    continue;
+                    assert(false);
                 }
                 }
 
-                if (carsNext[x2 + y2 * width].d != direction_empty)
+                if (cartsNext[x2 + y2 * width] != 0 || cartsNow[x2 + y2 * width] != 0)
                 {
                     // Crash!
+                    // cartsNext[x2 + y2 * width] = cartId;
+                    // ProcessTurn(map, &carts[cartId], x2, y2, width);
+                    // DrawCars(cartsNext, carts, map, width, height);
                     printf("Crash at %d,%d on iteration %d\n", x2, y2, iteration);
                     return;
                 }
-                carsNext[x2 + y2 * width] = ProcessTurn(map, car, x2, y2, width);
+                cartsNext[x2 + y2 * width] = cartId;
+                ProcessTurn(map, &carts[cartId], x2, y2, width);
+
+                // switch (carts[cartId].d)
+                // {
+                // case up:
+                // {
+                //     printf(" ^");
+                //     break;
+                // }
+
+                // case down:
+                // {
+                //     printf(" v");
+                //     break;
+                // }
+
+                // case left:
+                // {
+                //     printf(" <");
+                //     break;
+                // }
+
+                // case right:
+                // {
+                //     printf(" >");
+                //     break;
+                // }
+
+                // default:
+                // {
+                //     assert(false);
+                // }
+                // }
             }
         }
 
         iteration++;
+        // printf("\nnew round");
     }
 }
 
@@ -420,6 +445,5 @@ int main(int argc, char* argv[])
 {
     FindTheCrash(testData, ARRAY_SIZE(testData));
     FindTheCrash(input, ARRAY_SIZE(input));
-    printf("Hello world\n");
     return 0;
 }
