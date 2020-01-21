@@ -18,47 +18,136 @@ typedef enum _direction {
     right
 } direction;
 
-direction ProcessTurn(piece* map, direction car, uint32_t x, uint32_t y, uint32_t width)
+typedef struct _cart {
+    direction d;
+    uint32_t count;
+} cart;
+
+cart ProcessTurn(piece* map, cart car, uint32_t x, uint32_t y, uint32_t width)
 {
     piece p = map[x + y * width];
     if (p == horizontalLeftTurn_verticalRightTurn)
     {
         // Piece '/'
-        if (car == up)
+        if (car.d == up)
         {
-            return right;
+            car.d = right;
+            return car;
         }
-        else if (car == down)
+        else if (car.d == down)
         {
-            return left;
+            car.d = left;
+            return car;
         }
-        else if (car == left)
+        else if (car.d == left)
         {
-            return down;
+            car.d = down;
+            return car;
         }
-        else if (car == right)
+        else if (car.d == right)
         {
-            return up;
+            car.d = up;
+            return car;
         }
     }
     else if (p == horizontalRightTurn_verticalLeftTurn)
     {
         // Piece '\'
-        if (car == up)
+        if (car.d == up)
         {
-            return left;
+            car.d = left;
+            return car;
         }
-        else if (car == down)
+        else if (car.d == down)
         {
-            return right;
+            car.d = right;
+            return car;
         }
-        else if (car == left)
+        else if (car.d == left)
         {
-            return up;
+            car.d = up;
+            return car;
         }
-        else if (car == right)
+        else if (car.d == right)
         {
-            return down;
+            car.d = down;
+            return car;
+        }
+    }
+    else if (p == intersection)
+    {
+        switch (car.count % 3)
+        {
+        case 0:
+        {
+            // Left turn
+            if (car.d == up)
+            {
+                car.d = left;
+                car.count++;
+                return car;
+            }
+            else if (car.d == down)
+            {
+                car.d = right;
+                car.count++;
+                return car;
+            }
+            else if (car.d == left)
+            {
+                car.d = down;
+                car.count++;
+                return car;
+            }
+            else if (car.d == right)
+            {
+                car.d = up;
+                car.count++;
+                return car;
+            }
+            break;
+        }
+
+        case 1:
+        {
+            // Go stright
+            car.count++;
+            return car;
+            break;
+        }
+
+        case 2:
+        {
+            // Right turn
+            if (car.d == up)
+            {
+                car.d = right;
+                car.count++;
+                return car;
+            }
+            else if (car.d == down)
+            {
+                car.d = left;
+                car.count++;
+                return car;
+            }
+            else if (car.d == left)
+            {
+                car.d = up;
+                car.count++;
+                return car;
+            }
+            else if (car.d == right)
+            {
+                car.d = down;
+                car.count++;
+                return car;
+            }
+            break;
+        }
+
+        default:
+            break;
         }
     }
     else
@@ -68,14 +157,14 @@ direction ProcessTurn(piece* map, direction car, uint32_t x, uint32_t y, uint32_
     }
 }
 
-void DrawCars(direction* cars, piece* map, uint32_t width, uint32_t height)
+void DrawCars(cart* cars, piece* map, uint32_t width, uint32_t height)
 {
     printf("-------------------\n");
     for (uint32_t y = 0; y < height; y++)
     {
         for (uint32_t x = 0; x < width; x++)
         {
-            direction car = cars[x + y * width];
+            direction car = cars[x + y * width].d;
             switch (car)
             {
             case up:
@@ -104,6 +193,8 @@ void DrawCars(direction* cars, piece* map, uint32_t width, uint32_t height)
 
             default:
             {
+                printf(" ");
+                break;
                 piece p = map[x + y * width];
                 switch (p)
                 {
@@ -158,10 +249,10 @@ void FindTheCrash(char* input[], uint32_t height)
     uint32_t width = strlen(input[0]);
     piece* map = malloc(sizeof(piece) * width * height);
     memset(map, 0, sizeof(piece) * width * height);
-    direction* cars = malloc(sizeof(direction) * width * height);
-    direction* cars2 = malloc(sizeof(direction) * width * height);
-    memset(cars, 0, sizeof(direction) * width * height);
-    memset(cars2, 0, sizeof(direction) * width * height);
+    cart* cars = malloc(sizeof(cart) * width * height);
+    cart* cars2 = malloc(sizeof(cart) * width * height);
+    memset(cars, 0, sizeof(cart) * width * height);
+    memset(cars2, 0, sizeof(cart) * width * height);
     for (uint32_t y = 0; y < height; y++)
     {
         for (uint32_t x = 0; x < width; x++)
@@ -208,28 +299,28 @@ void FindTheCrash(char* input[], uint32_t height)
             case '^':
             {
                 map[x + y * width] = vertical;
-                cars[x + y * width] = up;
+                cars[x + y * width].d = up;
                 break;
             }
 
             case 'v':
             {
                 map[x + y * width] = vertical;
-                cars[x + y * width] = down;
+                cars[x + y * width].d = down;
                 break;
             }
 
             case '<':
             {
                 map[x + y * width] = horizontal;
-                cars[x + y * width] = left;
+                cars[x + y * width].d = left;
                 break;
             }
 
             case '>':
             {
                 map[x + y * width] = horizontal;
-                cars[x + y * width] = right;
+                cars[x + y * width].d = right;
                 break;
             }
 
@@ -244,11 +335,11 @@ void FindTheCrash(char* input[], uint32_t height)
 
     // Run until crash!
     uint32_t iteration = 0;
-    direction* carsNow = NULL;
-    direction* carsNext = NULL;
+    cart* carsNow = NULL;
+    cart* carsNext = NULL;
     uint32_t x2 = 0;
     uint32_t y2 = 0;
-    direction car = direction_empty;
+    cart car = {0};
     while (true)
     {
         if (iteration % 2 == 0)
@@ -261,9 +352,9 @@ void FindTheCrash(char* input[], uint32_t height)
             carsNow = cars2;
             carsNext = cars;
         }
-        memset(carsNext, 0, sizeof(direction) * width * height);
+        memset(carsNext, 0, sizeof(cart) * width * height);
 
-        DrawCars(carsNow, map, width, height);
+        // DrawCars(carsNow, map, width, height);
 
         // Move the cars
         for (uint32_t y = 0; y < height; y++)
@@ -271,7 +362,7 @@ void FindTheCrash(char* input[], uint32_t height)
             for (uint32_t x = 0; x < width; x++)
             {
                 car = carsNow[x + y * width];
-                switch (car)
+                switch (car.d)
                 {
                 case up:
                 {
@@ -311,7 +402,7 @@ void FindTheCrash(char* input[], uint32_t height)
                 }
                 }
 
-                if (carsNext[x2 + y2 * width] != direction_empty)
+                if (carsNext[x2 + y2 * width].d != direction_empty)
                 {
                     // Crash!
                     printf("Crash at %d,%d on iteration %d\n", x2, y2, iteration);
@@ -328,6 +419,7 @@ void FindTheCrash(char* input[], uint32_t height)
 int main(int argc, char* argv[])
 {
     FindTheCrash(testData, ARRAY_SIZE(testData));
+    FindTheCrash(input, ARRAY_SIZE(input));
     printf("Hello world\n");
     return 0;
 }
