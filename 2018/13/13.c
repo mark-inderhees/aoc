@@ -320,6 +320,7 @@ void FindTheCrash(char* input[], uint32_t height)
     uint32_t* cartsNext = NULL;
     uint32_t x2 = 0;
     uint32_t y2 = 0;
+    uint32_t cartCount = 0;
     while (true)
     {
         if (iteration % 2 == 0)
@@ -347,6 +348,8 @@ void FindTheCrash(char* input[], uint32_t height)
                 {
                     continue;
                 }
+
+                cartCount++;
 
                 // printf("\n(%d, %d)", x, y);
 
@@ -397,10 +400,24 @@ void FindTheCrash(char* input[], uint32_t height)
                     // ProcessTurn(map, &carts[cartId], x2, y2, width);
                     // DrawCars(cartsNext, carts, map, width, height);
                     printf("Crash at %d,%d on iteration %d\n", x2, y2, iteration);
-                    return;
+                    // return;
+                    if (cartsNext[x2 + y2 * width] != 0)
+                    {
+                        cartsNext[x2 + y2 * width] = 0;
+                        cartCount--;
+                    }
+                    else if (cartsNow[x2 + y2 * width] != 0)
+                    {
+                        cartsNow[x2 + y2 * width] = 0;
+                    }
+
+                    cartCount--;
                 }
-                cartsNext[x2 + y2 * width] = cartId;
-                ProcessTurn(map, &carts[cartId], x2, y2, width);
+                else
+                {
+                    cartsNext[x2 + y2 * width] = cartId;
+                    ProcessTurn(map, &carts[cartId], x2, y2, width);
+                }
 
                 // switch (carts[cartId].d)
                 // {
@@ -437,7 +454,28 @@ void FindTheCrash(char* input[], uint32_t height)
         }
 
         iteration++;
+        if (cartCount <= 1)
+        {
+            printf("all done\n");
+            break;
+        }
+        else
+        {
+            cartCount = 0;
+        }
         // printf("\nnew round");
+    }
+
+    for (uint32_t y = 0; y < height; y++)
+    {
+        for (uint32_t x = 0; x < width; x++)
+        {
+            cartId = cartsNext[x + y * width];
+            if (cartId != 0)
+            {
+                printf("last cart is at %d,%d\n", x, y);
+            }
+        }
     }
 }
 
