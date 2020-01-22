@@ -26,6 +26,54 @@ uint8_t* mapGoal;
 player* players = NULL;
 uint32_t playerCount = 0;
 
+// Returns  -1 if a < b
+//           0 if a == b
+//          +1 if a > b
+int ComparePlayers(const void* a, const void* b)
+{
+    const player* A = a;
+    const player* B = b;
+
+    // First check if players are dead
+    if (A->hitPoints > 0 && B->hitPoints <= 0)
+    {
+        // printf("B is dead\n");
+        return -1;
+    }
+    else if (A->hitPoints <= 0 && B->hitPoints > 0)
+    {
+        // printf("A is dead\n");
+        return 1;
+    }
+    else if (A->hitPoints <= 0 && B->hitPoints <= 0)
+    {
+        // printf("Both are dead\n");
+        return 0;
+    }
+
+    // Now return reading order based
+    if (A->y < B->y)
+    {
+        // printf("%d < %d\n", A->y, B->y);
+        return -1;
+    }
+    else if (A->y > B->y)
+    {
+        // printf("%d > %d\n", A->y, B->y);
+        return 1;
+    }
+    else if (A->x < B->x)
+    {
+        return -1;
+    }
+    else if (A->x > B->x)
+    {
+        return 1;
+    }
+
+    assert(false);
+}
+
 uint32_t CountInstance(char instance)
 {
     uint32_t count = 0;
@@ -81,8 +129,13 @@ void InitPlayer(player* p, uint32_t x, uint32_t y, char type)
 void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
 {
     // Can only move if this is a space or this is the first square
-    assert(count < 100);
+    assert(count < UINT8_MAX);
     if (mapNow[y * MAP_Y + x] != '.' && count != 0)
+    {
+        return;
+    }
+
+    if (count > 25)
     {
         return;
     }
@@ -102,9 +155,91 @@ void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
     }
 }
 
-// Returns true if next to enemy
-bool MovePlayer(player* p)
+player* GetPlayer(uint32_t x, uint32_t y)
 {
+    for (uint32_t i = 0; i < playerCount; i++)
+    {
+        if (players[i].x == x && players[i].y == y)
+        {
+            return &players[i];
+        }
+    }
+
+    return NULL;
+}
+
+// Returns true if enemy was killed
+bool Attack(player* p)
+{
+    // Are we dead?
+    if (p->hitPoints <= 0)
+    {
+        return false;
+    }
+
+    // Find who to attack, one with lowest HP
+    char enemy = p->type == 'E' ? 'G' : 'E';
+    uint8_t hp = UINT8_MAX;
+    player* enemyToAttack = NULL;
+    if (mapNow[(p->y - 1) * MAP_X + (p->x + 0)] == enemy)
+    {
+        player* e = GetPlayer(p->x + 0, p->y - 1);
+        if (e->hitPoints < hp)
+        {
+            hp = e->hitPoints;
+            enemyToAttack = e;
+        }
+    }
+    if (mapNow[(p->y + 0) * MAP_X + (p->x - 1)] == enemy)
+    {
+        player* e = GetPlayer(p->x - 1, p->y + 0);
+        if (e->hitPoints < hp)
+        {
+            hp = e->hitPoints;
+            enemyToAttack = e;
+        }
+    }
+    if (mapNow[(p->y + 0) * MAP_X + (p->x + 1)] == enemy)
+    {
+        player* e = GetPlayer(p->x + 1, p->y + 0);
+        if (e->hitPoints < hp)
+        {
+            hp = e->hitPoints;
+            enemyToAttack = e;
+        }
+    }
+    if (mapNow[(p->y + 1) * MAP_X + (p->x + 0)] == enemy)
+    {
+        player* e = GetPlayer(p->x + 0, p->y + 1);
+        if (e->hitPoints < hp)
+        {
+            hp = e->hitPoints;
+            enemyToAttack = e;
+        }
+    }
+
+    // Now attack the enemy!
+    if (enemyToAttack != NULL)
+    {
+        enemyToAttack->hitPoints -= 3;
+        if (enemyToAttack->hitPoints <= 0)
+        {
+            mapNow[enemyToAttack->y * MAP_X + enemyToAttack->x] = '.';
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void MovePlayer(player* p)
+{
+    // Are we dead?
+    if (p->hitPoints <= 0)
+    {
+        return;
+    }
+
     // Is this player next to an enemy?
     char enemy = p->type == 'E' ? 'G' : 'E';
     if ((mapNow[(p->y + 0) * MAP_X + (p->x + 1)] == enemy) ||
@@ -113,7 +248,7 @@ bool MovePlayer(player* p)
         (mapNow[(p->y - 1) * MAP_X + (p->x + 0)] == enemy))
     {
         // printf("Attack1\n");
-        return true;
+        return;
     }
 
     // Find path to each enemy
@@ -122,6 +257,7 @@ bool MovePlayer(player* p)
     {
         if (players[i].type == enemy)
         {
+            // printf("?");
             // printf("Enemy at %d,%d\n", players[i].x, players[i].y);
             UpdateGoalMap(players[i].x, players[i].y, 0);
         }
@@ -188,19 +324,6 @@ bool MovePlayer(player* p)
     {
         // printf("NO MOVE\n");
     }
-    
-
-    // Is this player next to an enemy?
-    if ((mapNow[(p->y + 0) * MAP_X + (p->x + 1)] == enemy) ||
-        (mapNow[(p->y + 0) * MAP_X + (p->x - 1)] == enemy) ||
-        (mapNow[(p->y + 1) * MAP_X + (p->x + 0)] == enemy) ||
-        (mapNow[(p->y - 1) * MAP_X + (p->x + 0)] == enemy))
-    {
-        // printf("Attack2\n");
-        return true;
-    }
-
-    return false;
 }
 
 void DoBattle()
@@ -229,16 +352,66 @@ void DoBattle()
     }
 
     // Do battle!
-    // while (elfCount > 0 && goblinCount > 0)
-    for (uint32_t aaa = 0; aaa < 4; aaa++)
+    uint32_t rounds = 0;
+    while (elfCount > 0 && goblinCount > 0)
+    // for (uint32_t aaa = 0; aaa < 4; aaa++)
     {
-        DrawMap();
+        printf(".");
+        // DrawMap();
+
         // Move players
+        bool quitEarly = false;
         for (uint32_t i = 0; i < playerCount; i++)
         {
+            if (elfCount == 0 || goblinCount == 0)
+            {
+                quitEarly = true;
+                break;
+            }
+
+            // printf("!");
             MovePlayer(&players[i]);
+
+            // ATTACK
+            // printf("x");
+            if (Attack(&players[i]))
+            {
+                // The enemy died!
+                if (players[i].type == 'E')
+                {
+                    goblinCount--;
+                }
+                else
+                {
+                    elfCount--;
+                }
+            }
+        }
+
+        if (quitEarly)
+        {
+            break;
+        }
+
+        // Sort!
+        qsort(players, playerCount, sizeof(player), ComparePlayers);
+        playerCount = goblinCount + elfCount;
+
+        rounds++;
+    }
+
+    printf("After %d rounds\n", rounds);
+    DrawMap();
+    uint32_t sumHp = 0;
+    for (uint32_t i = 0; i < playerCount; i++)
+    {
+        if (players[i].hitPoints > 0)
+        {
+            printf("HP: %d\n", players[i].hitPoints);
+            sumHp += players[i].hitPoints;
         }
     }
+    printf("Outcome: %d * %d = %d\n", rounds, sumHp, rounds * sumHp);
 }
 
 int main()
