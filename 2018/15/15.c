@@ -30,6 +30,10 @@ uint32_t rounds = 0;
 player* players = NULL;
 uint32_t playerCount = 0;
 
+
+uint32_t goalMaxTry;
+char enemyRightNow;
+
 // Returns  -1 if a < b
 //           0 if a == b
 //          +1 if a > b
@@ -170,17 +174,15 @@ void DrawGoal()
     }
 }
 
-void InitPlayer(player* p, uint32_t x, uint32_t y, char type)
+void InitPlayer(player* p, uint32_t x, uint32_t y, char type, uint32_t power)
 {
-    p->power = 3;
+    p->power = power;
     p->hitPoints = 200;
     p->x = x;
     p->y = y;
     p->type = type;
 }
 
-uint32_t goalMaxTry = 25;
-char enemyRightNow;
 void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
 {
     // Can only move if this is a space or this is the first square
@@ -297,7 +299,7 @@ bool Attack(player* p)
     // Now attack the enemy!
     if (enemyToAttack != NULL)
     {
-        enemyToAttack->hitPoints -= 3;
+        enemyToAttack->hitPoints -= p->power;
         p->attacked = true;
         if (enemyToAttack->hitPoints <= 0)
         {
@@ -408,8 +410,10 @@ void MovePlayer(player* p)
     p->mostRecentMove = d;
 }
 
-void DoBattle()
+bool DoBattle(uint32_t elfPower)
 {
+    rounds = 0;
+    goalMaxTry = 25;
     // Init elfs and goblins, they will be sorted initially
     uint32_t elfCount = CountInstance('E');
     uint32_t goblinCount = CountInstance('G');
@@ -424,11 +428,11 @@ void DoBattle()
             mapNow[y * MAP_X + x] = map[y][x];
             if (map[y][x] == 'E')
             {
-                InitPlayer(&players[playerI++], x, y, 'E');
+                InitPlayer(&players[playerI++], x, y, 'E', elfPower);
             }
             else if (map[y][x] == 'G')
             {
-                InitPlayer(&players[playerI++], x, y, 'G');
+                InitPlayer(&players[playerI++], x, y, 'G', 3);
             }
         }
     }
@@ -470,6 +474,7 @@ void DoBattle()
                 else
                 {
                     elfCount--;
+                    return false;
                 }
             }
         }
@@ -498,6 +503,7 @@ void DoBattle()
         }
     }
     printf("Outcome: %d * %d = %d\n", rounds, sumHp, rounds * sumHp);
+    return true;
 }
 
 int main()
@@ -508,6 +514,10 @@ int main()
     MAP_SIZE = MAP_X * MAP_Y;
     mapNow = malloc(MAP_SIZE);
     mapGoal = malloc(MAP_SIZE);
-    DoBattle();
+    uint32_t elfPower = 3;
+    while(!DoBattle(elfPower))
+    {
+        elfPower++;
+    }
     return 0;
 }

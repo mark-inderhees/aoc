@@ -390,6 +390,7 @@ def problem2(inp, print_=False):
     damage_dict = {"G":3, "E":3}
     while not score:
         damage_dict["E"] += 1
+        print("Elf power", damage_dict["E"])
         score = problem2_loop(inp, damage_dict, print_)
     return score
 
