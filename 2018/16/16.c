@@ -22,107 +22,128 @@ typedef enum _opcodes {
     opcodeCount
 } opcodes;
 
+const char* OPCODE_NAMES[] = {
+    "addr",
+    "addi",
+    "mulr",
+    "muli",
+    "banr",
+    "bani",
+    "borr",
+    "bori",
+    "setr",
+    "seti",
+    "gtir",
+    "gtri",
+    "gtrr",
+    "eqir",
+    "eqri",
+    "eqrr",
+};
+
 uint8_t _opcodeMatches[opcodeCount][opcodeCount] = {0};
 opcodes _opcodeLookup[opcodeCount] = {0};
+uint32_t _opcodeInstances[opcodeCount] = {0};
+bool _opcodeInstancesProcessed[opcodeCount] = {0};
 
-bool IsOpCode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[4], uint32_t registersAfter[4])
+uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t registersBefore[4])
 {
-    uint32_t expectedOutput;
+    uint32_t output;
     switch (opcode)
     {
         case addr:
         {
-            expectedOutput = registersBefore[inputA] + registersBefore[inputB];
+            output = registersBefore[inputA] + registersBefore[inputB];
             break;
         }
 
         case addi:
         {
-            expectedOutput = registersBefore[inputA] + inputB;
+            output = registersBefore[inputA] + inputB;
             break;
         }
 
         case mulr:
         {
-            expectedOutput = registersBefore[inputA] * registersBefore[inputB];
+            output = registersBefore[inputA] * registersBefore[inputB];
             break;
         }
 
         case muli:
         {
-            expectedOutput = registersBefore[inputA] * inputB;
+            output = registersBefore[inputA] * inputB;
             break;
         }
 
         case banr:
         {
-            expectedOutput = registersBefore[inputA] & registersBefore[inputB];
+            output = registersBefore[inputA] & registersBefore[inputB];
             break;
         }
 
         case bani:
         {
-            expectedOutput = registersBefore[inputA] & inputB;
+            output = registersBefore[inputA] & inputB;
             break;
         }
 
         case borr:
         {
-            expectedOutput = registersBefore[inputA] | registersBefore[inputB];
+            output = registersBefore[inputA] | registersBefore[inputB];
             break;
         }
 
         case bori:
         {
-            expectedOutput = registersBefore[inputA] | inputB;
+            output = registersBefore[inputA] | inputB;
             break;
         }
 
         case setr:
         {
-            expectedOutput = registersBefore[inputA];
+            output = registersBefore[inputA];
             break;
         }
 
         case seti:
         {
-            expectedOutput = inputA;
+            output = inputA;
             break;
         }
 
         case gtir:
         {
-            expectedOutput = inputA > registersBefore[inputB] ? 1 : 0;
+            output = inputA > registersBefore[inputB] ? 1 : 0;
             break;
         }
 
         case gtri:
         {
-            expectedOutput = registersBefore[inputA] > inputB ? 1 : 0;
+            output = registersBefore[inputA] > inputB ? 1 : 0;
             break;
         }
 
         case gtrr:
         {
-            expectedOutput = registersBefore[inputA] > registersBefore[inputB] ? 1 : 0;
+            output = registersBefore[inputA] > registersBefore[inputB] ? 1 : 0;
             break;
         }
 
         case eqir:
         {
-            expectedOutput = inputA == registersBefore[inputB] ? 1 : 0;
+            output = inputA == registersBefore[inputB] ? 1 : 0;
             break;
         }
 
         case eqri:
         {
-            expectedOutput = registersBefore[inputA] == inputB ? 1 : 0;
+            output = registersBefore[inputA] == inputB ? 1 : 0;
             break;
         }
 
         case eqrr:
         {
-            expectedOutput = registersBefore[inputA] == registersBefore[inputB] ? 1 : 0;
+            output = registersBefore[inputA] == registersBefore[inputB] ? 1 : 0;
             break;
         }
 
@@ -130,10 +151,16 @@ bool IsOpCode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC
         default:
         {
             assert(false);
-            return false;
+            return 0;
         }
     }
 
+    return output;
+}
+
+bool IsOpCode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[4], uint32_t registersAfter[4])
+{
+    uint32_t expectedOutput = ProcessOpcode(opcode, inputA, inputB, registersBefore);
     if (expectedOutput == registersAfter[outputC])
     {
         // printf("Matches opcode %d\n", opcode);
@@ -161,7 +188,49 @@ uint32_t CountMatches(uint32_t inputOpcode, uint32_t inputA, uint32_t inputB, ui
     return count;
 }
 
-uint32_t Problem2(char* input[], uint32_t length)
+// The opcode to keep must only exist onces in _opcodeMatches
+void ClearAllOtherOpcodes(opcodes opcodeToKeep)
+{
+    // Find the input opcode that has this opcode.
+    bool foundOpcode = false;
+    for (uint32_t inputOpcodeI = 0; inputOpcodeI < opcodeCount; inputOpcodeI++)
+    {
+        if (_opcodeMatches[inputOpcodeI][opcodeToKeep] == 1)
+        {
+            printf("For input %02d, keeping just %02d %s\n", inputOpcodeI, opcodeToKeep, OPCODE_NAMES[opcodeToKeep]);
+            assert(!foundOpcode);
+            foundOpcode = true;
+
+            // Remove all other opcodes from this input opcode.
+            for (uint32_t opcodeI = 0; opcodeI < opcodeCount; opcodeI++)
+            {
+                if (opcodeI != opcodeToKeep)
+                {
+                    _opcodeMatches[inputOpcodeI][opcodeI] = 0;
+                }
+            }
+        }
+    }
+
+    assert(foundOpcode);
+}
+
+void CalculateOpcodeInstances()
+{
+    memset(_opcodeInstances, 0, sizeof(_opcodeInstances));
+    for (uint32_t inputOpcodeI = 0; inputOpcodeI < opcodeCount; inputOpcodeI++)
+    {
+        for (uint32_t opcodeI = 0; opcodeI < opcodeCount; opcodeI++)
+        {
+            if (_opcodeMatches[inputOpcodeI][opcodeI] == 1)
+            {
+                _opcodeInstances[opcodeI]++;
+            }
+        }
+    }
+}
+
+uint32_t Problem2(char* input[], uint32_t length, uint32_t program[], uint32_t programLength)
 {
     // Count the number of input that have 3 more opcodes
     // Input looks like:
@@ -220,28 +289,56 @@ uint32_t Problem2(char* input[], uint32_t length)
 
     // return countsOfThree;
 
-    // Validate each input opcode maps to just one opcode
-    for (uint32_t i = 0; i < opcodeCount; i++)
+    // Start of problem 2 logic
+    // Need to find input opcodes that exactly match one opcode.
+    // Remove all other opcodes from that input opcode.
+    // Then repeat from the beginning.
+    CalculateOpcodeInstances();
+    uint32_t opcodeI = 0;
+    while (opcodeI < opcodeCount)
     {
-        uint32_t someCount = 0;
-        for (uint32_t j = 0; j < opcodeCount; j++)
+        if (_opcodeInstances[opcodeI] == 1 && !_opcodeInstancesProcessed[opcodeI])
         {
-            if (_opcodeMatches[i][j] == 1)
-            {
-                someCount++;
-            }
+            _opcodeInstancesProcessed[opcodeI] = true;
+            ClearAllOtherOpcodes(opcodeI);
+            CalculateOpcodeInstances();
+            opcodeI = 0;
+            continue;
         }
-
-        assert(someCount == 1);
-        if (someCount != 1)
-        {
-            printf("Did not find opcode matches!!!\n");
-            return 0;
-        }
+        opcodeI++;
     }
 
-    printf("Found opcode matches :)\n");
-    return 0;
+    for (uint32_t inputOpcodeI = 0; inputOpcodeI < opcodeCount; inputOpcodeI++)
+    {
+        uint32_t someCount = 0;
+        for (uint32_t opcodeI = 0; opcodeI < opcodeCount; opcodeI++)
+        {
+            if (_opcodeMatches[inputOpcodeI][opcodeI] == 1)
+            {
+                _opcodeLookup[inputOpcodeI] = opcodeI;
+                someCount++;
+                printf("Input opcode %d = %s\n", inputOpcodeI, OPCODE_NAMES[opcodeI]);
+            }
+        }
+        assert(someCount == 1);
+    }
+
+    // Now process the program!
+    // uint32_t registers[4] = {0};
+    uint32_t result = 0;
+    opcodes opcode;
+    for (uint32_t i = 0; i < programLength; i++)
+    {
+        inputOpcode = program[i++];
+        opcode = _opcodeLookup[inputOpcode];
+        inputA = program[i++];
+        inputB = program[i++];
+        outputC = program[i++];
+        result = ProcessOpcode(opcode, inputA, inputB, registersAfter);
+        registersAfter[outputC] = result;
+    }
+
+    return registersAfter[0];
 }
 
 int main()
@@ -255,7 +352,7 @@ int main()
 
     // Problem 2
     uint32_t answer2;
-    answer2 = Problem2(input1, ARRAY_SIZE(input1));
+    answer2 = Problem2(input1, ARRAY_SIZE(input1), input2, ARRAY_SIZE(input2));
     printf("Problem 2: %d\n", answer2);
     return 0;
 }
