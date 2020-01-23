@@ -1,27 +1,31 @@
 #include "..\common.h"
 #include "15input.h"
 
+typedef enum _direction {
+    invalid,
+    up,
+    left,
+    right,
+    down,
+    nomovebecausenearenemy,
+} direction;
+
 typedef struct _player {
     uint32_t power;
     int32_t hitPoints;
     uint32_t x;
     uint32_t y;
     char type;
+    direction mostRecentMove;
+    bool attacked;
 } player;
-
-typedef enum _direction {
-    invalid,
-    up,
-    left,
-    right,
-    down
-} direction;
 
 const uint32_t MAP_Y = ARRAY_SIZE(map);
 uint32_t MAP_X = 0;
 uint32_t MAP_SIZE = 0;
 char* mapNow;
 uint8_t* mapGoal;
+uint32_t rounds = 0;
 
 player* players = NULL;
 uint32_t playerCount = 0;
@@ -74,6 +78,19 @@ int ComparePlayers(const void* a, const void* b)
     assert(false);
 }
 
+player* GetPlayer(uint32_t x, uint32_t y)
+{
+    for (uint32_t i = 0; i < playerCount; i++)
+    {
+        if (players[i].x == x && players[i].y == y)
+        {
+            return &players[i];
+        }
+    }
+
+    return NULL;
+}
+
 uint32_t CountInstance(char instance)
 {
     uint32_t count = 0;
@@ -93,13 +110,49 @@ uint32_t CountInstance(char instance)
 
 void DrawMap()
 {
-    printf("----------MAP----------\n");
+    printf("%d\n", rounds);
+    player* drawMe[10];
     for (uint32_t y = 0; y < MAP_Y; y++)
     {
+        uint32_t i = 0;
         for (uint32_t x = 0; x < MAP_X; x++)
         {
-            printf("%c", mapNow[y * MAP_X + x]);
+            char c = mapNow[y * MAP_X + x];
+            printf("%c", c);
+            if ('E' == c || 'G' == c)
+            {
+                drawMe[i++] = GetPlayer(x, y);
+            }
         }
+
+        // Draw hit points
+        if (i > 0)
+        {
+            printf("    ");
+            for (uint32_t p = 0; p < i; p++)
+            {
+                printf(" %d", drawMe[p]->hitPoints);
+            }
+        }
+
+        // Draw move
+        if (i > 0)
+        {
+            for (uint32_t p = 0; p < i; p++)
+            {
+                printf(" %d", drawMe[p]->mostRecentMove);
+            }
+        }
+
+        // Draw attack
+        if (i > 0)
+        {
+            for (uint32_t p = 0; p < i; p++)
+            {
+                printf(" %c", drawMe[p]->attacked ? 'a' : 'p');
+            }
+        }
+
         printf("\n");
     }
 }
@@ -126,16 +179,43 @@ void InitPlayer(player* p, uint32_t x, uint32_t y, char type)
     p->type = type;
 }
 
+uint32_t goalMaxTry = 25;
+char enemyRightNow;
 void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
 {
     // Can only move if this is a space or this is the first square
     assert(count < UINT8_MAX);
-    if (mapNow[y * MAP_Y + x] != '.' && count != 0)
+    char thisSpot = mapNow[y * MAP_Y + x];
+    if (count == 0)
     {
+        // assert(thisSpot == enemyRightNow);
+        if (thisSpot != enemyRightNow)
+        {
+            printf("!!!!!!!!!!!!!\n");
+        }
+    }
+    if (thisSpot != '.' && count != 0)
+    {
+        if (mapGoal[y * MAP_Y + x] == 0)
+        {
+            if (mapNow[y * MAP_Y + x] == '#')
+            {
+                mapGoal[y * MAP_Y + x] = 99;
+            }
+            else if (mapNow[y * MAP_Y + x] == 'G')
+            {
+                mapGoal[y * MAP_Y + x] = 98;
+            }
+            else if (mapNow[y * MAP_Y + x] == 'E')
+            {
+                mapGoal[y * MAP_Y + x] = 97;
+            }
+        }
+
         return;
     }
 
-    if (count > 25)
+    if (count > goalMaxTry)
     {
         return;
     }
@@ -144,7 +224,14 @@ void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
     uint8_t currentCount = mapGoal[y * MAP_Y + x];
     if (count <= currentCount || currentCount == 0)
     {
-        mapGoal[y * MAP_Y + x] = count;
+        if (count != 0)
+        {
+            mapGoal[y * MAP_Y + x] = count;
+        }
+        else
+        {
+            mapGoal[y * MAP_Y + x] = 96;
+        }
 
         // Move up, left, right, down
         count++;
@@ -155,19 +242,6 @@ void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
     }
 }
 
-player* GetPlayer(uint32_t x, uint32_t y)
-{
-    for (uint32_t i = 0; i < playerCount; i++)
-    {
-        if (players[i].x == x && players[i].y == y)
-        {
-            return &players[i];
-        }
-    }
-
-    return NULL;
-}
-
 // Returns true if enemy was killed
 bool Attack(player* p)
 {
@@ -176,6 +250,8 @@ bool Attack(player* p)
     {
         return false;
     }
+
+    p->attacked = false;
 
     // Find who to attack, one with lowest HP
     char enemy = p->type == 'E' ? 'G' : 'E';
@@ -222,9 +298,11 @@ bool Attack(player* p)
     if (enemyToAttack != NULL)
     {
         enemyToAttack->hitPoints -= 3;
+        p->attacked = true;
         if (enemyToAttack->hitPoints <= 0)
         {
             mapNow[enemyToAttack->y * MAP_X + enemyToAttack->x] = '.';
+            goalMaxTry = 50;
             return true;
         }
     }
@@ -248,6 +326,7 @@ void MovePlayer(player* p)
         (mapNow[(p->y - 1) * MAP_X + (p->x + 0)] == enemy))
     {
         // printf("Attack1\n");
+        p->mostRecentMove = nomovebecausenearenemy;
         return;
     }
 
@@ -255,10 +334,11 @@ void MovePlayer(player* p)
     memset(mapGoal, 0, MAP_SIZE);
     for (uint32_t i = 0; i < playerCount; i++)
     {
-        if (players[i].type == enemy)
+        if (players[i].type == enemy && players[i].hitPoints > 0)
         {
             // printf("?");
             // printf("Enemy at %d,%d\n", players[i].x, players[i].y);
+            enemyRightNow = enemy;
             UpdateGoalMap(players[i].x, players[i].y, 0);
         }
     }
@@ -324,6 +404,8 @@ void MovePlayer(player* p)
     {
         // printf("NO MOVE\n");
     }
+
+    p->mostRecentMove = d;
 }
 
 void DoBattle()
@@ -352,12 +434,11 @@ void DoBattle()
     }
 
     // Do battle!
-    uint32_t rounds = 0;
     while (elfCount > 0 && goblinCount > 0)
     // for (uint32_t aaa = 0; aaa < 4; aaa++)
     {
-        printf(".");
-        // DrawMap();
+        // printf(".");
+        DrawMap();
 
         // Move players
         bool quitEarly = false;
@@ -371,6 +452,11 @@ void DoBattle()
 
             // printf("!");
             MovePlayer(&players[i]);
+
+            if (rounds == 23 && players[i].mostRecentMove == up)
+            {
+                DrawGoal();
+            }
 
             // ATTACK
             // printf("x");
