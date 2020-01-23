@@ -1,5 +1,5 @@
 #include "..\common.h"
-#include "00input.h"
+#include "16input.h"
 
 int main()
 {
