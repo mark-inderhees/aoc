@@ -8,6 +8,7 @@ typedef enum _direction {
     right,
     down,
     nomovebecausenearenemy,
+    directionCount
 } direction;
 
 typedef struct _player {
@@ -33,6 +34,8 @@ uint32_t playerCount = 0;
 
 uint32_t goalMaxTry;
 char enemyRightNow;
+uint32_t bestMoveSoFar = 0;
+uint32_t bestMoveCount[directionCount] = {0};
 
 // Returns  -1 if a < b
 //           0 if a == b
@@ -183,36 +186,59 @@ void InitPlayer(player* p, uint32_t x, uint32_t y, char type, uint32_t power)
     p->type = type;
 }
 
-void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
+void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count, direction firstDirection)
 {
-    // Can only move if this is a space or this is the first square
     assert(count < UINT8_MAX);
     char thisSpot = mapNow[y * MAP_Y + x];
-    if (count == 0)
+
+    // if (count == 0)
+    // {
+    //     // assert(thisSpot == enemyRightNow);
+    //     if (thisSpot != enemyRightNow)
+    //     {
+    //         printf("!!!!!!!!!!!!!\n");
+    //     }
+    // }
+
+    if (thisSpot == enemyRightNow)
     {
-        // assert(thisSpot == enemyRightNow);
-        if (thisSpot != enemyRightNow)
+        // Found an enemy!
+        if (count < goalMaxTry)
         {
-            printf("!!!!!!!!!!!!!\n");
+            goalMaxTry = count;
         }
+
+        if (count < bestMoveSoFar)
+        {
+            bestMoveSoFar = count;
+        }
+
+        if (count < bestMoveCount[firstDirection] || bestMoveCount[firstDirection] == 0)
+        {
+            bestMoveCount[firstDirection] = count;
+        }
+
+        return;
     }
-    if (thisSpot != '.' && count != 0)
+
+    // Can only move if this is a space or this is the first square
+    if (thisSpot != '.')
     {
-        if (mapGoal[y * MAP_Y + x] == 0)
-        {
-            if (mapNow[y * MAP_Y + x] == '#')
-            {
-                mapGoal[y * MAP_Y + x] = 99;
-            }
-            else if (mapNow[y * MAP_Y + x] == 'G')
-            {
-                mapGoal[y * MAP_Y + x] = 98;
-            }
-            else if (mapNow[y * MAP_Y + x] == 'E')
-            {
-                mapGoal[y * MAP_Y + x] = 97;
-            }
-        }
+        // if (mapGoal[y * MAP_Y + x] == 0)
+        // {
+        //     if (mapNow[y * MAP_Y + x] == '#')
+        //     {
+        //         mapGoal[y * MAP_Y + x] = 99;
+        //     }
+        //     else if (mapNow[y * MAP_Y + x] == 'G')
+        //     {
+        //         mapGoal[y * MAP_Y + x] = 98;
+        //     }
+        //     else if (mapNow[y * MAP_Y + x] == 'E')
+        //     {
+        //         mapGoal[y * MAP_Y + x] = 97;
+        //     }
+        // }
 
         return;
     }
@@ -224,23 +250,23 @@ void UpdateGoalMap(uint32_t x, uint32_t y, uint8_t count)
 
     // Mark this value if it's less and continue looking
     uint8_t currentCount = mapGoal[y * MAP_Y + x];
-    if (count <= currentCount || currentCount == 0)
+    if (count < currentCount || currentCount == 0)
     {
-        if (count != 0)
-        {
+        // if (count != 0)
+        // {
             mapGoal[y * MAP_Y + x] = count;
-        }
-        else
-        {
-            mapGoal[y * MAP_Y + x] = 96;
-        }
+        // }
+        // else
+        // {
+        //     mapGoal[y * MAP_Y + x] = 96;
+        // }
 
         // Move up, left, right, down
         count++;
-        UpdateGoalMap(x + 0, y - 1, count); // Up
-        UpdateGoalMap(x - 1, y + 0, count); // Left
-        UpdateGoalMap(x + 1, y + 0, count); // Right
-        UpdateGoalMap(x + 0, y + 1, count); // Down
+        UpdateGoalMap(x + 0, y - 1, count, firstDirection); // Up
+        UpdateGoalMap(x - 1, y + 0, count, firstDirection); // Left
+        UpdateGoalMap(x + 1, y + 0, count, firstDirection); // Right
+        UpdateGoalMap(x + 0, y + 1, count, firstDirection); // Down
     }
 }
 
@@ -334,47 +360,63 @@ void MovePlayer(player* p)
 
     // Find path to each enemy
     memset(mapGoal, 0, MAP_SIZE);
-    for (uint32_t i = 0; i < playerCount; i++)
-    {
-        if (players[i].type == enemy && players[i].hitPoints > 0)
-        {
-            // printf("?");
-            // printf("Enemy at %d,%d\n", players[i].x, players[i].y);
-            enemyRightNow = enemy;
-            UpdateGoalMap(players[i].x, players[i].y, 0);
-        }
-    }
+    // for (uint32_t i = 0; i < playerCount; i++)
+    // {
+    //     if (players[i].type == enemy && players[i].hitPoints > 0)
+    //     {
+    //         // printf("?");
+    //         // printf("Enemy at %d,%d\n", players[i].x, players[i].y);
+    //         enemyRightNow = enemy;
+    //         UpdateGoalMap(players[i].x, players[i].y, 0);
+    //     }
+    // }
+
+    enemyRightNow = enemy;
+    goalMaxTry = 50;
+    bestMoveSoFar = UINT32_MAX;
+    memset(bestMoveCount, 0, sizeof(bestMoveCount));
+    UpdateGoalMap(p->x + 0, p->y - 1, 1, up);
+    UpdateGoalMap(p->x - 1, p->y + 0, 1, left);
+    UpdateGoalMap(p->x + 1, p->y + 0, 1, right);
+    UpdateGoalMap(p->x + 0, p->y + 1, 1, down);
 
     // DrawMap();
     // DrawGoal();
 
     // Find lowest goal value and desired direction
-    uint8_t goal = UINT8_MAX;
-    uint8_t testValue = 0;
+    // uint8_t goal = UINT8_MAX;
+    // uint8_t testValue = 0;
     direction d = invalid;
-    testValue = mapGoal[(p->y - 1) * MAP_X + (p->x + 0)];
-    if (testValue < goal && testValue != 0)
+    // testValue = mapGoal[(p->y - 1) * MAP_X + (p->x + 0)];
+    // if (testValue < goal && testValue != 0)
+    // {
+    //     goal = testValue;
+    //     d = up;
+    // }
+    // testValue = mapGoal[(p->y + 0) * MAP_X + (p->x - 1)];
+    // if (testValue < goal && testValue != 0)
+    // {
+    //     goal = testValue;
+    //     d = left;
+    // }
+    // testValue = mapGoal[(p->y + 0) * MAP_X + (p->x + 1)];
+    // if (testValue < goal && testValue != 0)
+    // {
+    //     goal = testValue;
+    //     d = right;
+    // }
+    // testValue = mapGoal[(p->y + 1) * MAP_X + (p->x + 0)];
+    // if (testValue < goal && testValue != 0)
+    // {
+    //     goal = testValue;
+    //     d = down;
+    // }
+    for (int32_t i = directionCount - 1; i >= 0; i--)
     {
-        goal = testValue;
-        d = up;
-    }
-    testValue = mapGoal[(p->y + 0) * MAP_X + (p->x - 1)];
-    if (testValue < goal && testValue != 0)
-    {
-        goal = testValue;
-        d = left;
-    }
-    testValue = mapGoal[(p->y + 0) * MAP_X + (p->x + 1)];
-    if (testValue < goal && testValue != 0)
-    {
-        goal = testValue;
-        d = right;
-    }
-    testValue = mapGoal[(p->y + 1) * MAP_X + (p->x + 0)];
-    if (testValue < goal && testValue != 0)
-    {
-        goal = testValue;
-        d = down;
+        if (bestMoveCount[i] == bestMoveSoFar)
+        {
+            d = i;
+        }
     }
 
     // Now do the move
@@ -442,7 +484,7 @@ bool DoBattle(uint32_t elfPower)
     // for (uint32_t aaa = 0; aaa < 4; aaa++)
     {
         // printf(".");
-        DrawMap();
+        // DrawMap();
 
         // Move players
         bool quitEarly = false;
@@ -457,10 +499,10 @@ bool DoBattle(uint32_t elfPower)
             // printf("!");
             MovePlayer(&players[i]);
 
-            if (rounds == 23 && players[i].mostRecentMove == up)
-            {
-                DrawGoal();
-            }
+            // if (rounds == 23 && players[i].mostRecentMove == up)
+            // {
+            //     DrawGoal();
+            // }
 
             // ATTACK
             // printf("x");
@@ -492,7 +534,7 @@ bool DoBattle(uint32_t elfPower)
     }
 
     printf("After %d rounds\n", rounds);
-    DrawMap();
+    // DrawMap();
     uint32_t sumHp = 0;
     for (uint32_t i = 0; i < playerCount; i++)
     {
