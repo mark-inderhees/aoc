@@ -46,104 +46,122 @@ opcodes _opcodeLookup[opcodeCount] = {0};
 uint32_t _opcodeInstances[opcodeCount] = {0};
 bool _opcodeInstancesProcessed[opcodeCount] = {0};
 
-uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t registersBefore[4])
+uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[4])
 {
+    (void)(outputC);
+
     uint32_t output;
     switch (opcode)
     {
         case addr:
         {
             output = registersBefore[inputA] + registersBefore[inputB];
+            // printf("r%d = r%d + r%d = %d + %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], registersBefore[inputB], output);
             break;
         }
 
         case addi:
         {
             output = registersBefore[inputA] + inputB;
+            // printf("r%d = r%d + %d = %d + %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], inputB, output);
             break;
         }
 
         case mulr:
         {
             output = registersBefore[inputA] * registersBefore[inputB];
+            // printf("r%d = r%d * r%d = %d * %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], registersBefore[inputB], output);
             break;
         }
 
         case muli:
         {
             output = registersBefore[inputA] * inputB;
+            // printf("r%d = r%d * %d = %d * %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], inputB, output);
             break;
         }
 
         case banr:
         {
             output = registersBefore[inputA] & registersBefore[inputB];
+            // printf("r%d = r%d & r%d = %d & %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], registersBefore[inputB], output);
             break;
         }
 
         case bani:
         {
             output = registersBefore[inputA] & inputB;
+            // printf("r%d = r%d & r%d = %d & %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], inputB, output);
             break;
         }
 
         case borr:
         {
             output = registersBefore[inputA] | registersBefore[inputB];
+            // printf("r%d = r%d | r%d = %d | %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], registersBefore[inputB], output);
             break;
         }
 
         case bori:
         {
             output = registersBefore[inputA] | inputB;
+            // printf("r%d = r%d | r%d = %d | %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], inputB, output);
             break;
         }
 
         case setr:
         {
             output = registersBefore[inputA];
+            // printf("r%d = r%d = %d\n", outputC, inputA, registersBefore[inputA]);
             break;
         }
 
         case seti:
         {
             output = inputA;
+            // printf("r%d = %d\n", outputC, inputA);
             break;
         }
 
         case gtir:
         {
             output = inputA > registersBefore[inputB] ? 1 : 0;
+            // printf("r%d = %d > r%d = %d > %d = %d\n", outputC, inputA, inputB, inputA, registersBefore[inputB], output);
             break;
         }
 
         case gtri:
         {
             output = registersBefore[inputA] > inputB ? 1 : 0;
+            // printf("r%d = r%d > %d = %d > %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], inputB, output);
             break;
         }
 
         case gtrr:
         {
             output = registersBefore[inputA] > registersBefore[inputB] ? 1 : 0;
+            // printf("r%d = r%d > r%d = %d > %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], registersBefore[inputB], output);
             break;
         }
 
         case eqir:
         {
             output = inputA == registersBefore[inputB] ? 1 : 0;
+            // printf("r%d = %d == r%d = %d == %d = %d\n", outputC, inputA, inputB, inputA, registersBefore[inputB], output);
             break;
         }
 
         case eqri:
         {
             output = registersBefore[inputA] == inputB ? 1 : 0;
+            // printf("r%d = r%d == %d = %d == %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], inputB, output);
             break;
         }
 
         case eqrr:
         {
             output = registersBefore[inputA] == registersBefore[inputB] ? 1 : 0;
+            // printf("r%d = r%d == r%d = %d == %d = %d\n", outputC, inputA, inputB, registersBefore[inputA], registersBefore[inputB], output);
             break;
         }
 
@@ -160,7 +178,7 @@ uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_
 
 bool IsOpCode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[4], uint32_t registersAfter[4])
 {
-    uint32_t expectedOutput = ProcessOpcode(opcode, inputA, inputB, registersBefore);
+    uint32_t expectedOutput = ProcessOpcode(opcode, inputA, inputB, outputC, registersBefore);
     if (expectedOutput == registersAfter[outputC])
     {
         // printf("Matches opcode %d\n", opcode);
@@ -324,21 +342,23 @@ uint32_t Problem2(char* input[], uint32_t length, uint32_t program[], uint32_t p
     }
 
     // Now process the program!
-    // uint32_t registers[4] = {0};
+    uint32_t registers[4] = {0};
     uint32_t result = 0;
     opcodes opcode;
+    // printf("r0:%d r1:%d r2:%d r3:%d\n", registers[0], registers[1], registers[2], registers[3]);
     for (uint32_t i = 0; i < programLength; i++)
     {
         inputOpcode = program[i++];
         opcode = _opcodeLookup[inputOpcode];
         inputA = program[i++];
         inputB = program[i++];
-        outputC = program[i++];
-        result = ProcessOpcode(opcode, inputA, inputB, registersAfter);
-        registersAfter[outputC] = result;
+        outputC = program[i];
+        result = ProcessOpcode(opcode, inputA, inputB, outputC, registers);
+        registers[outputC] = result;
+        // printf("r0:%d r1:%d r2:%d r3:%d\n", registers[0], registers[1], registers[2], registers[3]);
     }
 
-    return registersAfter[0];
+    return registers[0];
 }
 
 int main()
