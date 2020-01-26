@@ -97,12 +97,17 @@ bool Flow(char* map, uint32_t width, uint32_t* pCount, uint32_t x, uint32_t y, i
     return false;
 }
 
-void Fill(char* map, uint32_t width, uint32_t x, uint32_t y, int32_t offset)
+void Fill(char* map, uint32_t width, uint32_t x, uint32_t y, int32_t offset, uint32_t* pFillCount)
 {
     char c;
     do
     {
-        map[x + y * width] = '~';
+        c = map[x + y * width];
+        if (c != '~')
+        {
+            map[x + y * width] = '~';
+            *pFillCount += 1;
+        }
 
         // Can we flow more?
         x = x + offset;
@@ -243,6 +248,7 @@ uint32_t CountReachable(char* inputReadOnly[], uint32_t length)
     // DrawMap(map, width, height);
 
     uint32_t count = 0;
+    uint32_t fillCount = 0;
     uint32_t startX = 500 - minX;
     uint32_t startY = minY;
     map[startX] = '+';
@@ -328,8 +334,8 @@ uint32_t CountReachable(char* inputReadOnly[], uint32_t length)
             {
                 // Fill up this row, back up one and flow again
                 // printf("Filling row %d", y);
-                Fill(map, width, work.x, work.y, -1);
-                Fill(map, width, work.x, work.y, +1);
+                Fill(map, width, work.x, work.y, -1, &fillCount);
+                Fill(map, width, work.x, work.y, +1, &fillCount);
                 // printf("\n");
                 pNewWork = &stack[stackI++];
                 pNewWork->type = flow;
@@ -343,7 +349,7 @@ uint32_t CountReachable(char* inputReadOnly[], uint32_t length)
 
     // DrawMap(map, width, height);
 
-    return count;
+    return fillCount;
 }
 
 int main()
