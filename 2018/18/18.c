@@ -156,7 +156,7 @@ uint32_t Problem1(char* input[], uint32_t length)
     char* mapDestination = map2;
 
     // uint32_t time = 10; // Problem one!!!
-    uint32_t time = 10000; // Problem two - look for the pattern. From something like iteration 450, there is a 28 entry pattern. Use ((1000000000 - 450) % 280) + 450 --> index of answer
+    uint32_t time = 10000; // Problem two - look for the pattern. From something like iteration 450, there is a 28 entry pattern. Use ((1000000000 - 450) % 28) + 450 --> index of answer
     // uint32_t time = 1000000000;
     // uint32_t previousScore = 0;
     for (uint32_t i = 0; i < time; i++)
