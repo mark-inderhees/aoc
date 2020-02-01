@@ -43,16 +43,16 @@ const char* OPCODE_NAMES[] = {
 
 typedef struct _instruction {
     opcodes opcode;
-    uint32_t inputA;
-    uint32_t inputB;
-    uint32_t outputC;
+    uint64_t inputA;
+    uint64_t inputB;
+    uint64_t outputC;
 } instruction;
 
-uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[6])
+uint64_t ProcessOpcode(opcodes opcode, uint64_t inputA, uint64_t inputB, uint64_t outputC, uint64_t registersBefore[6])
 {
     (void)(outputC);
 
-    uint32_t output;
+    uint64_t output;
     switch (opcode)
     {
         case addr:
@@ -178,11 +178,11 @@ uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_
     return output;
 }
 
-uint32_t Problem1(char* input[], uint32_t length)
+uint64_t Problem1(char* input[], uint32_t length)
 {
     // Parse input
     // Get program counter
-    uint32_t programCounterRegister = input[0][4] - '0';
+    uint64_t programCounterRegister = input[0][4] - '0';
 
     // Get instructions
     instruction* instructions = malloc(sizeof(instruction) * (length - 1));
@@ -220,10 +220,10 @@ uint32_t Problem1(char* input[], uint32_t length)
         instructions[instructionI].outputC = input[i][charI] - '0';
     }
 
-    printf("#ip %d\n", programCounterRegister);
+    printf("#ip %lld\n", programCounterRegister);
     for (uint32_t i = 0; i < length - 1; i++)
     {
-        printf("%s %d %d %d\n",
+        printf("%s %lld %lld %lld\n",
             OPCODE_NAMES[instructions[i].opcode],
             instructions[i].inputA,
             instructions[i].inputB,
@@ -231,18 +231,35 @@ uint32_t Problem1(char* input[], uint32_t length)
     }
 
     // Now process the program!
-    uint32_t registers[6] = {0};
-    uint32_t result = 0;
+    uint64_t registers[6] = {0};
+    registers[0] = 0;
+    uint64_t result = 0;
+    uint32_t jumpCount = 0;
+    uint32_t instructionCount = 0;
+    uint32_t instructionCountSinceLastJump = 0;
     for (uint32_t instructionPointer = 0; instructionPointer < length - 1; instructionPointer++)
     {
+        instructionCount++;
+        instructionCountSinceLastJump++;
+        uint32_t tempIp = instructionPointer;
         registers[programCounterRegister] = instructionPointer;
-        // printf("ip=%d [%d, %d, %d, %d, %d, %d] %s %d %d %d",
+        // printf("ip=%d [%lld, %lld, %lld, %lld, %lld, %lld] \t%s %lld %lld %lld",
         //     instructionPointer,
         //     registers[0], registers[1], registers[2], registers[3], registers[4], registers[5],
         //     OPCODE_NAMES[instructions[instructionPointer].opcode],
         //     instructions[instructionPointer].inputA,
         //     instructions[instructionPointer].inputB,
         //     instructions[instructionPointer].outputC);
+
+        if (instructionPointer == 4)
+        {
+            printf("%lld == %lld ?\n", registers[2], registers[1]);
+        }
+        else if (instructionPointer == 9)
+        {
+            printf("%lld > %lld ?\n", registers[4], registers[1]);
+        }
+
         result = ProcessOpcode(
             instructions[instructionPointer].opcode,
             instructions[instructionPointer].inputA,
@@ -250,17 +267,27 @@ uint32_t Problem1(char* input[], uint32_t length)
             instructions[instructionPointer].outputC,
             registers);
         registers[instructions[instructionPointer].outputC] = result;
-        // printf(" [%d, %d, %d, %d, %d, %d]\n",
+        // printf(" [%lld, %lld, %lld, %lld, %lld, %lld]\n",
         //     registers[0], registers[1], registers[2], registers[3], registers[4], registers[5]);
         instructionPointer = registers[programCounterRegister];
+        if (tempIp != instructionPointer)
+        {
+            jumpCount++;
+            // printf("Jump from %d to %d \t[jc:%d ic:%d iclj:%d]\n", tempIp, instructionPointer + 1,
+            //     jumpCount, instructionCount, instructionCountSinceLastJump);
+            instructionCountSinceLastJump = 0;
+        }
     }
+
+    printf("[jc:%d ic:%d iclj:%d]\n",
+        jumpCount, instructionCount, instructionCountSinceLastJump);
 
     return registers[0];
 }
 
 int main()
 {
-    // printf("Result: %d\n", Problem1(testData, ARRAY_SIZE(testData)));
-    printf("Result: %d\n", Problem1(input, ARRAY_SIZE(input)));
+    // printf("Result: %lld\n", Problem1(testData, ARRAY_SIZE(testData)));
+    printf("Result: %lld\n", Problem1(input, ARRAY_SIZE(input)));
     return 0;
 }
