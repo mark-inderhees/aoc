@@ -48,7 +48,7 @@ typedef struct _instruction {
     uint32_t outputC;
 } instruction;
 
-uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[4])
+uint32_t ProcessOpcode(opcodes opcode, uint32_t inputA, uint32_t inputB, uint32_t outputC, uint32_t registersBefore[6])
 {
     (void)(outputC);
 
@@ -230,11 +230,37 @@ uint32_t Problem1(char* input[], uint32_t length)
             instructions[i].outputC);
     }
 
-    return 0;
+    // Now process the program!
+    uint32_t registers[6] = {0};
+    uint32_t result = 0;
+    for (uint32_t instructionPointer = 0; instructionPointer < length - 1; instructionPointer++)
+    {
+        registers[programCounterRegister] = instructionPointer;
+        // printf("ip=%d [%d, %d, %d, %d, %d, %d] %s %d %d %d",
+        //     instructionPointer,
+        //     registers[0], registers[1], registers[2], registers[3], registers[4], registers[5],
+        //     OPCODE_NAMES[instructions[instructionPointer].opcode],
+        //     instructions[instructionPointer].inputA,
+        //     instructions[instructionPointer].inputB,
+        //     instructions[instructionPointer].outputC);
+        result = ProcessOpcode(
+            instructions[instructionPointer].opcode,
+            instructions[instructionPointer].inputA,
+            instructions[instructionPointer].inputB,
+            instructions[instructionPointer].outputC,
+            registers);
+        registers[instructions[instructionPointer].outputC] = result;
+        // printf(" [%d, %d, %d, %d, %d, %d]\n",
+        //     registers[0], registers[1], registers[2], registers[3], registers[4], registers[5]);
+        instructionPointer = registers[programCounterRegister];
+    }
+
+    return registers[0];
 }
 
 int main()
 {
-    printf("Result: %d\n", Problem1(testData, ARRAY_SIZE(testData)));
+    // printf("Result: %d\n", Problem1(testData, ARRAY_SIZE(testData)));
+    printf("Result: %d\n", Problem1(input, ARRAY_SIZE(input)));
     return 0;
 }
