@@ -8,9 +8,15 @@ typedef enum _direction {
     down
 } direction;
 
-void UpdateGoalMap(char* map, uint8_t* mapGoal, uint32_t mapSide, uint32_t x, uint32_t y, uint8_t count, direction d)
+typedef struct item item;
+struct item {
+    uint32_t index;
+    item* pNext;
+};
+
+void UpdateGoalMap(char* map, uint32_t* mapGoal, uint32_t mapSide, uint32_t x, uint32_t y, uint32_t count, direction d)
 {
-    assert(count < UINT8_MAX);
+    // assert(count < UINT32_MAX);
     if (d == up)
     {
         y--;
@@ -56,7 +62,7 @@ void UpdateGoalMap(char* map, uint8_t* mapGoal, uint32_t mapSide, uint32_t x, ui
     assert(thisSpot == '.');
 
     // Mark this value if it's less and continue looking
-    uint8_t currentCount = mapGoal[x + y * mapSide];
+    uint32_t currentCount = mapGoal[x + y * mapSide];
     if (count < currentCount || currentCount == 0)
     {
         mapGoal[x + y * mapSide] = count;
@@ -70,12 +76,50 @@ void UpdateGoalMap(char* map, uint8_t* mapGoal, uint32_t mapSide, uint32_t x, ui
     }
 }
 
-void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, uint32_t x, uint32_t y,
+bool HaveWeBeenHere(item* mapHistory[], uint32_t mapSide, uint32_t index, uint32_t x, uint32_t y)
+{
+    item* pItem = mapHistory[x + y * mapSide];
+    if (pItem == NULL)
+    {
+        pItem = malloc(sizeof(item));
+        pItem->index = index;
+        pItem->pNext = NULL;
+        mapHistory[x + y * mapSide] = pItem;
+        return false;
+    }
+
+    while (true)
+    {
+        if (pItem->index == index)
+        {
+            return true;
+        }
+
+        if (pItem->pNext == NULL)
+        {
+            pItem->pNext = malloc(sizeof(item));
+            pItem->pNext->index = index;
+            pItem->pNext->pNext = NULL;
+            return false;
+        }
+        pItem = pItem->pNext;
+    }
+
+    return false;
+}
+
+void BuildMap(item* mapHistory[], char map[], uint32_t mapSide, char* input, uint32_t inputIndex, uint32_t x, uint32_t y,
     uint32_t* xMin, uint32_t* xMax, uint32_t* yMin, uint32_t* yMax)
 {
     // Example map  "^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN$"
     //              "^ENWWW(NEEE|SSE(EE|N))$";
     //              ^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$
+    if (HaveWeBeenHere(mapHistory, mapSide, inputIndex, x, y))
+    {
+        // printf("We have been here\n");
+        return;
+    }
+
     while (true)
     {
         if (x <= 2 || x >= mapSide - 2 || y <= 2 || y >= mapSide - 2)
@@ -110,7 +154,7 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
         {
             // Need to fork and create recursive calls
             inputIndex++;
-            BuildMap(map, mapSide, input, inputIndex, x, y, xMin, xMax, yMin, yMax);
+            BuildMap(mapHistory, map, mapSide, input, inputIndex, x, y, xMin, xMax, yMin, yMax);
             uint32_t levelCount = 0;
             while (true)
             {
@@ -129,7 +173,7 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
                         else if (c == 'N' || c == 'S' || c == 'E' || c == 'W')
                         {
                             // Creat new fork
-                            BuildMap(map, mapSide, input, inputIndex, x, y, xMin, xMax, yMin, yMax);
+                            BuildMap(mapHistory, map, mapSide, input, inputIndex, x, y, xMin, xMax, yMin, yMax);
                             continue;
                         }
                         else
@@ -254,7 +298,7 @@ void DrawMap(char* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, uint32_t
     }
 }
 
-void DrawMapGoal(uint8_t* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, uint32_t yMin, uint32_t yMax)
+void DrawMapGoal(uint32_t* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, uint32_t yMin, uint32_t yMax)
 {
     for (uint32_t y = yMin; y <= yMax; y++)
     {
@@ -266,15 +310,15 @@ void DrawMapGoal(uint8_t* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, u
     }
 }
 
-uint8_t FindLargestGoal(uint8_t* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, uint32_t yMin, uint32_t yMax)
+uint32_t FindLargestGoal(uint32_t* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, uint32_t yMin, uint32_t yMax)
 {
-    uint8_t goal = 0;
+    uint32_t goal = 0;
     for (uint32_t y = yMin; y <= yMax; y++)
     {
         for (uint32_t x = xMin; x <= xMax; x++)
         {
-            uint8_t value = map[x + y * mapSide];
-            if (value != 255 && value > goal)
+            uint32_t value = map[x + y * mapSide];
+            if (value != UINT32_MAX && value > goal)
             {
                 goal = value;
             }
@@ -289,8 +333,8 @@ uint32_t Problem1(char* input)
     uint32_t mapSide = 1000;
     uint32_t mapSize = mapSide * mapSide;
     char* map = malloc(mapSize);
-    uint8_t* mapGoal = malloc(mapSize);
-    memset(mapGoal, UINT8_MAX, mapSize);
+    uint32_t* mapGoal = malloc(mapSize * sizeof(uint32_t));
+    memset(mapGoal, 0, mapSize * sizeof(uint32_t));
     uint32_t x = mapSide / 2;
     uint32_t y = mapSide / 2;
     uint32_t xMin = x;
@@ -299,19 +343,21 @@ uint32_t Problem1(char* input)
     uint32_t yMax = y;
     memset(map, '#', mapSize);
     map[x + y * mapSide] = '.';
-    BuildMap(map, mapSide, input, 1, x, y, &xMin, &xMax, &yMin, &yMax);
+    item** mapHistory = malloc(sizeof(item*) * mapSize);
+    memset(mapHistory, 0, sizeof(item*) * mapSize);
+    BuildMap(mapHistory, map, mapSide, input, 1, x, y, &xMin, &xMax, &yMin, &yMax);
     xMin--;
     xMax++;
     yMin--;
     yMax++;
-    DrawMap(map, mapSide, xMin, xMax, yMin, yMax);
+    // DrawMap(map, mapSide, xMin, xMax, yMin, yMax);
 
     UpdateGoalMap(map, mapGoal, mapSide, x, y, 1, up);
     UpdateGoalMap(map, mapGoal, mapSide, x, y, 1, left);
     UpdateGoalMap(map, mapGoal, mapSide, x, y, 1, right);
     UpdateGoalMap(map, mapGoal, mapSide, x, y, 1, down);
 
-    DrawMapGoal(mapGoal, mapSide, xMin, xMax, yMin, yMax);
+    // DrawMapGoal(mapGoal, mapSide, xMin, xMax, yMin, yMax);
 
     return FindLargestGoal(mapGoal, mapSide, xMin, xMax, yMin, yMax);
 }
@@ -323,7 +369,7 @@ int main()
     printf("Result: %d\n", Problem1(testData2));
     printf("Result: %d\n", Problem1(testData3));
     printf("Result: %d\n", Problem1(testData4));
-    // printf("Result: %d\n", Problem1(input));
+    printf("Result: %d\n", Problem1(inputData));
     printf("Hello world\n");
     return 0;
 }
