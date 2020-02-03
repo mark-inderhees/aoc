@@ -1,7 +1,8 @@
 #include "..\common.h"
 #include "20input.h"
 
-void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, uint32_t x, uint32_t y)
+void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, uint32_t x, uint32_t y,
+    uint32_t* xMin, uint32_t* xMax, uint32_t* yMin, uint32_t* yMax)
 {
     // Example map  "^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN$"
     //              "^ENWWW(NEEE|SSE(EE|N))$";
@@ -11,6 +12,23 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
         if (x <= 2 || x >= mapSide - 2 || y <= 2 || y >= mapSide - 2)
         {
             assert(false);
+        }
+
+        if (x < *xMin)
+        {
+            *xMin = x;
+        }
+        if (x > *xMax)
+        {
+            *xMax = x;
+        }
+        if (y < *yMin)
+        {
+            *yMin = y;
+        }
+        if (y > *yMax)
+        {
+            *yMax = y;
         }
 
         char c = input[inputIndex];
@@ -23,7 +41,7 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
         {
             // Need to fork and create recursive calls
             inputIndex++;
-            BuildMap(map, mapSide, input, inputIndex, x, y);
+            BuildMap(map, mapSide, input, inputIndex, x, y, xMin, xMax, yMin, yMax);
             uint32_t levelCount = 0;
             while (true)
             {
@@ -42,7 +60,7 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
                         else if (c == 'N' || c == 'S' || c == 'E' || c == 'W')
                         {
                             // Creat new fork
-                            BuildMap(map, mapSide, input, inputIndex, x, y);
+                            BuildMap(map, mapSide, input, inputIndex, x, y, xMin, xMax, yMin, yMax);
                             continue;
                         }
                         else
@@ -90,7 +108,6 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
                     if (c == ')')
                     {
                         // Forks are done, continue work
-                        inputIndex++;
                         break;
                     }
                 }
@@ -132,40 +149,70 @@ void BuildMap(char map[], uint32_t mapSide, char* input, uint32_t inputIndex, ui
         else if (c == 'E')
         {
             x = x + 1;
-            map[x + y * mapSide] = '-';
+            map[x + y * mapSide] = '|';
             x = x + 1;
             map[x + y * mapSide] = '.';
         }
         else if (c == 'W')
         {
             x = x - 1;
-            map[x + y * mapSide] = '-';
+            map[x + y * mapSide] = '|';
             x = x - 1;
             map[x + y * mapSide] = '.';
+        }
+        else if (c == ')')
+        {
+            // We were a fork, done with fork. But keep going with normal logic.
         }
         else
         {
             assert(false);
         }
+
+        inputIndex++;
     }
 }
 
-#define MAP_SIDE 1000
-#define MAP_SIZE (MAP_SIDE * MAP_SIDE)
-char _map[MAP_SIZE];
+void DrawMap(char* map, uint32_t mapSide, uint32_t xMin, uint32_t xMax, uint32_t yMin, uint32_t yMax)
+{
+    for (uint32_t y = yMin; y <= yMax; y++)
+    {
+        for (uint32_t x = xMin; x <= xMax; x++)
+        {
+            printf("%c", map[x + y * mapSide]);
+        }
+        printf("\n");
+    }
+}
+
+
 uint32_t Problem1(char* input)
 {
-
-    uint32_t mapSide = MAP_SIDE;
-    uint32_t mapSize = MAP_SIZE;
+    uint32_t mapSide = 1000;
+    uint32_t mapSize = mapSide * mapSide;
+    char* map = malloc(mapSize);
     uint32_t x = mapSide / 2;
     uint32_t y = mapSide / 2;
-    memset(_map, '#', mapSize);
+    uint32_t xMin = x;
+    uint32_t xMax = x;
+    uint32_t yMin = y;
+    uint32_t yMax = y;
+    memset(map, '#', mapSize);
+    map[x + y * mapSide] = '.';
+    BuildMap(map, mapSide, input, 1, x, y, &xMin, &xMax, &yMin, &yMax);
+    xMin--;
+    xMax++;
+    yMin--;
+    yMax++;
+    DrawMap(map, mapSide, xMin, xMax, yMin, yMax);
+
+    return 0;
 }
 
 int main()
 {
     // printf("%s\n", input);
+    printf("Result: %d\n", Problem1(testData1));
     printf("Hello world\n");
     return 0;
 }
