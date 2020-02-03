@@ -359,7 +359,23 @@ uint32_t Problem1(char* input)
 
     // DrawMapGoal(mapGoal, mapSide, xMin, xMax, yMin, yMax);
 
-    return FindLargestGoal(mapGoal, mapSide, xMin, xMax, yMin, yMax);
+    // Problem 1 answer:
+    // return FindLargestGoal(mapGoal, mapSide, xMin, xMax, yMin, yMax);
+
+    // Problem 2:
+    uint32_t countBig = 0;
+    for (uint32_t y = yMin; y <= yMax; y++)
+    {
+        for (uint32_t x = xMin; x <= xMax; x++)
+        {
+            uint32_t value = mapGoal[x + y * mapSide];
+            if (value >= 1000)
+            {
+                countBig++;
+            }
+        }
+    }
+    return countBig;
 }
 
 int main()
