@@ -17,18 +17,28 @@ fn main() {
                 let r1_1: u32 = r1[1].parse().unwrap();
                 let r2_0: u32 = r2[0].parse().unwrap();
                 let r2_1: u32 = r2[1].parse().unwrap();
-                // if r1[0] == r2[0] && r1[1] == r2[1] {
-                if r1_0 <= r2_0 && r1_1 >= r2_1 {
+                let bob1 = r1_0..=r1_1;
+                let bob2 = r2_0..=r2_1;
+                if bob1.contains(&r2_0)
+                    || bob1.contains(&r2_1)
+                    || bob2.contains(&r1_0)
+                    || bob2.contains(&r1_1)
+                {
+                    println!("hi mark");
                     count += 1;
-                    start = "*";
-                } else if r2_0 <= r1_0 && r2_1 >= r1_1 {
-                    count += 1;
-                    start = "*";
                 }
-                println!(
-                    "{} {}-{} {}-{} {} {}",
-                    l, r1_0, r1_1, r2_0, r2_1, count, start
-                );
+                // if r1[0] == r2[0] && r1[1] == r2[1] {
+                // if r2_0 <= r1_0 <= r2_1 {
+                //     count += 1;
+                //     start = "*";
+                // } else if r1_0 <= r2_0 <= r1_1 {
+                //     count += 1;
+                //     start = "*";
+                // }
+                // println!(
+                //     "{} {}-{} {}-{} {} {}",
+                //     l, r1_0, r1_1, r2_0, r2_1, count, start
+                // );
             }
         }
     }
