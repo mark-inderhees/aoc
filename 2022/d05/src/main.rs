@@ -5,7 +5,7 @@ use std::path::Path;
 fn main() {
     println!("Hello, world!");
 
-    if let Ok(lines) = read_lines("./src/input.txt") {
+    if let Ok(lines) = read_lines("./src/input_test.txt") {
         for line in lines {
             if let Ok(l) = line {
             }
