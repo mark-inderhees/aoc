@@ -43,14 +43,27 @@ fn main() {
                 let mut dest: usize = orders[5].parse().unwrap();
                 dest -= 1;
                 println!("move {} from {} to {}", count, source, dest);
-                for _ in 0..count {
-                    let val = lists[source].pop().expect("bob");
-                    lists[dest].push(val);
-                }
+
+                let moo = lists[source].clone();
+                let splices = moo.split_at(moo.len() - count);
+                lists[source] = splices.0.to_vec();
+                lists[dest].extend_from_slice(splices.1);
+
+                // let mut bob = vec![];
+                // for _ in 0..count {
+                //     let val = lists[source].pop().expect("bob");
+                //     bob.push(val);
+                //     // lists[dest].push(val);
+                // }
+                // bob.reverse();
+                // for b in bob {
+                //     lists[dest].push(b);
+                // }
             }
         }
     }
 
+    //LVZPSTTCZ
     for mut bob in lists {
         print!("{}", bob.pop().expect("moo"));
     }
