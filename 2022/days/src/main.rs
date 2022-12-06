@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use puzzle::Puzzle;
+use regex::Regex;
 use std::fs;
 
 mod day01;
@@ -58,9 +59,9 @@ fn bootstrap(day: u32) -> Result<()> {
     println!("Bootstrapping day {}", day);
     let source = ["src/dayXX.rs", "src/dayXX.test", "src/dayXX.input"];
     let dest = [
-        format!("src/day{:02}.rs", day),
-        format!("src/day{:02}.test", day),
-        format!("src/day{:02}.input", day),
+        format!("src/day{day:02}.rs"),
+        format!("src/day{day:02}.test"),
+        format!("src/day{day:02}.input"),
     ];
     for (s, d) in source.iter().zip(dest.iter()) {
         if fs::metadata(d).is_ok() {
@@ -72,8 +73,21 @@ fn bootstrap(day: u32) -> Result<()> {
     // Change DayXX to a real number like Day01
     let day_rs = &dest[0];
     let contents = fs::read_to_string(day_rs)?;
-    let new_contents = contents.replace("DayXX", &format!("Day{:02}", day));
+    let new_contents = contents.replace("DayXX", &format!("Day{day:02}"));
     fs::write(day_rs, new_contents)?;
+
+    // Reset values in main.rs
+    let main_rs = "src/main.rs";
+    let mut main = fs::read_to_string(main_rs)?;
+    let re_day = Regex::new(r"\d+(, // __BOOTSTRAP_DAY__)")?;
+    let re_part = Regex::new(r"\d+(, // __BOOTSTRAP_PART__)")?;
+    let re_test = Regex::new(r"false(, // __BOOTSTRAP_TEST__)")?;
+    let re_run = Regex::new(r"( +)(// __BOOTSTRAP_RUN__)")?;
+    main = re_day.replace(&main, format!("{day}${{1}}")).to_string();
+    main = re_part.replace(&main, "1${1}").to_string();
+    main = re_test.replace(&main, "true${1}").to_string();
+    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<day{day:02}::Day{day:02}>(args.part, input)?,\r\n${{1}}${{2}}")).to_string();
+    fs::write(main_rs, main)?;
 
     Ok(())
 }
@@ -101,6 +115,7 @@ fn main() -> Result<()> {
     match args.day {
         1 => run_day::<day01::Day01>(args.part, input)?,
         6 => run_day::<day06::Day06>(args.part, input)?,
+        // __BOOTSTRAP_RUN__
         _ => bail!("Day {} not found", args.day),
     }
 
