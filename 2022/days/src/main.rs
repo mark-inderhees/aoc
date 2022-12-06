@@ -39,6 +39,10 @@ struct Args {
     )]
     test: bool,
 
+    /// Validate all parts and input for the currently selected day
+    #[arg(long, short)]
+    validate: bool,
+
     /// Bootstrap a new day
     #[arg(long, short, value_name = "DAY")]
     bootstrap: Option<u32>,
@@ -60,14 +64,14 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
     match expect {
         Some(expected_val) => {
             println!(
-                "\n\nSolution: {} == {} is {}\n\n",
+                "Solution: {} == {} is {}\n",
                 output,
                 expected_val,
                 output == expected_val
             );
             assert_eq!(output, expected_val);
         }
-        _ => println!("\n\nSolution: {}\n\n", output),
+        _ => println!("Solution: {}\n", output),
     }
 
     Ok(())
@@ -125,21 +129,37 @@ fn main() -> Result<()> {
         None => (),
     };
 
-    println!(
-        "\n\nRunning day={} part={} test={} ...",
-        args.day, args.part, args.test
-    );
-    let input_type = match args.test {
-        true => "test",
-        false => "input",
+    let day = args.day;
+    let part = args.part;
+    let test = args.test;
+    let runs = match args.validate {
+        false => vec![(day, part, test)],
+        true => vec![
+            (day, 1, true),
+            (day, 1, false),
+            (day, 2, true),
+            (day, 2, false),
+        ],
     };
-    let input = format!("input/day{:02}.{}", args.day, input_type);
-    match args.day {
-        1 => run_day::<day01::Day01>(args.part, input, args.test)?,
-        6 => run_day::<day06::Day06>(args.part, input, args.test)?,
-        7 => run_day::<day07::Day07>(args.part, input, args.test)?,
-        // __BOOTSTRAP_RUN__
-        _ => bail!("Day {} not found", args.day),
+
+    for run in runs {
+        let day = run.0;
+        let part = run.1;
+        let test = run.2;
+        println!("\nRunning day={} part={} test={} ...", day, part, test);
+        let input_type = match test {
+            true => "test",
+            false => "input",
+        };
+        let input = format!("input/day{:02}.{}", day, input_type);
+
+        match day {
+            1 => run_day::<day01::Day01>(part, input, test)?,
+            6 => run_day::<day06::Day06>(part, input, test)?,
+            7 => run_day::<day07::Day07>(part, input, test)?,
+            // __BOOTSTRAP_RUN__
+            _ => bail!("Day {} not found", day),
+        }
     }
 
     Ok(())
