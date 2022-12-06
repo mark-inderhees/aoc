@@ -11,7 +11,7 @@ mod puzzle;
 #[derive(Parser, Debug)]
 struct Args {
     /// Which day's code to run
-    #[arg(long, default_value_t = 1)]
+    #[arg(long, default_value_t = 6)]
     day: u32,
 
     /// Which part of the day's code to run
@@ -19,7 +19,7 @@ struct Args {
     part: u32,
 
     /// Run test data instead of input
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = true)]
     test: bool,
 
     /// Bootstrap a new day
