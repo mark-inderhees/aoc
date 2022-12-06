@@ -39,6 +39,14 @@ impl Puzzle for Day06 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let chars = self.code.chars().collect::<Vec<char>>();
+        let mut index = 14;
+        for window in chars.windows(14) {
+            if all_unique(window) {
+                break;
+            }
+            index += 1;
+        }
+        Ok(index.to_string())
     }
 }

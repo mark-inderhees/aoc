@@ -15,7 +15,7 @@ struct Args {
     day: u32,
 
     /// Which part of the day's code to run
-    #[arg(long, default_value_t = 1)]
+    #[arg(long, default_value_t = 2)]
     part: u32,
 
     /// Run test data instead of input
