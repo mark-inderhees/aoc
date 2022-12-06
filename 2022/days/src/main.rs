@@ -59,11 +59,11 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String) -> Result<()> {
 
 fn bootstrap(day: u32) -> Result<()> {
     println!("Bootstrapping day {}", day);
-    let source = ["src/dayXX.rs", "src/dayXX.test", "src/dayXX.input"];
+    let source = ["src/dayXX.rs", "input/dayXX.test", "input/dayXX.input"];
     let dest = [
         format!("src/day{day:02}.rs"),
-        format!("src/day{day:02}.test"),
-        format!("src/day{day:02}.input"),
+        format!("input/day{day:02}.test"),
+        format!("input/day{day:02}.input"),
     ];
     for (s, d) in source.iter().zip(dest.iter()) {
         if fs::metadata(d).is_ok() {
@@ -117,7 +117,7 @@ fn main() -> Result<()> {
         true => "test",
         false => "input",
     };
-    let input = format!("src/day{:02}.{}", args.day, input_type);
+    let input = format!("input/day{:02}.{}", args.day, input_type);
     match args.day {
         1 => run_day::<day01::Day01>(args.part, input)?,
         6 => run_day::<day06::Day06>(args.part, input)?,
