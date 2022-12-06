@@ -38,6 +38,13 @@ impl Puzzle for Day06 {
         Ok(index.to_string())
     }
 
+    fn answer_part1(&mut self, test: bool) -> Option<String> {
+        match test {
+            true => Some(5.to_string()),
+            false => Some(1238.to_string()),
+        }
+    }
+
     fn solve_part2(&mut self) -> Result<String> {
         let chars = self.code.chars().collect::<Vec<char>>();
         let mut index = 14;
@@ -48,5 +55,12 @@ impl Puzzle for Day06 {
             index += 1;
         }
         Ok(index.to_string())
+    }
+
+    fn answer_part2(&mut self, test: bool) -> Option<String> {
+        match test {
+            true => Some(23.to_string()),
+            false => Some(3037.to_string()),
+        }
     }
 }

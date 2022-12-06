@@ -44,7 +44,7 @@ struct Args {
     bootstrap: Option<u32>,
 }
 
-fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String) -> Result<()> {
+fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Result<()> {
     let raw_input = fs::read_to_string(input).expect("Input file error");
     let mut day: DayType = Puzzle::from_input(&raw_input)?;
     let output = match part {
@@ -52,7 +52,23 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String) -> Result<()> {
         2 => day.solve_part2()?,
         _ => bail!("Invalid part"),
     };
-    println!("\n\nSolution: {}\n\n", output);
+    let expect = match part {
+        1 => day.answer_part1(test),
+        2 => day.answer_part2(test),
+        _ => bail!("Invalid part"),
+    };
+    match expect {
+        Some(expected_val) => {
+            println!(
+                "\n\nSolution: {} == {} is {}\n\n",
+                output,
+                expected_val,
+                output == expected_val
+            );
+            assert_eq!(output, expected_val);
+        }
+        _ => println!("\n\nSolution: {}\n\n", output),
+    }
 
     Ok(())
 }
@@ -92,7 +108,7 @@ fn bootstrap(day: u32) -> Result<()> {
     main = re_day.replace(&main, format!("{day}${{1}}")).to_string();
     main = re_part.replace(&main, "1${1}").to_string();
     main = re_test.replace(&main, "true${1}").to_string();
-    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<day{day:02}::Day{day:02}>(args.part, input)?,\r\n${{1}}${{2}}")).to_string();
+    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<day{day:02}::Day{day:02}>(args.part, input, args.test)?,\r\n${{1}}${{2}}")).to_string();
     fs::write(main_rs, main)?;
 
     Ok(())
@@ -119,9 +135,9 @@ fn main() -> Result<()> {
     };
     let input = format!("input/day{:02}.{}", args.day, input_type);
     match args.day {
-        1 => run_day::<day01::Day01>(args.part, input)?,
-        6 => run_day::<day06::Day06>(args.part, input)?,
-        7 => run_day::<day07::Day07>(args.part, input)?,
+        1 => run_day::<day01::Day01>(args.part, input, args.test)?,
+        6 => run_day::<day06::Day06>(args.part, input, args.test)?,
+        7 => run_day::<day07::Day07>(args.part, input, args.test)?,
         // __BOOTSTRAP_RUN__
         _ => bail!("Day {} not found", args.day),
     }

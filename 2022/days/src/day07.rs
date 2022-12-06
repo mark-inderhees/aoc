@@ -3,13 +3,13 @@ use anyhow::Result;
 use crate::puzzle::Puzzle;
 
 #[derive(Debug)]
-pub struct Day07 {
-
-}
+pub struct Day07 {}
 
 impl Puzzle for Day07 {
+    #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
-        let mut day = Day07 { };
+        #[allow(unused_mut)]
+        let mut day = Day07 {};
 
         Ok(day)
     }
@@ -18,7 +18,21 @@ impl Puzzle for Day07 {
         Ok("to do".to_string())
     }
 
+    fn answer_part1(&mut self, test: bool) -> Option<String> {
+        match test {
+            true => None,
+            false => None,
+        }
+    }
+
     fn solve_part2(&mut self) -> Result<String> {
         Ok("to do".to_string())
+    }
+
+    fn answer_part2(&mut self, test: bool) -> Option<String> {
+        match test {
+            true => None,
+            false => None,
+        }
     }
 }
