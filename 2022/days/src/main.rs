@@ -5,6 +5,7 @@ use regex::Regex;
 use std::fs;
 
 mod day01;
+mod day02;
 mod day06;
 mod day07;
 // __BOOTSTRAP_MOD__
@@ -112,7 +113,7 @@ fn bootstrap(day: u32) -> Result<()> {
     main = re_day.replace(&main, format!("{day}${{1}}")).to_string();
     main = re_part.replace(&main, "1${1}").to_string();
     main = re_test.replace(&main, "true${1}").to_string();
-    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<day{day:02}::Day{day:02}>(args.part, input, args.test)?,\r\n${{1}}${{2}}")).to_string();
+    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<day{day:02}::Day{day:02}>(part, input, test)?,\r\n${{1}}${{2}}")).to_string();
     fs::write(main_rs, main)?;
 
     Ok(())
@@ -155,6 +156,7 @@ fn main() -> Result<()> {
 
         match day {
             1 => run_day::<day01::Day01>(part, input, test)?,
+            2 => run_day::<day02::Day02>(part, input, test)?,
             6 => run_day::<day06::Day06>(part, input, test)?,
             7 => run_day::<day07::Day07>(part, input, test)?,
             // __BOOTSTRAP_RUN__
