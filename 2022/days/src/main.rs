@@ -6,6 +6,8 @@ use std::fs;
 
 mod day01;
 mod day06;
+mod day07;
+// __BOOTSTRAP_MOD__
 mod puzzle;
 
 /// Runner for Advent of Code
@@ -15,7 +17,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 6, // __BOOTSTRAP_DAY__
+        default_value_t = 7, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -23,7 +25,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 2, // __BOOTSTRAP_PART__
+        default_value_t = 1, // __BOOTSTRAP_PART__
     )]
     part: u32,
 
@@ -79,10 +81,14 @@ fn bootstrap(day: u32) -> Result<()> {
     // Reset values in main.rs
     let main_rs = "src/main.rs";
     let mut main = fs::read_to_string(main_rs)?;
+    let re_mod = Regex::new(r"(// __BOOTSTRAP_MOD__)")?;
     let re_day = Regex::new(r"\d+(, // __BOOTSTRAP_DAY__)")?;
     let re_part = Regex::new(r"\d+(, // __BOOTSTRAP_PART__)")?;
     let re_test = Regex::new(r"false(, // __BOOTSTRAP_TEST__)")?;
     let re_run = Regex::new(r"( +)(// __BOOTSTRAP_RUN__)")?;
+    main = re_mod
+        .replace(&main, format!("mod day{day:02};\r\n${{1}}"))
+        .to_string();
     main = re_day.replace(&main, format!("{day}${{1}}")).to_string();
     main = re_part.replace(&main, "1${1}").to_string();
     main = re_test.replace(&main, "true${1}").to_string();
@@ -115,6 +121,7 @@ fn main() -> Result<()> {
     match args.day {
         1 => run_day::<day01::Day01>(args.part, input)?,
         6 => run_day::<day06::Day06>(args.part, input)?,
+        7 => run_day::<day07::Day07>(args.part, input)?,
         // __BOOTSTRAP_RUN__
         _ => bail!("Day {} not found", args.day),
     }
