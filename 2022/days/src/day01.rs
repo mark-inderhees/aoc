@@ -12,7 +12,7 @@ impl Puzzle for Day01 {
         let mut day = Day01 { elves: vec![] };
 
         for elf in input.split("\r\n\r\n") {
-            let calories:u32 = elf.lines().map(|calorie| calorie.parse::<u32>().expect("")).sum();
+            let calories:u32 = elf.lines().map(|calorie| calorie.parse::<u32>().expect("Parse error")).sum();
             day.elves.push(calories);
         }
 
@@ -20,7 +20,7 @@ impl Puzzle for Day01 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        Ok(self.elves.iter().max().expect("err").to_string())
+        Ok(self.elves.iter().max().expect("Max error").to_string())
     }
 
     fn solve_part2(&mut self) -> Result<String> {
