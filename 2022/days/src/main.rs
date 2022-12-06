@@ -11,19 +11,33 @@ mod puzzle;
 #[derive(Parser, Debug)]
 struct Args {
     /// Which day's code to run
-    #[arg(long, default_value_t = 6)]
+    #[arg(
+        long,
+        short,
+        default_value_t = 6, // __BOOTSTRAP_DAY__
+    )]
     day: u32,
 
     /// Which part of the day's code to run
-    #[arg(long, default_value_t = 2)]
+    #[arg(
+        long,
+        short,
+        default_value_t = 2, // __BOOTSTRAP_PART__
+    )]
     part: u32,
 
     /// Run test data instead of input
-    #[arg(long, default_value_t = false)]
+    #[arg(
+        long,
+        short,
+        value_name = "BOOL",
+        action = clap::ArgAction::Set,
+        default_value_t = true, // __BOOTSTRAP_TEST__
+    )]
     test: bool,
 
     /// Bootstrap a new day
-    #[arg(long)]
+    #[arg(long, short, value_name = "DAY")]
     bootstrap: Option<u32>,
 }
 
