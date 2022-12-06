@@ -1,69 +1,106 @@
 use anyhow::Result;
-use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
 
 #[derive(Debug)]
 pub struct Day02 {
-    matches: Vec<(String, String)>,
-    matches2: Vec<(String, String)>,
+    matches: Vec<(ItemType, ItemType)>,
+    matches2: Vec<(ItemType, ItemType)>,
 }
 
-fn get_type_value(item: &String) -> u32 {
-    match item.as_ref() {
-        "rock" => 1,
-        "paper" => 2,
-        "scissors" => 3,
-        _ => 0,
+#[derive(Debug, Copy, Clone)]
+enum ItemType {
+    Rock,
+    Paper,
+    Scissors,
+}
+
+#[derive(Debug, Copy, Clone)]
+enum ResultType {
+    Loss,
+    Tie,
+    Win,
+}
+
+fn get_type_value(item: &ItemType) -> u32 {
+    match item {
+        ItemType::Rock => 1,
+        ItemType::Paper => 2,
+        ItemType::Scissors => 3,
     }
 }
 
-fn get_result_value(result: &String) -> u32 {
-    match result.as_ref() {
-        "loss" => 0,
-        "tie" => 3,
-        "win" => 6,
-        _ => 0,
+fn get_result_value(result: ResultType) -> u32 {
+    match result {
+        ResultType::Loss => 0,
+        ResultType::Tie => 3,
+        ResultType::Win => 6,
     }
 }
 
-fn get_result(them: &String, me: &String) -> String {
-    match (me.as_ref(), them.as_ref()) {
-        ("rock", "rock") => "tie".to_string(),
-        ("rock", "paper") => "loss".to_string(),
-        ("rock", "scissors") => "win".to_string(),
-        ("paper", "rock") => "win".to_string(),
-        ("paper", "paper") => "tie".to_string(),
-        ("paper", "scissors") => "loss".to_string(),
-        ("scissors", "rock") => "loss".to_string(),
-        ("scissors", "paper") => "win".to_string(),
-        ("scissors", "scissors") => "tie".to_string(),
-        _ => "ERROR!!!!".to_string(),
+fn get_result(them: &ItemType, me: &ItemType) -> ResultType {
+    match (me, them) {
+        (ItemType::Rock, ItemType::Rock) => ResultType::Tie,
+        (ItemType::Rock, ItemType::Paper) => ResultType::Loss,
+        (ItemType::Rock, ItemType::Scissors) => ResultType::Win,
+        (ItemType::Paper, ItemType::Rock) => ResultType::Win,
+        (ItemType::Paper, ItemType::Paper) => ResultType::Tie,
+        (ItemType::Paper, ItemType::Scissors) => ResultType::Loss,
+        (ItemType::Scissors, ItemType::Rock) => ResultType::Loss,
+        (ItemType::Scissors, ItemType::Paper) => ResultType::Win,
+        (ItemType::Scissors, ItemType::Scissors) => ResultType::Tie,
     }
 }
 
-fn get_my_type(them: &String, result: &String) -> String {
-    match (them.as_ref(), result.as_ref()) {
-        ("rock", "loss") => "scissors".to_string(),
-        ("rock", "tie") => "rock".to_string(),
-        ("rock", "win") => "paper".to_string(),
-        ("paper", "loss") => "rock".to_string(),
-        ("paper", "tie") => "paper".to_string(),
-        ("paper", "win") => "scissors".to_string(),
-        ("scissors", "loss") => "paper".to_string(),
-        ("scissors", "tie") => "scissors".to_string(),
-        ("scissors", "win") => "rock".to_string(),
-        _ => "ERRROROROROR".to_string(),
+fn get_my_type_from_result(them: ItemType, result: ResultType) -> ItemType {
+    match (them, result) {
+        (ItemType::Rock, ResultType::Loss) => ItemType::Scissors,
+        (ItemType::Rock, ResultType::Tie) => ItemType::Rock,
+        (ItemType::Rock, ResultType::Win) => ItemType::Paper,
+        (ItemType::Paper, ResultType::Loss) => ItemType::Rock,
+        (ItemType::Paper, ResultType::Tie) => ItemType::Paper,
+        (ItemType::Paper, ResultType::Win) => ItemType::Scissors,
+        (ItemType::Scissors, ResultType::Loss) => ItemType::Paper,
+        (ItemType::Scissors, ResultType::Tie) => ItemType::Scissors,
+        (ItemType::Scissors, ResultType::Win) => ItemType::Rock,
     }
 }
 
-fn get_input_result(input: char) -> String {
+fn get_input_result(input: char) -> ResultType {
     match input {
-        'X' => "loss".to_string(),
-        'Y' => "tie".to_string(),
-        'Z' => "win".to_string(),
-        _ => "EROEOREROE".to_string(),
+        'X' => ResultType::Loss,
+        'Y' => ResultType::Tie,
+        'Z' => ResultType::Win,
+        _ => panic!("Invalid request to get result type"),
     }
+}
+
+fn get_their_type(input: char) -> ItemType {
+    match input {
+        'A' => ItemType::Rock,
+        'B' => ItemType::Paper,
+        'C' => ItemType::Scissors,
+        _ => panic!("Invalid input for their type"),
+    }
+}
+
+fn get_my_type(input: char) -> ItemType {
+    match input {
+        'X' => ItemType::Rock,
+        'Y' => ItemType::Paper,
+        'Z' => ItemType::Scissors,
+        _ => panic!("Invalid input for my type"),
+    }
+}
+
+fn sum_matches(matches: &Vec<(ItemType, ItemType)>) -> u32 {
+    let mut sum = 0;
+    for (them, me) in matches.iter() {
+        sum += get_type_value(me);
+        let result = get_result(them, me);
+        sum += get_result_value(result);
+    }
+    sum
 }
 
 impl Puzzle for Day02 {
@@ -75,41 +112,25 @@ impl Puzzle for Day02 {
             matches2: vec![],
         };
 
-        let them_to_type = HashMap::from([
-            ('A', "rock".to_string()),
-            ('B', "paper".to_string()),
-            ('C', "scissors".to_string()),
-        ]);
-        let me_to_type = HashMap::from([
-            ('X', "rock".to_string()),
-            ('Y', "paper".to_string()),
-            ('Z', "scissors".to_string()),
-        ]);
-
         for line in input.lines() {
             let them = line.chars().next().unwrap();
             let me = line.chars().last().unwrap();
 
-            let them_type = them_to_type[&them].clone();
+            let them_type = get_their_type(them);
+            let my_type = get_my_type(me);
 
-            day.matches
-                .push((them_type.clone(), me_to_type[&me].clone()));
+            day.matches.push((them_type, my_type));
 
             let result = get_input_result(me);
             day.matches2
-                .push((them_type.clone(), get_my_type(&them_type, &result)));
+                .push((them_type, get_my_type_from_result(them_type, result)));
         }
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let mut sum = 0;
-        for (them, me) in self.matches.iter() {
-            sum += get_type_value(&me);
-            let result = get_result(&them, &me);
-            sum += get_result_value(&result)
-        }
+        let sum = sum_matches(&self.matches);
         Ok(sum.to_string())
     }
 
@@ -121,12 +142,7 @@ impl Puzzle for Day02 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let mut sum = 0;
-        for (them, me) in self.matches2.iter() {
-            sum += get_type_value(&me);
-            let result = get_result(&them, &me);
-            sum += get_result_value(&result)
-        }
+        let sum = sum_matches(&self.matches2);
         Ok(sum.to_string())
     }
 
