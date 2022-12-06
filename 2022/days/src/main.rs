@@ -19,7 +19,7 @@ struct Args {
     part: u32,
 
     /// Run test data instead of input
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = false)]
     test: bool,
 
     /// Bootstrap a new day
