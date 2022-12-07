@@ -1,17 +1,19 @@
 use anyhow::Result;
-use std::{collections::HashMap, vec, mem::needs_drop};
+use std::{collections::HashMap, path::PathBuf};
 
 use crate::puzzle::Puzzle;
 
 pub struct Day07 {
-    folders: HashMap<String, Folder>,
+    folders: HashMap<PathBuf, Folder>,
 }
 
+#[allow(dead_code)]
 struct File {
     size: u32,
     name: String,
 }
 
+#[allow(dead_code)]
 struct Folder {
     size: u32,
     name: String,
@@ -31,17 +33,8 @@ fn get_command_type(line: &str) -> CommandType {
         "$ cd /" => CommandType::CdRoot,
         "$ cd .." => CommandType::CdBack,
         "$ ls" => CommandType::Ls,
-        _ => CommandType::CdDir(line.split(" ").last().expect("").to_string()),
+        _ => CommandType::CdDir(line.split(" ").last().unwrap().to_string()),
     }
-}
-
-fn get_folder(dirs: Vec<Box<Folder>>, name: &str) -> Result<Box<Folder>> {
-    for folder in dirs {
-        if folder.name == name {
-            return Ok(folder);
-        }
-    }
-    panic!("Did not find folder");
 }
 
 impl Puzzle for Day07 {
@@ -50,33 +43,33 @@ impl Puzzle for Day07 {
         #[allow(unused_mut)]
         let mut day = Day07 {
             folders: HashMap::from([(
-                "".to_string(),
+                PathBuf::from("/"),
                 Folder {
                     size: 0,
-                    name: "".to_string(),
+                    name: "/".to_string(),
                     files: vec![],
                     dirs: vec![],
                 },
             )]),
         };
 
-        let mut current = "".to_string();
+        let mut current = PathBuf::from("/");
 
         for line in input.lines() {
             if line.starts_with("$") {
                 let command = get_command_type(line);
                 match command {
-                    CommandType::CdRoot => current = "".to_string(),
-                    CommandType::CdDir(name) => current += format!("/{}", name).as_ref(),
+                    CommandType::CdRoot => current = PathBuf::from("/"),
+                    CommandType::CdDir(name) => current.push(name),
                     CommandType::CdBack => {
-                        current = current[..current.rfind("/").expect("")].to_string()
+                        current.pop();
                     }
                     CommandType::Ls => (),
                 }
             } else if line.starts_with("dir") {
-                let name = line.split(" ").last().expect(" ");
+                let name = line.split(" ").last().unwrap();
                 day.folders.insert(
-                    format!("{}/{}", current, name),
+                    current.join(name),
                     Folder {
                         size: 0,
                         name: name.to_string(),
@@ -84,7 +77,11 @@ impl Puzzle for Day07 {
                         dirs: vec![],
                     },
                 );
-                day.folders.get_mut(&current).unwrap().dirs.push(name.to_string());
+                day.folders
+                    .get_mut(&current)
+                    .unwrap()
+                    .dirs
+                    .push(name.to_string());
             } else {
                 // File
                 let mut line2 = line.split(" ");
@@ -96,17 +93,17 @@ impl Puzzle for Day07 {
             }
         }
 
-        let mut keys: Vec<String> = vec![];
+        let mut keys: Vec<PathBuf> = vec![];
         for key in day.folders.keys() {
-            keys.push(key.to_string());
+            keys.push(key.to_path_buf());
         }
-        keys.sort_by(|a, b| a.matches("/").count().cmp(&b.matches("/").count()));
+        keys.sort_by(|a, b| a.components().count().cmp(&b.components().count()));
         keys.reverse();
         for key in &keys {
             let folder = &day.folders[key];
             let dirs = day.folders[key].dirs.clone();
             for subdir in dirs {
-                let subdir_name = format!("{}/{}",key, subdir);
+                let subdir_name = key.join(subdir);
                 let size = day.folders[&subdir_name].size;
                 day.folders.get_mut(key).unwrap().size += size;
             }
@@ -134,10 +131,10 @@ impl Puzzle for Day07 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let available = 70000000 - self.folders[""].size;
+        let available = 70000000 - self.folders[&PathBuf::from("/")].size;
         let needed = 30000000 - available;
-        let mut folders = self.folders.iter().collect::<Vec<(&String, &Folder)>>();
-        folders.sort_by(|a,b| a.1.size.cmp(&b.1.size));
+        let mut folders = self.folders.iter().collect::<Vec<(&PathBuf, &Folder)>>();
+        folders.sort_by(|a, b| a.1.size.cmp(&b.1.size));
         let mut value = 0;
         for (_, folder) in folders {
             if folder.size > needed {
