@@ -33,7 +33,7 @@ fn get_input_result(input: char) -> ResultType {
     }
 }
 
-fn get_their_type(input: char) -> ItemType {
+fn get_input_their_type(input: char) -> ItemType {
     match input {
         'A' => ItemType::Rock,
         'B' => ItemType::Paper,
@@ -42,7 +42,7 @@ fn get_their_type(input: char) -> ItemType {
     }
 }
 
-fn get_my_type(input: char) -> ItemType {
+fn get_input_my_type(input: char) -> ItemType {
     match input {
         'X' => ItemType::Rock,
         'Y' => ItemType::Paper,
@@ -74,8 +74,8 @@ impl Puzzle for Day02 {
             let them = line.chars().next().unwrap();
             let me = line.chars().last().unwrap();
 
-            let them_type = get_their_type(them);
-            let my_type = get_my_type(me);
+            let them_type = get_input_their_type(them);
+            let my_type = get_input_my_type(me);
 
             day.matches.push((them_type, my_type));
 
