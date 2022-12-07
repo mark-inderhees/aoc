@@ -11,6 +11,7 @@ mod day06;
 mod day07;
 // __BOOTSTRAP_MOD__
 mod puzzle;
+mod utils;
 mod rock_paper_scissors;
 
 /// Runner for Advent of Code
