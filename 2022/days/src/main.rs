@@ -16,6 +16,7 @@ mod day08;
 mod puzzle;
 mod utils;
 mod rock_paper_scissors;
+mod file_system;
 
 /// Runner for Advent of Code
 #[derive(Parser, Debug)]
