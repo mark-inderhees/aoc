@@ -16,7 +16,7 @@ fn get_type_value(item: &ItemType) -> u32 {
     }
 }
 
-fn get_result_value(result: ResultType) -> u32 {
+fn get_result_value(result: &ResultType) -> u32 {
     match result {
         ResultType::Loss => 0,
         ResultType::Tie => 3,
@@ -24,7 +24,7 @@ fn get_result_value(result: ResultType) -> u32 {
     }
 }
 
-fn get_input_result(input: char) -> ResultType {
+fn get_input_result(input: &char) -> ResultType {
     match input {
         'X' => ResultType::Loss,
         'Y' => ResultType::Tie,
@@ -33,7 +33,7 @@ fn get_input_result(input: char) -> ResultType {
     }
 }
 
-fn get_input_their_type(input: char) -> ItemType {
+fn get_input_their_type(input: &char) -> ItemType {
     match input {
         'A' => ItemType::Rock,
         'B' => ItemType::Paper,
@@ -42,7 +42,7 @@ fn get_input_their_type(input: char) -> ItemType {
     }
 }
 
-fn get_input_my_type(input: char) -> ItemType {
+fn get_input_my_type(input: &char) -> ItemType {
     match input {
         'X' => ItemType::Rock,
         'Y' => ItemType::Paper,
@@ -56,7 +56,7 @@ fn sum_matches(matches: &Vec<(ItemType, ItemType)>) -> u32 {
     for (them, me) in matches.iter() {
         sum += get_type_value(me);
         let result = get_result(me, them);
-        sum += get_result_value(result);
+        sum += get_result_value(&result);
     }
     sum
 }
@@ -71,17 +71,17 @@ impl Puzzle for Day02 {
         };
 
         for line in input.lines() {
-            let them = line.chars().next().unwrap();
-            let me = line.chars().last().unwrap();
+            let value1 = line.chars().next().unwrap();
+            let value2 = line.chars().last().unwrap();
 
-            let them_type = get_input_their_type(them);
-            let my_type = get_input_my_type(me);
-
+            let them_type = get_input_their_type(&value1);
+            let my_type = get_input_my_type(&value2);
             day.matches.push((them_type, my_type));
 
-            let result = get_input_result(me);
-            day.matches2
-                .push((them_type, get_type_from_result(them_type, result)));
+            let them_type2 = get_input_their_type(&value1);
+            let result = get_input_result(&value2);
+            let my_type2 = get_type_from_result(&them_type2, &result);
+            day.matches2.push((them_type2, my_type2));
         }
 
         Ok(day)

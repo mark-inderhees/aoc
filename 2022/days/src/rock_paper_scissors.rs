@@ -1,11 +1,9 @@
-#[derive(Copy, Clone)]
 pub enum ItemType {
     Rock,
     Paper,
     Scissors,
 }
 
-#[derive(Copy, Clone)]
 pub enum ResultType {
     Loss,
     Tie,
@@ -26,7 +24,7 @@ pub fn get_result(me: &ItemType, them: &ItemType) -> ResultType {
     }
 }
 
-pub fn get_type_from_result(player1: ItemType, result: ResultType) -> ItemType {
+pub fn get_type_from_result(player1: &ItemType, result: &ResultType) -> ItemType {
     match (player1, result) {
         (ItemType::Rock, ResultType::Loss) => ItemType::Scissors,
         (ItemType::Rock, ResultType::Tie) => ItemType::Rock,
