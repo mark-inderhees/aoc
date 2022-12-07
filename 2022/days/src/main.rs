@@ -7,6 +7,7 @@ use std::fs;
 mod day01;
 mod day02;
 mod day03;
+mod day04;
 mod day06;
 mod day07;
 // __BOOTSTRAP_MOD__
@@ -161,6 +162,7 @@ fn main() -> Result<()> {
             1 => run_day::<day01::Day01>(part, input, test)?,
             2 => run_day::<day02::Day02>(part, input, test)?,
             3 => run_day::<day03::Day03>(part, input, test)?,
+            4 => run_day::<day04::Day04>(part, input, test)?,
             6 => run_day::<day06::Day06>(part, input, test)?,
             7 => run_day::<day07::Day07>(part, input, test)?,
             // __BOOTSTRAP_RUN__
