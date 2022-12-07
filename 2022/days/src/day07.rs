@@ -37,11 +37,9 @@ impl Puzzle for Day07 {
                 // Command
                 let command = get_command_type(line);
                 match command {
-                    CommandType::CdRoot => day.file_system.pwd = PathBuf::from("/"),
-                    CommandType::CdDir(name) => day.file_system.pwd.push(name),
-                    CommandType::CdBack => {
-                        day.file_system.pwd.pop();
-                    }
+                    CommandType::CdRoot => day.file_system.change_directory_to_root(),
+                    CommandType::CdDir(name) => day.file_system.change_directory(&name),
+                    CommandType::CdBack => day.file_system.change_directory_parent(),
                     CommandType::Ls => (),
                 }
             } else if line.starts_with("dir") {

@@ -15,7 +15,7 @@ pub struct Folder {
 
 pub struct FileSystem {
     pub folders: HashMap<PathBuf, Folder>,
-    pub pwd: PathBuf,
+    pwd: PathBuf,
 }
 
 impl FileSystem {
@@ -34,6 +34,18 @@ impl FileSystem {
             // Set present working directory as root
             pwd: PathBuf::from("/"),
         }
+    }
+
+    pub fn change_directory_to_root(&mut self) {
+        self.pwd = PathBuf::from("/");
+    }
+
+    pub fn change_directory(&mut self, name: &str) {
+        self.pwd.push(name);
+    }
+
+    pub fn change_directory_parent(&mut self) {
+        self.pwd.pop();
     }
 
     pub fn add_file(&mut self, name: &str, size: u32) {
