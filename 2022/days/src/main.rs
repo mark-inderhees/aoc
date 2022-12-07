@@ -8,6 +8,7 @@ mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 mod day06;
 mod day07;
 // __BOOTSTRAP_MOD__
@@ -22,7 +23,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 7, // __BOOTSTRAP_DAY__
+        default_value_t = 5, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -163,6 +164,7 @@ fn main() -> Result<()> {
             2 => run_day::<day02::Day02>(part, input, test)?,
             3 => run_day::<day03::Day03>(part, input, test)?,
             4 => run_day::<day04::Day04>(part, input, test)?,
+            5 => run_day::<day05::Day05>(part, input, test)?,
             6 => run_day::<day06::Day06>(part, input, test)?,
             7 => run_day::<day07::Day07>(part, input, test)?,
             // __BOOTSTRAP_RUN__
