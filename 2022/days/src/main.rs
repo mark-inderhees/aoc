@@ -10,6 +10,7 @@ mod day06;
 mod day07;
 // __BOOTSTRAP_MOD__
 mod puzzle;
+mod rock_paper_scissors;
 
 /// Runner for Advent of Code
 #[derive(Parser, Debug)]

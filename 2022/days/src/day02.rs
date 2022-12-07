@@ -1,25 +1,12 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
+use crate::rock_paper_scissors::*;
 
 #[derive(Debug)]
 pub struct Day02 {
     matches: Vec<(ItemType, ItemType)>,
     matches2: Vec<(ItemType, ItemType)>,
-}
-
-#[derive(Debug, Copy, Clone)]
-enum ItemType {
-    Rock,
-    Paper,
-    Scissors,
-}
-
-#[derive(Debug, Copy, Clone)]
-enum ResultType {
-    Loss,
-    Tie,
-    Win,
 }
 
 fn get_type_value(item: &ItemType) -> u32 {
@@ -35,34 +22,6 @@ fn get_result_value(result: ResultType) -> u32 {
         ResultType::Loss => 0,
         ResultType::Tie => 3,
         ResultType::Win => 6,
-    }
-}
-
-fn get_result(them: &ItemType, me: &ItemType) -> ResultType {
-    match (me, them) {
-        (ItemType::Rock, ItemType::Rock) => ResultType::Tie,
-        (ItemType::Rock, ItemType::Paper) => ResultType::Loss,
-        (ItemType::Rock, ItemType::Scissors) => ResultType::Win,
-        (ItemType::Paper, ItemType::Rock) => ResultType::Win,
-        (ItemType::Paper, ItemType::Paper) => ResultType::Tie,
-        (ItemType::Paper, ItemType::Scissors) => ResultType::Loss,
-        (ItemType::Scissors, ItemType::Rock) => ResultType::Loss,
-        (ItemType::Scissors, ItemType::Paper) => ResultType::Win,
-        (ItemType::Scissors, ItemType::Scissors) => ResultType::Tie,
-    }
-}
-
-fn get_my_type_from_result(them: ItemType, result: ResultType) -> ItemType {
-    match (them, result) {
-        (ItemType::Rock, ResultType::Loss) => ItemType::Scissors,
-        (ItemType::Rock, ResultType::Tie) => ItemType::Rock,
-        (ItemType::Rock, ResultType::Win) => ItemType::Paper,
-        (ItemType::Paper, ResultType::Loss) => ItemType::Rock,
-        (ItemType::Paper, ResultType::Tie) => ItemType::Paper,
-        (ItemType::Paper, ResultType::Win) => ItemType::Scissors,
-        (ItemType::Scissors, ResultType::Loss) => ItemType::Paper,
-        (ItemType::Scissors, ResultType::Tie) => ItemType::Scissors,
-        (ItemType::Scissors, ResultType::Win) => ItemType::Rock,
     }
 }
 
@@ -97,7 +56,7 @@ fn sum_matches(matches: &Vec<(ItemType, ItemType)>) -> u32 {
     let mut sum = 0;
     for (them, me) in matches.iter() {
         sum += get_type_value(me);
-        let result = get_result(them, me);
+        let result = get_result(me, them);
         sum += get_result_value(result);
     }
     sum
@@ -123,7 +82,7 @@ impl Puzzle for Day02 {
 
             let result = get_input_result(me);
             day.matches2
-                .push((them_type, get_my_type_from_result(them_type, result)));
+                .push((them_type, get_type_from_result(them_type, result)));
         }
 
         Ok(day)
