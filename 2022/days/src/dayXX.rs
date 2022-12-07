@@ -2,7 +2,6 @@ use anyhow::Result;
 
 use crate::puzzle::Puzzle;
 
-#[derive(Debug)]
 pub struct DayXX {}
 
 impl Puzzle for DayXX {

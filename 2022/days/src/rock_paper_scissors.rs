@@ -1,11 +1,11 @@
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub enum ItemType {
     Rock,
     Paper,
     Scissors,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub enum ResultType {
     Loss,
     Tie,

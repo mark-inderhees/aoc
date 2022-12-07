@@ -3,7 +3,6 @@ use anyhow::Result;
 use crate::puzzle::Puzzle;
 use crate::rock_paper_scissors::*;
 
-#[derive(Debug)]
 pub struct Day02 {
     matches: Vec<(ItemType, ItemType)>,
     matches2: Vec<(ItemType, ItemType)>,
