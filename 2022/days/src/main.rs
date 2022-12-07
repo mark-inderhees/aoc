@@ -11,6 +11,7 @@ mod day04;
 mod day05;
 mod day06;
 mod day07;
+mod day08;
 // __BOOTSTRAP_MOD__
 mod puzzle;
 mod utils;
@@ -23,7 +24,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 5, // __BOOTSTRAP_DAY__
+        default_value_t = 8, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -167,6 +168,7 @@ fn main() -> Result<()> {
             5 => run_day::<day05::Day05>(part, input, test)?,
             6 => run_day::<day06::Day06>(part, input, test)?,
             7 => run_day::<day07::Day07>(part, input, test)?,
+            8 => run_day::<day08::Day08>(part, input, test)?,
             // __BOOTSTRAP_RUN__
             _ => bail!("Day {} not found", day),
         }
