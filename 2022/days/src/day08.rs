@@ -1,5 +1,4 @@
 use anyhow::Result;
-use strum::IntoEnumIterator; // TODO move this into board.rs
 
 use crate::board::*;
 use crate::puzzle::Puzzle;
@@ -37,7 +36,7 @@ impl Puzzle for Day08 {
         let mut count = self.board.width() * 2 + self.board.height() * 2 - 4;
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
-                for direction in Direction::iter() {
+                for direction in Direction::iterator() {
                     self.board.set_location(x, y);
                     let height = self.board.get_current_value().clone();
                     let mut heights = vec![];
@@ -75,7 +74,7 @@ impl Puzzle for Day08 {
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 let mut scores = vec![];
-                for direction in Direction::iter() {
+                for direction in Direction::iterator() {
                     scores.push(0);
                     self.board.set_location(x, y);
                     let height = self.board.get_current_value().clone();

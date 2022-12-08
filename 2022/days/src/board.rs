@@ -1,4 +1,5 @@
 use grid::*;
+use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 #[derive(Debug, Clone, Copy)]
@@ -19,6 +20,12 @@ pub enum Direction {
     Down,
     Left,
     Right,
+}
+
+impl Direction {
+    pub fn iterator() -> DirectionIter {
+        Direction::iter()
+    }
 }
 
 impl<T> Board<T> {
