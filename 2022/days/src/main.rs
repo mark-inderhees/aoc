@@ -13,6 +13,7 @@ mod day06;
 mod day07;
 mod day08;
 // __BOOTSTRAP_MOD__
+mod board;
 mod file_system;
 mod puzzle;
 mod rock_paper_scissors;
