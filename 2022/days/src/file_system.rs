@@ -1,19 +1,20 @@
 use std::{collections::HashMap, path::PathBuf};
 
 pub struct File {
-    pub size: u32,
     pub name: String,
+    pub size: u32,
 }
 
 pub struct Directory {
-    pub size: u32,
     pub name: String,
-    files: Vec<File>,
+    pub size: u32,
     directories: Vec<String>,
+    files: Vec<File>,
 }
 
 pub struct FileSystem {
-    pub directories: HashMap<PathBuf, Directory>,
+    directories: HashMap<PathBuf, Directory>,
+    files: HashMap<PathBuf, File>,
     pwd: PathBuf,
 }
 
@@ -24,12 +25,13 @@ impl FileSystem {
             directories: HashMap::from([(
                 PathBuf::from("/"),
                 Directory {
-                    size: 0,
                     name: "/".to_string(),
-                    files: vec![],
+                    size: 0,
                     directories: vec![],
+                    files: vec![],
                 },
             )]),
+            files: HashMap::from([]),
             // Set present working directory as root
             pwd: PathBuf::from("/"),
         }
@@ -51,9 +53,18 @@ impl FileSystem {
         // Add file in the list of files for this directory
         let directory = self.directories.get_mut(&self.pwd).unwrap();
         directory.files.push(File {
-            size,
             name: name.to_string(),
+            size,
         });
+
+        // Add a new file into the file system
+        self.files.insert(
+            self.pwd.join(name),
+            File {
+                name: name.to_string(),
+                size: 0,
+            },
+        );
 
         // Increase the size of directories in this tree
         for ancestor in self.pwd.ancestors() {
@@ -73,10 +84,10 @@ impl FileSystem {
         self.directories.insert(
             self.pwd.join(name),
             Directory {
-                size: 0,
                 name: name.to_string(),
-                files: vec![],
+                size: 0,
                 directories: vec![],
+                files: vec![],
             },
         );
     }
