@@ -1,16 +1,15 @@
 use std::{collections::HashMap, path::PathBuf};
 
-#[allow(dead_code)]
-struct File {
-    size: u32,
-    name: String,
+pub struct File {
+    pub size: u32,
+    pub name: String,
 }
 
 pub struct Folder {
     pub size: u32,
     pub name: String,
     files: Vec<File>,
-    pub dirs: Vec<String>,
+    directories: Vec<String>,
 }
 
 pub struct FileSystem {
@@ -28,7 +27,7 @@ impl FileSystem {
                     size: 0,
                     name: "/".to_string(),
                     files: vec![],
-                    dirs: vec![],
+                    directories: vec![],
                 },
             )]),
             // Set present working directory as root
@@ -56,8 +55,10 @@ impl FileSystem {
             name: name.to_string(),
         });
 
-        // Increase the size of this folder
-        folder.size += size;
+        // Increase the size of folders in this tree
+        for ancestor in self.pwd.ancestors() {
+            self.folders.get_mut(ancestor).unwrap().size += size;
+        }
     }
 
     pub fn add_directory(&mut self, name: &str) {
@@ -65,7 +66,7 @@ impl FileSystem {
         self.folders
             .get_mut(&self.pwd)
             .unwrap()
-            .dirs
+            .directories
             .push(name.to_string());
 
         // Add a new folder into the file system
@@ -75,8 +76,16 @@ impl FileSystem {
                 size: 0,
                 name: name.to_string(),
                 files: vec![],
-                dirs: vec![],
+                directories: vec![],
             },
         );
+    }
+
+    pub fn iter_directories(&self) -> std::collections::hash_map::Values<'_, PathBuf, Folder> {
+        self.folders.values()
+    }
+
+    pub fn get_size(&self, path: &PathBuf) -> u32 {
+        self.folders[path].size
     }
 }
