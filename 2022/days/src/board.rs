@@ -41,6 +41,12 @@ impl<T> Board<T> {
         self.grid.size().1.try_into().unwrap()
     }
 
+    pub fn set_at(&mut self, x: i32, y: i32, value: T) {
+        let x_: usize = x.try_into().unwrap();
+        let y_: usize = y.try_into().unwrap();
+        self.grid[y_][x_] = value;
+    }
+
     pub fn set_location(&mut self, x: i32, y: i32) {
         self.location.x = x;
         self.location.y = y;

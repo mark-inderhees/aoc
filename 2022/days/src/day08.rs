@@ -1,8 +1,8 @@
 use anyhow::Result;
 use strum::IntoEnumIterator; // TODO move this into board.rs
 
-use crate::puzzle::Puzzle;
 use crate::board::*;
+use crate::puzzle::Puzzle;
 
 pub struct Day08 {
     board: Board<u32>,
@@ -57,17 +57,13 @@ impl Puzzle for Day08 {
                     // log::debug!("At {x},{y} going {direction:?}: {height} vs {height_max} = {visible}, {heights:?}");
                     if visible {
                         count += 1;
-                        let x_: usize = x.try_into().unwrap();
-                        let y_: usize = y.try_into().unwrap();
-                        self.visible.grid[y_][x_] = 'v';
+                        self.visible.set_at(x, y, 'v');
                         break;
                     }
                 }
                 let mega_score = scores.iter().fold(1, |a, x| a * x);
                 log::debug!("At {x},{y} score {scores:?} --> {mega_score}");
-                let x_: usize = x.try_into().unwrap();
-                let y_: usize = y.try_into().unwrap();
-                self.score.grid[y_][x_] = mega_score;
+                self.score.set_at(x, y, mega_score);
             }
         }
 
@@ -109,22 +105,17 @@ impl Puzzle for Day08 {
                     // log::debug!("At {x},{y} going {direction:?}: {height} vs {height_max} = {visible}, {heights:?}");
                     if visible {
                         count += 1;
-                        let x_: usize = x.try_into().unwrap();
-                        let y_: usize = y.try_into().unwrap();
-                        self.visible.grid[y_][x_] = 'v';
+                        self.visible.set_at(x, y, 'v');
                         // break; part 2
                     }
                 }
                 let mega_score = scores.iter().fold(1, |a, x| a * x);
                 log::debug!("At {x},{y} score {scores:?} --> {mega_score}");
-                let x_: usize = x.try_into().unwrap();
-                let y_: usize = y.try_into().unwrap();
-                self.score.grid[y_][x_] = mega_score;
+                self.score.set_at(x, y, mega_score);
             }
         }
 
         log::debug!("Input Grid: {:#?}", self.board.grid);
-        // log::debug!("{:#?}", self.visible.grid);
         log::debug!("{:#?}", self.score.grid);
         log::info!("{count}");
         let part2 = self.score.grid.iter().max().unwrap();
