@@ -5,7 +5,7 @@ pub struct File {
     pub name: String,
 }
 
-pub struct Folder {
+pub struct Directory {
     pub size: u32,
     pub name: String,
     files: Vec<File>,
@@ -13,7 +13,7 @@ pub struct Folder {
 }
 
 pub struct FileSystem {
-    pub folders: HashMap<PathBuf, Folder>,
+    pub directories: HashMap<PathBuf, Directory>,
     pwd: PathBuf,
 }
 
@@ -21,9 +21,9 @@ impl FileSystem {
     pub fn new() -> FileSystem {
         FileSystem {
             // Init a single directory at root
-            folders: HashMap::from([(
+            directories: HashMap::from([(
                 PathBuf::from("/"),
-                Folder {
+                Directory {
                     size: 0,
                     name: "/".to_string(),
                     files: vec![],
@@ -49,30 +49,30 @@ impl FileSystem {
 
     pub fn add_file(&mut self, name: &str, size: u32) {
         // Add file in the list of files for this directory
-        let folder = self.folders.get_mut(&self.pwd).unwrap();
-        folder.files.push(File {
+        let directory = self.directories.get_mut(&self.pwd).unwrap();
+        directory.files.push(File {
             size,
             name: name.to_string(),
         });
 
-        // Increase the size of folders in this tree
+        // Increase the size of directories in this tree
         for ancestor in self.pwd.ancestors() {
-            self.folders.get_mut(ancestor).unwrap().size += size;
+            self.directories.get_mut(ancestor).unwrap().size += size;
         }
     }
 
     pub fn add_directory(&mut self, name: &str) {
         // Add directory name in the list of directories for this directory
-        self.folders
+        self.directories
             .get_mut(&self.pwd)
             .unwrap()
             .directories
             .push(name.to_string());
 
-        // Add a new folder into the file system
-        self.folders.insert(
+        // Add a new directory into the file system
+        self.directories.insert(
             self.pwd.join(name),
-            Folder {
+            Directory {
                 size: 0,
                 name: name.to_string(),
                 files: vec![],
@@ -81,11 +81,11 @@ impl FileSystem {
         );
     }
 
-    pub fn iter_directories(&self) -> std::collections::hash_map::Values<'_, PathBuf, Folder> {
-        self.folders.values()
+    pub fn iter_directories(&self) -> std::collections::hash_map::Values<'_, PathBuf, Directory> {
+        self.directories.values()
     }
 
     pub fn get_size(&self, path: &PathBuf) -> u32 {
-        self.folders[path].size
+        self.directories[path].size
     }
 }

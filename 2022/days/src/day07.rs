@@ -59,9 +59,9 @@ impl Puzzle for Day07 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let mut sum = 0;
-        for folder in self.file_system.iter_directories() {
-            if folder.size <= 100000 {
-                sum += folder.size
+        for directory in self.file_system.iter_directories() {
+            if directory.size <= 100000 {
+                sum += directory.size
             }
         }
         Ok(sum.to_string())
@@ -77,15 +77,15 @@ impl Puzzle for Day07 {
     fn solve_part2(&mut self) -> Result<String> {
         let available = 70000000 - self.file_system.get_size(&PathBuf::from("/"));
         let needed = 30000000 - available;
-        let mut folders = self
+        let mut directories = self
             .file_system
             .iter_directories()
-            .collect::<Vec<&Folder>>();
-        folders.sort_by(|a, b| a.size.cmp(&b.size));
+            .collect::<Vec<&Directory>>();
+        directories.sort_by(|a, b| a.size.cmp(&b.size));
         let mut value = 0;
-        for folder in folders {
-            if folder.size > needed {
-                value = folder.size;
+        for directory in directories {
+            if directory.size > needed {
+                value = directory.size;
                 break;
             }
         }
