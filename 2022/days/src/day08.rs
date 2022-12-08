@@ -8,6 +8,7 @@ use crate::puzzle::Puzzle;
 pub struct Day08 {
     board: Board<u32>,
     visible: Board<char>,
+    score: Board<u32>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -86,6 +87,7 @@ impl Puzzle for Day08 {
         let mut day = Day08 {
             board: Board::new(),
             visible: Board::new(),
+            score: Board::new(),
         };
 
         for line in input.lines() {
@@ -93,6 +95,7 @@ impl Puzzle for Day08 {
             let len = row.len();
             day.board.grid.push_row(row);
             day.visible.grid.push_row(vec!['.'; len]);
+            day.score.grid.push_row(vec![0; len]);
         }
 
         log::debug!("Input Grid: {:#?}", day.board);
@@ -100,33 +103,47 @@ impl Puzzle for Day08 {
         let x_max: i32 = day.board.grid.size().0.try_into().unwrap();
         let y_max: i32 = day.board.grid.size().1.try_into().unwrap();
         let mut count = x_max * 2 + y_max * 2 - 4;
-
         for y in 1..(y_max - 1) {
             for x in 1..(x_max - 1) {
+                let mut scores = vec![];
                 for direction in Direction::iter() {
+                    scores.push(0);
                     day.board.set_location(x, y);
                     let height = day.board.get_current_value().clone();
                     let mut heights = vec![];
                     while let Some(height2) = day.board.step(direction) {
                         heights.push(height2.clone());
+
+                        let s = scores.pop().unwrap().clone();
+                        scores.push(s + 1);
+                        if *height2 >= height {
+                            break; // part 2
+                        }
                     }
                     let height_max = heights.iter().max().unwrap();
                     let visible = height > *height_max;
-                    log::debug!("At {x},{y} going {direction:?}: {height} vs {height_max} = {visible}, {heights:?}");
+                    // log::debug!("At {x},{y} going {direction:?}: {height} vs {height_max} = {visible}, {heights:?}");
                     if visible {
                         count += 1;
                         let x_: usize = x.try_into().unwrap();
                         let y_: usize = y.try_into().unwrap();
                         day.visible.grid[y_][x_] = 'v';
-                        break;
+                        // break; part 2
                     }
                 }
+                let mega_score = scores.iter().fold(1, |a, x| a * x);
+                log::debug!("At {x},{y} score {scores:?} --> {mega_score}");
+                let x_: usize = x.try_into().unwrap();
+                let y_: usize = y.try_into().unwrap();
+                day.score.grid[y_][x_] = mega_score;
             }
         }
 
         log::debug!("Input Grid: {:#?}", day.board.grid);
-        log::debug!("{:#?}", day.visible.grid);
+        // log::debug!("{:#?}", day.visible.grid);
+        log::debug!("{:#?}", day.score.grid);
         log::info!("{count}");
+        log::info!("{}", day.score.grid.iter().max().unwrap());
 
         Ok(day)
     }
