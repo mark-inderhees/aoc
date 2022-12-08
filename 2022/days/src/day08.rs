@@ -33,7 +33,8 @@ impl Puzzle for Day08 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let mut count = self.board.width() * 2 + self.board.height() * 2 - 4;
+        // Find how many trees are visible with respect to viewing from the outside of the board
+        let mut visible_trees = self.board.width() * 2 + self.board.height() * 2 - 4;
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 for direction in Direction::iterator() {
@@ -42,13 +43,12 @@ impl Puzzle for Day08 {
                     let mut tree_heights = vec![];
                     while let Some(tree_height2) = self.board.step(direction) {
                         tree_heights.push(tree_height2.clone());
-
                     }
                     let tree_height_max = tree_heights.iter().max().unwrap().clone();
                     let visible = tree_height > tree_height_max;
                     log::debug!("At {x},{y} going {direction:?}: {tree_height} vs {tree_height_max} = {visible}, {tree_heights:?}");
                     if visible {
-                        count += 1;
+                        visible_trees += 1;
                         self.visible.set_at(x, y, 'v');
                         break;
                     }
@@ -58,9 +58,9 @@ impl Puzzle for Day08 {
 
         log::debug!("Input Grid: {:#?}", self.board.grid());
         log::debug!("{:#?}", self.visible.grid());
-        log::info!("{count}");
+        log::info!("{visible_trees}");
 
-        Ok(count.to_string())
+        Ok(visible_trees.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
@@ -71,23 +71,26 @@ impl Puzzle for Day08 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find how many trees we can see from within the forest
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
-                let mut scores = vec![];
+                let mut count_trees = vec![];
                 for direction in Direction::iterator() {
-                    scores.push(0);
+                    count_trees.push(0);
                     self.board.set_location(x, y);
                     let tree_height = self.board.get_current_value().clone();
                     while let Some(tree_height2) = self.board.step(direction) {
-                        let s = scores.pop().unwrap().clone();
-                        scores.push(s + 1);
+                        let s = count_trees.pop().unwrap().clone();
+                        count_trees.push(s + 1);
                         if *tree_height2 >= tree_height {
                             break;
                         }
                     }
                 }
-                let mega_score = scores.iter().fold(1, |a, x| a * x);
-                log::debug!("At {x},{y} score {scores:?} --> {mega_score}");
+
+                // Calculate score as multiple of count in each direction
+                let mega_score = count_trees.iter().fold(1, |a, x| a * x);
+                log::debug!("At {x},{y} score {count_trees:?} --> {mega_score}");
                 self.score.set_at(x, y, mega_score);
             }
         }
