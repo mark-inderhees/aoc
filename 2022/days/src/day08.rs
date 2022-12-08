@@ -23,9 +23,9 @@ impl Puzzle for Day08 {
         for line in input.lines() {
             let row: Vec<u32> = line.chars().map(|c| c.to_digit(10).unwrap()).collect();
             let len = row.len();
-            day.board.grid.push_row(row);
-            day.visible.grid.push_row(vec!['.'; len]);
-            day.score.grid.push_row(vec![0; len]);
+            day.board.push_row(row);
+            day.visible.push_row(vec!['.'; len]);
+            day.score.push_row(vec![0; len]);
         }
 
         log::debug!("Input Grid: {:#?}", day.board);
@@ -34,11 +34,9 @@ impl Puzzle for Day08 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let x_max: i32 = self.board.grid.size().0.try_into().unwrap();
-        let y_max: i32 = self.board.grid.size().1.try_into().unwrap();
-        let mut count = x_max * 2 + y_max * 2 - 4;
-        for y in 1..(y_max - 1) {
-            for x in 1..(x_max - 1) {
+        let mut count = self.board.width() * 2 + self.board.height() * 2 - 4;
+        for y in 1..(self.board.height() - 1) {
+            for x in 1..(self.board.width() - 1) {
                 let mut scores = vec![];
                 for direction in Direction::iter() {
                     scores.push(0);
@@ -88,11 +86,9 @@ impl Puzzle for Day08 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let x_max: i32 = self.board.grid.size().0.try_into().unwrap();
-        let y_max: i32 = self.board.grid.size().1.try_into().unwrap();
-        let mut count = x_max * 2 + y_max * 2 - 4;
-        for y in 1..(y_max - 1) {
-            for x in 1..(x_max - 1) {
+        let mut count = self.board.width() * 2 + self.board.height() * 2 - 4;
+        for y in 1..(self.board.height() - 1) {
+            for x in 1..(self.board.width() - 1) {
                 let mut scores = vec![];
                 for direction in Direction::iter() {
                     scores.push(0);

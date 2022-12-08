@@ -29,6 +29,18 @@ impl<T> Board<T> {
         }
     }
 
+    pub fn push_row(&mut self, row: Vec<T>) {
+        self.grid.push_row(row);
+    }
+
+    pub fn width(&self) -> i32 {
+        self.grid.size().0.try_into().unwrap()
+    }
+
+    pub fn height(&self) -> i32 {
+        self.grid.size().1.try_into().unwrap()
+    }
+
     pub fn set_location(&mut self, x: i32, y: i32) {
         self.location.x = x;
         self.location.y = y;
