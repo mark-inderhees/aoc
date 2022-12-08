@@ -57,8 +57,8 @@ impl Puzzle for Day08 {
             }
         }
 
-        log::debug!("Input Grid: {:#?}", self.board.grid);
-        log::debug!("{:#?}", self.visible.grid);
+        log::debug!("Input Grid: {:#?}", self.board.grid());
+        log::debug!("{:#?}", self.visible.grid());
         log::info!("{count}");
 
         Ok(count.to_string())
@@ -96,9 +96,9 @@ impl Puzzle for Day08 {
             }
         }
 
-        log::debug!("Input Grid: {:#?}", self.board.grid);
-        log::debug!("{:#?}", self.score.grid);
-        let part2 = self.score.grid.iter().max().unwrap();
+        log::debug!("Input Grid: {:#?}", self.board.grid());
+        log::debug!("{:#?}", self.score.grid());
+        let part2 = self.score.grid().iter().max().unwrap();
         log::info!("{}", part2);
 
         Ok(part2.to_string())

@@ -9,7 +9,7 @@ struct Point {
 
 #[derive(Debug)]
 pub struct Board<T> {
-    pub grid: Grid<T>,
+    grid: Grid<T>,
     location: Point,
 }
 
@@ -27,6 +27,10 @@ impl<T> Board<T> {
             grid: grid![],
             location: Point { x: 0, y: 0 },
         }
+    }
+
+    pub fn grid(&self) -> &Grid<T> {
+        &self.grid
     }
 
     pub fn push_row(&mut self, row: Vec<T>) {
