@@ -7,7 +7,6 @@ use std::fs;
 mod puzzle;
 mod utils;
 mod year2022;
-use year2022::*;
 
 /// Runner for Advent of Code
 #[derive(Parser, Debug)]
@@ -27,6 +26,10 @@ struct Args {
         default_value_t = 1, // __BOOTSTRAP_PART__
     )]
     part: u32,
+
+    /// Which year to run for
+    #[arg(long, short, default_value_t = 2022)]
+    year: u32,
 
     /// Run test data instead of input
     #[arg(
@@ -85,13 +88,13 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
     Ok(())
 }
 
-fn bootstrap(day: u32) -> Result<()> {
+fn bootstrap(day: u32, year: u32) -> Result<()> {
     println!("Bootstrapping day {}", day);
     let source = ["src/dayXX.rs", "input/dayXX.test", "input/dayXX.input"];
     let dest = [
         format!("src/day{day:02}.rs"),
-        format!("input/day{day:02}.test"),
-        format!("input/day{day:02}.input"),
+        format!("input/{year}/day{day:02}.test"),
+        format!("input/{year}/day{day:02}.input"),
     ];
     for (s, d) in source.iter().zip(dest.iter()) {
         if fs::metadata(d).is_ok() {
@@ -135,47 +138,52 @@ fn main() -> Result<()> {
 
     match args.bootstrap {
         Some(day) => {
-            bootstrap(day)?;
+            bootstrap(day, args.year)?;
             return Ok(());
         }
         None => (),
     };
 
     let day = args.day;
+    let year = args.year;
     let part = args.part;
     let test = args.test;
     let runs = match args.validate {
-        false => vec![(day, part, test)],
+        false => vec![(day, year, part, test)],
         true => vec![
-            (day, 1, true),
-            (day, 1, false),
-            (day, 2, true),
-            (day, 2, false),
+            (day, year, 1, true),
+            (day, year, 1, false),
+            (day, year, 2, true),
+            (day, year, 2, false),
         ],
     };
 
     for run in runs {
         let day = run.0;
-        let part = run.1;
-        let test = run.2;
+        let year = run.1;
+        let part = run.2;
+        let test = run.3;
         println!("\nRunning day={} part={} test={} ...", day, part, test);
         let input_type = match test {
             true => "test",
             false => "input",
         };
-        let input = format!("input/day{:02}.{}", day, input_type);
+        let input = format!("input/{year}/day{day:02}.{input_type}");
 
-        match day {
-            1 => run_day::<day01::Day01>(part, input, test)?,
-            2 => run_day::<day02::Day02>(part, input, test)?,
-            3 => run_day::<day03::Day03>(part, input, test)?,
-            4 => run_day::<day04::Day04>(part, input, test)?,
-            5 => run_day::<day05::Day05>(part, input, test)?,
-            6 => run_day::<day06::Day06>(part, input, test)?,
-            7 => run_day::<day07::Day07>(part, input, test)?,
-            8 => run_day::<day08::Day08>(part, input, test)?,
-            // __BOOTSTRAP_RUN__
-            _ => bail!("Day {} not found", day),
+        match year {
+            2022 => match day {
+                1 => run_day::<year2022::day01::Day01>(part, input, test)?,
+                2 => run_day::<year2022::day02::Day02>(part, input, test)?,
+                3 => run_day::<year2022::day03::Day03>(part, input, test)?,
+                4 => run_day::<year2022::day04::Day04>(part, input, test)?,
+                5 => run_day::<year2022::day05::Day05>(part, input, test)?,
+                6 => run_day::<year2022::day06::Day06>(part, input, test)?,
+                7 => run_day::<year2022::day07::Day07>(part, input, test)?,
+                8 => run_day::<year2022::day08::Day08>(part, input, test)?,
+                // __BOOTSTRAP_RUN__
+                _ => bail!("Day {} not found", day),
+            },
+            _ => bail!("Year {} not found", year),
         }
     }
 
