@@ -13,10 +13,10 @@ mod day06;
 mod day07;
 mod day08;
 // __BOOTSTRAP_MOD__
-mod puzzle;
-mod utils;
-mod rock_paper_scissors;
 mod file_system;
+mod puzzle;
+mod rock_paper_scissors;
+mod utils;
 
 /// Runner for Advent of Code
 #[derive(Parser, Debug)]
@@ -54,6 +54,15 @@ struct Args {
     /// Bootstrap a new day
     #[arg(long, short, value_name = "DAY")]
     bootstrap: Option<u32>,
+
+    /// Set the log level
+    #[arg(
+        long,
+        short,
+        value_name = "LEVEL",
+        default_value_t = log::LevelFilter::Info,
+    )]
+    logs: log::LevelFilter,
 }
 
 fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Result<()> {
@@ -128,6 +137,10 @@ fn bootstrap(day: u32) -> Result<()> {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    env_logger::Builder::from_default_env()
+        .filter(None, args.logs)
+        .init();
 
     match args.bootstrap {
         Some(day) => {
