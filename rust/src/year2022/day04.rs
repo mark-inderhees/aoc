@@ -48,7 +48,18 @@ impl Puzzle for Day04 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut count = 0;
+        for (elf1, elf2) in self.groups.iter_mut() {
+            if elf1.contains(elf2.start())
+                || elf1.contains(elf2.end())
+                || elf2.contains(elf1.start())
+                || elf2.contains(elf1.end())
+            {
+                count += 1;
+            }
+        }
+
+        Ok(count.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {

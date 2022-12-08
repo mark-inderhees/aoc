@@ -45,6 +45,10 @@ struct Args {
     #[arg(long, short)]
     validate: bool,
 
+    /// Validate all parts and input for all days for the currently selected year
+    #[arg(long, short)]
+    comprehensive: bool,
+
     /// Bootstrap a new day
     #[arg(long, short, value_name = "DAY")]
     bootstrap: Option<u32>,
@@ -74,15 +78,15 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
     };
     match expect {
         Some(expected_val) => {
-            println!(
-                "Solution: {} == {} is {}\n",
+            log::info!(
+                "Solution: {} == {} is {}\n\n",
                 output,
                 expected_val,
                 output == expected_val
             );
             assert_eq!(output, expected_val);
         }
-        _ => println!("Solution: {}\n", output),
+        _ => log::info!("Solution: {}\n\n", output),
     }
 
     Ok(())
@@ -146,26 +150,39 @@ fn main() -> Result<()> {
         None => (),
     };
 
-    let day = args.day;
-    let year = args.year;
-    let part = args.part;
-    let test = args.test;
-    let runs = match args.validate {
-        false => vec![(day, year, part, test)],
-        true => vec![
-            (day, year, 1, true),
-            (day, year, 1, false),
-            (day, year, 2, true),
-            (day, year, 2, false),
-        ],
-    };
+    let years = vec![args.year];
+    let mut days = vec![args.day];
+    let mut parts = vec![args.part];
+    let mut tests = vec![args.test];
+    if args.validate {
+        parts = (1..=2).collect();
+        tests = vec![true, false];
+    } else if args.comprehensive {
+        days = (1..=25).collect();
+        parts = (1..=2).collect();
+        tests = vec![true, false];
+    }
 
+    let mut runs = vec![];
+    {
+        for year in &years {
+            for day in &days {
+                for part in &parts {
+                    for test in &tests {
+                        runs.push((*day, *year, *part, *test));
+                    }
+                }
+            }
+        }
+    }
+
+    println!("\n"); // Empty line
     for run in runs {
         let day = run.0;
         let year = run.1;
         let part = run.2;
         let test = run.3;
-        println!("\nRunning day={} part={} test={} ...", day, part, test);
+        println!("Running day={} part={} test={} ...", day, part, test);
         let input_type = match test {
             true => "test",
             false => "input",
@@ -184,7 +201,10 @@ fn main() -> Result<()> {
                 8 => run_day::<year2022::day08::Day08>(part, input, test)?,
                 9 => run_day::<year2022::day09::Day09>(part, input, test)?,
                 // __BOOTSTRAP_RUN__
-                _ => bail!("Day {} not found", day),
+                _ => {
+                    println!("Day {} not found, goodbye!", day);
+                    break;
+                }
             },
             _ => bail!("Year {} not found", year),
         }
