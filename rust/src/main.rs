@@ -4,20 +4,10 @@ use puzzle::Puzzle;
 use regex::Regex;
 use std::fs;
 
-mod day01;
-mod day02;
-mod day03;
-mod day04;
-mod day05;
-mod day06;
-mod day07;
-mod day08;
-// __BOOTSTRAP_MOD__
-mod board;
-mod file_system;
 mod puzzle;
-mod rock_paper_scissors;
 mod utils;
+mod year2022;
+use year2022::*;
 
 /// Runner for Advent of Code
 #[derive(Parser, Debug)]

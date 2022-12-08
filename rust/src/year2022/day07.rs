@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::path::PathBuf;
 
-use crate::file_system::*;
+use crate::utils::file_system::*;
 use crate::puzzle::Puzzle;
 
 pub struct Day07 {

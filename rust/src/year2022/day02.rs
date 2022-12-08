@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-use crate::rock_paper_scissors::*;
+use crate::utils::rock_paper_scissors::*;
 
 pub struct Day02 {
     matches: Vec<(ItemType, ItemType)>,

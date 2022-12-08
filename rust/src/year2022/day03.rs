@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-use crate::utils::*;
+use crate::utils::utils::*;
 
 pub struct Day03 {
     rucksacks: Vec<(String, String)>,

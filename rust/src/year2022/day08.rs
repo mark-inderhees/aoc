@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::board::*;
+use crate::utils::board::*;
 use crate::puzzle::Puzzle;
 
 pub struct Day08 {
