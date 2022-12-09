@@ -9,6 +9,57 @@ pub struct Day09 {
     commands: Vec<(Direction, u32)>,
 }
 
+fn move_it(day: &mut Day09, player_count: usize) -> u32 {
+    let debug = day.commands.len() < 10;
+    let dim = match debug {
+        true => 6,
+        false => 1000,
+    };
+    let (initx, inity) = match debug {
+        true => (0, 5),
+        false => (dim as i32 / 2, dim as i32 / 2),
+    };
+    for _ in 0..dim {
+        day.board.push_row(vec!['.'; dim]);
+        day.visited.push_row(vec!['.'; dim]);
+    }
+    for player in 0..player_count {
+        day.board
+            .add_player(initx, inity, char::from_digit(player as u32, 10).unwrap());
+    }
+
+    day.board.add_player(initx, inity, 'S');
+    day.visited.set_at(initx, inity, '#');
+    day.board.print_board_with_players();
+
+    for (direction, step_count) in &day.commands {
+        log::debug!("== {direction:#?} {step_count} ==");
+        for _ in 0..*step_count {
+            day.board.step(*direction);
+            for player in 1..player_count {
+                let prev_player = player - 1;
+                if !day.board.is_nearby(prev_player, player) {
+                    // Need to move player 2
+                    let way_to_go = day.board.where_to_move(player, prev_player);
+                    day.board.step_player(player, way_to_go);
+                    let p2_loc = day.board.get_player_location(player);
+                    if player == player_count - 1 {
+                        day.visited.set_at(p2_loc.0, p2_loc.1, '#');
+                    }
+                }
+            }
+            day.board.print_board_with_players();
+        }
+    }
+
+    log::debug!("{:#?}", day.visited.grid());
+
+    day.visited.grid().iter().fold(0, |a, x| match *x {
+        '#' => a + 1,
+        _ => a,
+    })
+}
+
 impl Puzzle for Day09 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -33,65 +84,12 @@ impl Puzzle for Day09 {
             day.commands.push((direction, step_count));
         }
 
-        let debug = false;
-        let dim = match debug {
-            true => 6,
-            false => 1000,
-        };
-        for d in 0..dim {
-            day.board.push_row(vec!['.'; dim]);
-            day.visited.push_row(vec!['.'; dim]);
-        }
-
-        let initx = match debug {
-            true => 0,
-            false => dim as i32 / 2,
-        };
-        let inity = match debug {
-            true => 5,
-            false => dim as i32 / 2,
-        };
-        let player_count = 10 as usize;
-        for player in 0..player_count {
-            day.board
-                .add_player(initx, inity, char::from_digit(player as u32, 10).unwrap());
-        }
-        let start = day.board.add_player(initx, inity, 'S');
-        day.visited.set_at(initx, inity, '#');
-        day.board.print_board_with_players();
-
-        for (direction, step_count) in &day.commands {
-            log::debug!("== {direction:#?} {step_count} ==");
-            for _ in 0..*step_count {
-                day.board.step(*direction);
-                // day.board.print_board_with_players();
-                for player in 1..player_count {
-                    let prev_player = player - 1;
-                    if !day.board.is_nearby(prev_player, player) {
-                        // Need to move player 2
-                        let way_to_go = day.board.where_to_move(player, prev_player);
-                        day.board.step_player(player, way_to_go);
-                        // day.board.print_board_with_players();
-                        let p2_loc = day.board.get_player_location(player);
-                        if player == player_count - 1 {
-                            day.visited.set_at(p2_loc.0, p2_loc.1, '#');
-                        }
-                    }
-                }
-                day.board.print_board_with_players();
-            }
-        }
-
-        log::debug!("{:#?}", day.visited.grid());
-
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let count = self.visited.grid().iter().fold(0, |a, x| match *x {
-            '#' => a + 1,
-            _ => a,
-        });
+        let player_count = 2;
+        let count = move_it(self, player_count);
         Ok(count.to_string())
     }
 
@@ -103,13 +101,15 @@ impl Puzzle for Day09 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let player_count = 10;
+        let count = move_it(self, player_count);
+        Ok(count.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(1.to_string()),
+            false => Some(2455.to_string()),
         }
     }
 }
