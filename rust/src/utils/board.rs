@@ -186,7 +186,7 @@ where
             .enumerate()
             .map(|(i, _)| self.get_player_value(i).clone())
             .collect();
-        for player in self.players.clone() {
+        for player in self.players.clone().iter().rev() {
             self.set_at(player.x, player.y, player.id);
         }
         log::debug!("{:#?}", self.grid);

@@ -51,24 +51,34 @@ impl Puzzle for Day09 {
             true => 5,
             false => dim as i32 / 2,
         };
-        let player1 = day.board.add_player(initx, inity, 'H');
-        let player2 = day.board.add_player(initx, inity, 'T');
+        let player_count = 10 as usize;
+        for player in 0..player_count {
+            day.board
+                .add_player(initx, inity, char::from_digit(player as u32, 10).unwrap());
+        }
         let start = day.board.add_player(initx, inity, 'S');
         day.visited.set_at(initx, inity, '#');
         day.board.print_board_with_players();
 
         for (direction, step_count) in &day.commands {
+            log::debug!("== {direction:#?} {step_count} ==");
             for _ in 0..*step_count {
                 day.board.step(*direction);
-                day.board.print_board_with_players();
-                if !day.board.is_nearby(player1, player2) {
-                    // Need to move player 2
-                    let way_to_go = day.board.where_to_move(player2, player1);
-                    day.board.step_player(player2, way_to_go);
-                    day.board.print_board_with_players();
-                    let p2_loc = day.board.get_player_location(player2);
-                    day.visited.set_at(p2_loc.0, p2_loc.1, '#');
+                // day.board.print_board_with_players();
+                for player in 1..player_count {
+                    let prev_player = player - 1;
+                    if !day.board.is_nearby(prev_player, player) {
+                        // Need to move player 2
+                        let way_to_go = day.board.where_to_move(player, prev_player);
+                        day.board.step_player(player, way_to_go);
+                        // day.board.print_board_with_players();
+                        let p2_loc = day.board.get_player_location(player);
+                        if player == player_count - 1 {
+                            day.visited.set_at(p2_loc.0, p2_loc.1, '#');
+                        }
+                    }
                 }
+                day.board.print_board_with_players();
             }
         }
 
