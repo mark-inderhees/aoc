@@ -41,8 +41,19 @@ pub enum Direction {
 }
 
 impl Direction {
+    #[allow(dead_code)]
     pub fn iterator() -> DirectionIter {
         Direction::iter()
+    }
+
+    pub fn straight_iterator() -> Vec<Direction> {
+        vec![
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ]
+
     }
 }
 

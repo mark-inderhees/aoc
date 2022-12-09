@@ -27,6 +27,8 @@ impl Puzzle for Day08 {
             day.score.push_row(vec![0; len]);
         }
 
+        day.board.add_player(0, 0, 0);
+
         log::debug!("Input Grid: {:#?}", day.board);
 
         Ok(day)
@@ -37,7 +39,7 @@ impl Puzzle for Day08 {
         let mut visible_trees = self.board.width() * 2 + self.board.height() * 2 - 4;
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
-                for direction in Direction::iterator() {
+                for direction in Direction::straight_iterator() {
                     self.board.set_location(x, y);
                     let tree_height = self.board.get_current_value().clone();
                     let mut tree_heights = vec![];
@@ -75,7 +77,7 @@ impl Puzzle for Day08 {
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 let mut count_trees = vec![];
-                for direction in Direction::iterator() {
+                for direction in Direction::straight_iterator() {
                     count_trees.push(0);
                     self.board.set_location(x, y);
                     let tree_height = self.board.get_current_value().clone();
