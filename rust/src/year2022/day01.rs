@@ -10,7 +10,7 @@ impl Puzzle for Day01 {
     fn from_input(input: &str) -> Result<Self> {
         let mut day = Day01 { elves: vec![] };
 
-        for elf in input.split("\r\n\r\n") {
+        for elf in input.split("\n\n") {
             let calories: u32 = elf
                 .lines()
                 .map(|calorie| calorie.parse::<u32>().expect("Parse error"))

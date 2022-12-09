@@ -25,7 +25,7 @@ impl Puzzle for Day05 {
             moves: Vec::new(),
         };
 
-        let inputs: Vec<&str> = input.split("\r\n\r\n").collect();
+        let inputs: Vec<&str> = input.split("\n\n").collect();
         let board = inputs[0];
         let moves = inputs[1];
 
