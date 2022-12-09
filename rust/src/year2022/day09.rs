@@ -33,31 +33,62 @@ impl Puzzle for Day09 {
             day.commands.push((direction, step_count));
         }
 
-        let dim = 1000;
+        let debug = false;
+        let dim = match debug {
+            true => 6,
+            false => 1000,
+        };
         for d in 0..dim {
             day.board.push_row(vec!['.'; dim]);
             day.visited.push_row(vec!['.'; dim]);
         }
 
-        day.board.set_location(dim as i32 / 2, dim as i32 / 2);
+        let initx = match debug {
+            true => 0,
+            false => dim as i32 / 2,
+        };
+        let inity = match debug {
+            true => 5,
+            false => dim as i32 / 2,
+        };
+        let player1 = day.board.add_player(initx, inity, 'H');
+        let player2 = day.board.add_player(initx, inity, 'T');
+        let start = day.board.add_player(initx, inity, 'S');
+        day.visited.set_at(initx, inity, '#');
+        day.board.print_board_with_players();
 
         for (direction, step_count) in &day.commands {
             for _ in 0..*step_count {
                 day.board.step(*direction);
+                day.board.print_board_with_players();
+                if !day.board.is_nearby(player1, player2) {
+                    // Need to move player 2
+                    let way_to_go = day.board.where_to_move(player2, player1);
+                    day.board.step_player(player2, way_to_go);
+                    day.board.print_board_with_players();
+                    let p2_loc = day.board.get_player_location(player2);
+                    day.visited.set_at(p2_loc.0, p2_loc.1, '#');
+                }
             }
         }
+
+        log::debug!("{:#?}", day.visited.grid());
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let count = self.visited.grid().iter().fold(0, |a, x| match *x {
+            '#' => a + 1,
+            _ => a,
+        });
+        Ok(count.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(13.to_string()),
+            false => Some(6337.to_string()),
         }
     }
 
