@@ -11,7 +11,8 @@ struct Point {
 #[derive(Debug)]
 pub struct Board<T> {
     grid: Grid<T>,
-    location: Point,
+    // location: Point,
+    players: Vec<Point>,
 }
 
 #[derive(Debug, EnumIter, Clone, Copy)]
@@ -20,6 +21,10 @@ pub enum Direction {
     Down,
     Left,
     Right,
+    UpLeft,
+    UpRight,
+    DownLeft,
+    DownRight,
 }
 
 impl Direction {
@@ -32,7 +37,8 @@ impl<T> Board<T> {
     pub fn new() -> Board<T> {
         Board {
             grid: grid![],
-            location: Point { x: 0, y: 0 },
+            // location: Point { x: 0, y: 0 },
+            players: vec![Point { x: 0, y: 0 }],
         }
     }
 
@@ -59,13 +65,13 @@ impl<T> Board<T> {
     }
 
     pub fn set_location(&mut self, x: i32, y: i32) {
-        self.location.x = x;
-        self.location.y = y;
+        self.players[0].x = x;
+        self.players[0].y = y;
     }
 
     pub fn get_current_value(&self) -> &T {
-        let x: usize = self.location.x.try_into().unwrap();
-        let y: usize = self.location.y.try_into().unwrap();
+        let x: usize = self.players[0].x.try_into().unwrap();
+        let y: usize = self.players[0].y.try_into().unwrap();
         self.grid.get(y, x).unwrap()
     }
 
@@ -75,11 +81,12 @@ impl<T> Board<T> {
             Direction::Down => (0, 1),
             Direction::Left => (-1, 0),
             Direction::Right => (1, 0),
+            _ => panic!("todo"),
         };
 
         let new_location = Point {
-            x: self.location.x + step_x,
-            y: self.location.y + step_y,
+            x: self.players[0].x + step_x,
+            y: self.players[0].y + step_y,
         };
 
         let x_max: i32 = self.grid.size().0.try_into().unwrap();
@@ -90,11 +97,18 @@ impl<T> Board<T> {
             _ if new_location.x == x_max => None,
             _ if new_location.y == y_max => None,
             _ => {
-                self.location = new_location;
+                self.players[0] = new_location;
                 let x: usize = new_location.x.try_into().unwrap();
                 let y: usize = new_location.y.try_into().unwrap();
                 Some(self.grid.get(y, x).unwrap())
             }
         }
+    }
+
+    pub fn is_nearby(&self, player1: usize, player2: usize) -> bool {
+        let p1 = self.players[player1];
+        let p2 = self.players[player2];
+
+
     }
 }
