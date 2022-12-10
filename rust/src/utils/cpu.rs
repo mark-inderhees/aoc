@@ -35,7 +35,7 @@ impl Cpu {
 
     pub fn run(&mut self) {
         for instruction in self.program.clone().iter() {
-            self.step(&instruction);
+            self.run_instruction(&instruction);
         }
     }
 
@@ -46,7 +46,7 @@ impl Cpu {
         }
     }
 
-    pub fn step(&mut self, instruction: &Instruction) {
+    pub fn run_instruction(&mut self, instruction: &Instruction) {
         let mut pixel = match self.state.pc {
             pc if (self.state.reg_x - 1..=self.state.reg_x + 1)
                 .contains(&((pc as i32 - 1) % 40)) =>
@@ -56,11 +56,11 @@ impl Cpu {
             _ => '.',
         };
         let mut sprite = vec!['.'; 40];
-        if self.state.reg_x >= 1 {
-            // let xu32 = self.state.reg_x as usize;
-            // sprite[xu32 - 1] = '#';
-            // sprite[xu32] = '#';
-            // sprite[xu32 + 1] = '#';
+        if self.state.reg_x > 0 && self.state.reg_x < 39 {
+            let xu32 = self.state.reg_x as usize;
+            sprite[xu32 - 1] = '#';
+            sprite[xu32] = '#';
+            sprite[xu32 + 1] = '#';
         }
         log::debug!(
             "Sprite position: {}\n",
@@ -75,12 +75,12 @@ impl Cpu {
         let count = Cpu::get_cycle_count(&instruction);
 
         // Save state
-        // log::debug!(
-        //     "CPU: {} {} {:?}",
-        //     self.state_history.len(),
-        //     self.state.reg_x,
-        //     instruction
-        // );
+        log::debug!(
+            "CPU: {} {} {:?}",
+            self.state_history.len(),
+            self.state.reg_x,
+            instruction
+        );
         log::debug!(
             "During cycle{:03}: CRT draws pixel in position {} {} {}",
             self.state.pc,
@@ -107,12 +107,12 @@ impl Cpu {
 
         // Add current state for multi cycling instuctions
         for _ in 0..count - 1 {
-            // log::debug!(
-            //     "CPU: {} {} {:?}",
-            //     self.state_history.len(),
-            //     self.state.reg_x,
-            //     instruction
-            // );
+            log::debug!(
+                "CPU: {} {} {:?}",
+                self.state_history.len(),
+                self.state.reg_x,
+                instruction
+            );
             log::debug!(
                 "During cycle{:03}: CRT draws pixel in position {} {} {}",
                 self.state.pc,
@@ -141,9 +141,5 @@ impl Cpu {
             instruction,
             self.state.reg_x
         );
-
-        if self.state.pc >= 21 {
-            // panic!("sopt!!!");
-        }
     }
 }
