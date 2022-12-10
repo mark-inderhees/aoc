@@ -13,9 +13,9 @@ pub struct State {
 }
 
 pub struct Cpu {
-    pub program: VecDeque<Instruction>,
+    program: VecDeque<Instruction>,
     pub state_history: Vec<State>,
-    pub state: State,
+    state: State,
     pub crt: Vec<char>,
 }
 
@@ -46,7 +46,7 @@ impl Cpu {
         }
     }
 
-    pub fn run_instruction(&mut self, instruction: &Instruction) {
+    fn run_instruction(&mut self, instruction: &Instruction) {
         let mut pixel = match self.state.pc {
             pc if (self.state.reg_x - 1..=self.state.reg_x + 1)
                 .contains(&((pc as i32 - 1) % 40)) =>
