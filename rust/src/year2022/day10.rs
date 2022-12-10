@@ -59,7 +59,7 @@ impl Puzzle for Day10 {
 
     fn solve_part2(&mut self) -> Result<String> {
         println!("{:?}", self.cpu.crt);
-        println!("{}",self.cpu.state_history.len());
+        println!("{}", self.cpu.state_history.len());
         for x in (0..240).step_by(40) {
             println!(
                 "{}",
@@ -67,13 +67,15 @@ impl Puzzle for Day10 {
             );
         }
 
-        Ok("to do".to_string())
+        println!("{}", self.cpu.crt.clone().into_iter().collect::<String>());
+
+        Ok(self.cpu.crt.clone().into_iter().collect::<String>())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some("##..##..##..##..##..##..##..##..##..##..###...###...###...###...###...###...###.####....####....####....####....####....#####.....#####.....#####.....#####.....######......######......######......###########.......#######.......#######.....".to_string()),
+            false => Some("###..####.#..#.####..##..###..####.####.#..#.#....#.#.....#.#..#.#..#.#....#....#..#.###..##.....#..#....#..#.###..###..###..#....#.#...#...#....###..#....#....#.#..#....#.#..#....#..#.#....#....#....#..#.#....#..#.####..##..#....####.#....".to_string()),
         }
     }
 }
