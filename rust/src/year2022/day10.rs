@@ -44,19 +44,18 @@ impl Puzzle for Day10 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(13140.to_string()),
-            false => None,
+            false => Some(13760.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        for x in (0..240).step_by(40) {
-            log::debug!(
-                "{}",
-                self.cpu.crt[x + 0..x + 40].into_iter().collect::<String>()
-            );
+        let mut line = self.cpu.crt.to_string();
+        for _ in 0..6 {
+            let lines = line.split_at(40);
+            log::debug!("{}", lines.0);
+            line = lines.1.to_string();
         }
-
-        Ok(self.cpu.crt.clone().into_iter().collect::<String>())
+        Ok(self.cpu.crt.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
