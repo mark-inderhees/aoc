@@ -31,15 +31,6 @@ impl Puzzle for Day10 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        // // log::debug!("{:#?}", self.cpu.state_history.iter().enumerate());
-        // log::debug!("{}", self.cpu.state_history.len());
-        // for (i,x) in (0..220).enumerate(){
-        //     let state = self.cpu.state_history[x];
-        //     // log::debug!("{} {}", i, state.reg_x);
-        // }
-
-        log::debug!("hi mark");
-
         let mut count = 0;
         for x in (19..220).step_by(40) {
             let state = self.cpu.state_history[x];
@@ -58,16 +49,12 @@ impl Puzzle for Day10 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        println!("{:?}", self.cpu.crt);
-        println!("{}", self.cpu.state_history.len());
         for x in (0..240).step_by(40) {
-            println!(
+            log::debug!(
                 "{}",
                 self.cpu.crt[x + 0..x + 40].into_iter().collect::<String>()
             );
         }
-
-        println!("{}", self.cpu.crt.clone().into_iter().collect::<String>());
 
         Ok(self.cpu.crt.clone().into_iter().collect::<String>())
     }
