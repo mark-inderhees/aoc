@@ -140,6 +140,7 @@ fn main() -> Result<()> {
 
     env_logger::Builder::from_default_env()
         .filter(None, args.logs)
+        .format(|_, record| {println!("{}", record.args()); Ok(())})
         .init();
 
     match args.bootstrap {
