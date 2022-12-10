@@ -1,7 +1,3 @@
-use std::collections::VecDeque;
-
-use crate::utils::crt::*;
-
 #[derive(Debug, Clone, Copy)]
 pub enum Instruction {
     Addx(i32),
@@ -15,33 +11,19 @@ pub struct State {
 }
 
 pub struct Cpu {
-    program: VecDeque<Instruction>,
     pub state_history: Vec<State>,
     state: State,
-    pub crt: Crt,
 }
 
 impl Cpu {
     pub fn new() -> Cpu {
         Cpu {
-            program: VecDeque::new(),
             state_history: Vec::new(),
             state: State { pc: 1, reg_x: 1 },
-            crt: Crt::new(40, 6),
         }
     }
 
-    pub fn add_instruction(&mut self, instruction: Instruction) {
-        self.program.push_back(instruction.clone());
-    }
-
-    pub fn run(&mut self) {
-        for instruction in self.program.clone().iter() {
-            self.run_instruction(&instruction);
-        }
-    }
-
-    fn get_cycle_count(instruction: &Instruction) -> u32 {
+    pub fn get_cycle_count(instruction: &Instruction) -> u32 {
         match instruction {
             Instruction::Addx(_) => 2,
             Instruction::Noop => 1,
@@ -49,13 +31,15 @@ impl Cpu {
     }
 
     fn step(&mut self) {
-        self.crt.step(self.state.reg_x);
         self.state_history.push(self.state);
         self.state.pc += 1;
     }
 
-    fn run_instruction(&mut self, instruction: &Instruction) {
-        self.crt.print_sprite(self.state.reg_x as usize);
+    pub fn get_reg_x(&self) -> i32 {
+        self.state.reg_x
+    }
+
+    pub fn run_instruction(&mut self, instruction: &Instruction) {
         log::debug!(
             "Start cycle {:03}: begin executing {:?}",
             self.state.pc,

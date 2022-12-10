@@ -2,16 +2,21 @@ use anyhow::Result;
 
 use crate::puzzle::Puzzle;
 use crate::utils::cpu::*;
+use crate::utils::crt::*;
 
 pub struct Day10 {
     cpu: Cpu,
+    crt: Crt,
 }
 
 impl Puzzle for Day10 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = Day10 { cpu: Cpu::new() };
+        let mut day = Day10 {
+            cpu: Cpu::new(),
+            crt: Crt::new(40, 6),
+        };
 
         for line in input.lines() {
             let instruction = match line {
@@ -22,10 +27,15 @@ impl Puzzle for Day10 {
                     Instruction::Addx(i)
                 }
             };
-            day.cpu.add_instruction(instruction);
-        }
 
-        day.cpu.run();
+            let reg_x = day.cpu.get_reg_x();
+            day.crt.print_sprite(reg_x as usize);
+            let count = Cpu::get_cycle_count(&instruction);
+            for _ in 0..count {
+                day.crt.step(reg_x);
+            }
+            day.cpu.run_instruction(&instruction);
+        }
 
         Ok(day)
     }
@@ -49,13 +59,13 @@ impl Puzzle for Day10 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let mut line = self.cpu.crt.to_string();
+        let mut line = self.crt.to_string();
         for _ in 0..6 {
             let lines = line.split_at(40);
             log::debug!("{}", lines.0);
             line = lines.1.to_string();
         }
-        Ok(self.cpu.crt.to_string())
+        Ok(self.crt.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
