@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
+use crate::utils::utils::*;
 
 pub struct Day11 {
     monkeys: Vec<Monkey>,
@@ -126,19 +127,15 @@ impl Puzzle for Day11 {
 
         let monkeys = input.split("\r\n\r\n");
         for monkey in monkeys {
+            let mut lines = monkey.lines();
+            _ = lines.next(); // Drop "Monkey 0:"
             let mut m = Monkey {
-                items: vec![],
+                items: get_vals::<u64>(lines.next().unwrap()),
                 operation: Operation::Unknown,
                 test: 0,
                 if_true: 0,
                 if_false: 0,
             };
-            let mut lines = monkey.lines();
-            _ = lines.next(); // Drop "Monkey 0:"
-            let items = &lines.next().unwrap()["  Starting items: ".len()..];
-            for item in items.split(", ") {
-                m.items.push(item.parse().unwrap());
-            }
 
             let operation = &lines.next().unwrap()["  Operation: new = old ".len()..];
             m.operation = match operation {
