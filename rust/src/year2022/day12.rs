@@ -156,13 +156,14 @@ impl Puzzle for Day12 {
         total_count.sort();
         self.step_count.print_board_with_players();
         println!("{:?}", total_count);
-        Ok("to do".to_string())
+        let answer = total_count[0];
+        Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(31.to_string()),
+            false => Some(528.to_string()),
         }
     }
 
@@ -187,13 +188,14 @@ impl Puzzle for Day12 {
         }
         answers.sort();
         println!("{:?}", answers);
-        Ok("to do".to_string())
+        let answer = answers[0];
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(29.to_string()),
+            false => Some(522.to_string()),
         }
     }
 }
