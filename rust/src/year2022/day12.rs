@@ -27,7 +27,7 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
     if count >= step_count {
         return;
     }
-    day.step_count.grid[location.y as usize][location.x as usize] = count;
+    day.step_count.set_at(location.x, location.y, count);
     // Force current location
     day.grid.set_location(location.x, location.y);
     let my_char = day.grid.get_current_value();
@@ -169,9 +169,9 @@ impl Puzzle for Day12 {
 
     fn solve_part2(&mut self) -> Result<String> {
         let mut answers = vec![];
-        for y in 0..self.grid.grid.rows() {
-            for x in 0..self.grid.grid.cols() {
-                let chr = self.grid.grid[y][x];
+        for y in 0..self.grid.grid().rows() {
+            for x in 0..self.grid.grid().cols() {
+                let chr = self.grid.grid()[y][x];
                 if chr == 'a' {
                     let x_i32 = x as i32;
                     let y_i32 = y as i32;

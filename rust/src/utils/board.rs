@@ -24,7 +24,7 @@ where
     T: Copy,
     T: Debug,
 {
-    pub grid: Grid<T>,
+    grid: Grid<T>,
     players: Vec<Player<T>>,
 }
 
@@ -87,7 +87,7 @@ where
     }
 
     pub fn height(&self) -> i32 {
-        self.grid.size().1.try_into().unwrap()
+        self.grid.rows() as i32
     }
 
     pub fn set_at(&mut self, x: i32, y: i32, value: T) {
@@ -144,8 +144,8 @@ where
             id: self.players[player].id,
         };
 
-        let x_max = self.grid.cols() as i32;
-        let y_max = self.grid.rows() as i32;
+        let x_max = self.width();
+        let y_max = self.height();
         match new_location {
             _ if new_location.x == -1 => None,
             _ if new_location.y == -1 => None,
@@ -169,23 +169,6 @@ where
         }
 
         false
-    }
-
-    pub fn get_nearby_square(&self, player: usize, direction: Direction) -> T {
-        let (step_x, step_y) = match direction {
-            Direction::Up => (0, -1),
-            Direction::Down => (0, 1),
-            Direction::Left => (-1, 0),
-            Direction::Right => (1, 0),
-            Direction::UpLeft => (-1, -1),
-            Direction::UpRight => (1, -1),
-            Direction::DownLeft => (-1, 1),
-            Direction::DownRight => (1, 1),
-        };
-
-        let x = (self.players[player].x + step_x) as usize;
-        let y = (self.players[player].y + step_y) as usize;
-        self.grid[y][x]
     }
 
     pub fn get_nearby_squares(&mut self, player: usize) -> Vec<Direction> {
