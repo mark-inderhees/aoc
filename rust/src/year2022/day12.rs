@@ -16,12 +16,7 @@ pub struct Day12 {
     end_y: i32,
 }
 
-fn move_it(
-    day: &mut Day12,
-    location: Point<i32>,
-    count: u32,
-    total_count: &mut Vec<u32>,
-) {
+fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut Vec<u32>) {
     if count > 600 {
         return;
     }
@@ -172,6 +167,26 @@ impl Puzzle for Day12 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        let mut answers = vec![];
+        for y in 0..self.grid.grid.rows() {
+            for x in 0..self.grid.grid.cols() {
+                let chr = self.grid.grid[y][x];
+                if chr == 'a' {
+                    let x_i32 = x as i32;
+                    let y_i32 = y as i32;
+                    self.grid.set_location(x_i32, y_i32);
+                    let point = Point { x: x_i32, y: y_i32 };
+                    let mut total_count = vec![];
+                    move_it(self, point, 0, &mut total_count);
+                    total_count.sort();
+                    if total_count.len() > 0 {
+                        answers.push(total_count[0]);
+                    }
+                }
+            }
+        }
+        answers.sort();
+        println!("{:?}", answers);
         Ok("to do".to_string())
     }
 
