@@ -1,9 +1,11 @@
+use grid::*;
+use rusttype::Point;
 use std::fmt::Debug;
 use std::iter::zip;
-
-use grid::*;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+
+pub type BoardPoint = Point<i32>;
 
 #[derive(Debug, Clone, Copy)]
 struct Player<T>
@@ -12,8 +14,7 @@ where
     T: Copy,
     T: Debug,
 {
-    x: i32,
-    y: i32,
+    point: BoardPoint,
     id: T,
 }
 
@@ -77,8 +78,8 @@ where
         self.grid.push_row(row);
     }
 
-    pub fn add_player(&mut self, x: i32, y: i32, id: T) -> usize {
-        self.players.push(Player { x, y, id });
+    pub fn add_player(&mut self, point: BoardPoint, id: T) -> usize {
+        self.players.push(Player { point, id });
         self.players.len() - 1
     }
 
@@ -90,24 +91,23 @@ where
         self.grid.rows() as i32
     }
 
-    pub fn set_at(&mut self, x: i32, y: i32, value: T) {
-        let x_: usize = x.try_into().unwrap();
-        let y_: usize = y.try_into().unwrap();
+    pub fn set_at(&mut self, point: BoardPoint, value: T) {
+        let x_: usize = point.x as usize;
+        let y_: usize = point.y as usize;
         self.grid[y_][x_] = value;
     }
 
-    pub fn set_location(&mut self, x: i32, y: i32) {
+    pub fn set_location(&mut self, point: BoardPoint) {
         let player = 0;
-        self.set_player_location(player, x, y);
+        self.set_player_location(player, point);
     }
 
-    pub fn set_player_location(&mut self, player: usize, x: i32, y: i32) {
-        self.players[player].x = x;
-        self.players[player].y = y;
+    pub fn set_player_location(&mut self, player: usize, point: BoardPoint) {
+        self.players[player].point = point;
     }
 
-    pub fn get_player_location(&self, player: usize) -> (i32, i32) {
-        (self.players[player].x, self.players[player].y)
+    pub fn get_player_location(&self, player: usize) -> BoardPoint {
+        self.players[player].point
     }
 
     pub fn get_current_value(&self) -> T {
@@ -116,8 +116,8 @@ where
     }
 
     pub fn get_player_value(&self, player: usize) -> T {
-        let x: usize = self.players[player].x.try_into().unwrap();
-        let y: usize = self.players[player].y.try_into().unwrap();
+        let x: usize = self.players[player].point.x as usize;
+        let y: usize = self.players[player].point.y as usize;
         self.grid[y][x]
     }
 
@@ -139,22 +139,24 @@ where
         };
 
         let new_location = Player {
-            x: self.players[player].x + step_x,
-            y: self.players[player].y + step_y,
+            point: BoardPoint {
+                x: self.players[player].point.x + step_x,
+                y: self.players[player].point.y + step_y,
+            },
             id: self.players[player].id,
         };
 
         let x_max = self.width();
         let y_max = self.height();
         match new_location {
-            _ if new_location.x == -1 => None,
-            _ if new_location.y == -1 => None,
-            _ if new_location.x == x_max => None,
-            _ if new_location.y == y_max => None,
+            _ if new_location.point.x == -1 => None,
+            _ if new_location.point.y == -1 => None,
+            _ if new_location.point.x == x_max => None,
+            _ if new_location.point.y == y_max => None,
             _ => {
                 self.players[player] = new_location;
-                let x: usize = new_location.x.try_into().unwrap();
-                let y: usize = new_location.y.try_into().unwrap();
+                let x: usize = new_location.point.x as usize;
+                let y: usize = new_location.point.y as usize;
                 Some(self.grid[y][x])
             }
         }
@@ -164,7 +166,9 @@ where
         let p1 = self.players[player1];
         let p2 = self.players[player2];
 
-        if (p1.x - 1..=p1.x + 1).contains(&p2.x) && (p1.y - 1..=p1.y + 1).contains(&p2.y) {
+        if (p1.point.x - 1..=p1.point.x + 1).contains(&p2.point.x)
+            && (p1.point.y - 1..=p1.point.y + 1).contains(&p2.point.y)
+        {
             return true;
         }
 
@@ -178,7 +182,7 @@ where
             if let Some(_value) = self.step_player(player, direction) {
                 values.push(direction);
             }
-            self.set_player_location(player, orig_point.0, orig_point.1);
+            self.set_player_location(player, orig_point);
         }
 
         values
@@ -190,14 +194,14 @@ where
 
         match s {
             // Move straight
-            s if s.x == d.x && s.y > d.y => Direction::Up,
-            s if s.x == d.x && s.y < d.y => Direction::Down,
-            s if s.y == d.y && s.x > d.x => Direction::Left,
-            s if s.y == d.y && s.x < d.x => Direction::Right,
-            s if s.x > d.x && s.y > d.y => Direction::UpLeft,
-            s if s.x > d.x && s.y < d.y => Direction::DownLeft,
-            s if s.x < d.x && s.y > d.y => Direction::UpRight,
-            s if s.x < d.x && s.y < d.y => Direction::DownRight,
+            s if s.point.x == d.point.x && s.point.y > d.point.y => Direction::Up,
+            s if s.point.x == d.point.x && s.point.y < d.point.y => Direction::Down,
+            s if s.point.y == d.point.y && s.point.x > d.point.x => Direction::Left,
+            s if s.point.y == d.point.y && s.point.x < d.point.x => Direction::Right,
+            s if s.point.x > d.point.x && s.point.y > d.point.y => Direction::UpLeft,
+            s if s.point.x > d.point.x && s.point.y < d.point.y => Direction::DownLeft,
+            s if s.point.x < d.point.x && s.point.y > d.point.y => Direction::UpRight,
+            s if s.point.x < d.point.x && s.point.y < d.point.y => Direction::DownRight,
             _ => panic!("Fix me"),
         }
     }
@@ -207,8 +211,8 @@ where
         let s = self.players[start];
         let d = self.players[destination];
 
-        let dx = d.x - s.x;
-        let dy = d.y - s.y;
+        let dx = d.point.x - s.point.x;
+        let dy = d.point.y - s.point.y;
 
         match s {
             // Move straight
@@ -228,11 +232,11 @@ where
             .map(|(i, _)| self.get_player_value(i).clone())
             .collect();
         for player in self.players.clone().iter().rev() {
-            self.set_at(player.x, player.y, player.id);
+            self.set_at(player.point, player.id);
         }
         log::debug!("{:#?}", self.grid);
         for (player, id) in zip(self.players.clone(), orig) {
-            self.set_at(player.x, player.y, id);
+            self.set_at(player.point, id);
         }
     }
 }

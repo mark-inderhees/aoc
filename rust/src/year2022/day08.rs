@@ -1,7 +1,7 @@
 use anyhow::Result;
 
-use crate::utils::board::*;
 use crate::puzzle::Puzzle;
+use crate::utils::board::*;
 
 pub struct Day08 {
     board: Board<u32>,
@@ -27,7 +27,7 @@ impl Puzzle for Day08 {
             day.score.push_row(vec![0; len]);
         }
 
-        day.board.add_player(0, 0, 0);
+        day.board.add_player(BoardPoint { x: 0, y: 0 }, 0);
 
         log::debug!("Input Grid: {:#?}", day.board);
 
@@ -40,7 +40,7 @@ impl Puzzle for Day08 {
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 for direction in Direction::straight_iterator() {
-                    self.board.set_location(x, y);
+                    self.board.set_location(BoardPoint { x, y });
                     let tree_height = self.board.get_current_value().clone();
                     let mut tree_heights = vec![];
                     while let Some(tree_height2) = self.board.step(direction) {
@@ -51,7 +51,7 @@ impl Puzzle for Day08 {
                     log::debug!("At {x},{y} going {direction:?}: {tree_height} vs {tree_height_max} = {visible}, {tree_heights:?}");
                     if visible {
                         visible_trees += 1;
-                        self.visible.set_at(x, y, 'v');
+                        self.visible.set_at(BoardPoint { x, y }, 'v');
                         break;
                     }
                 }
@@ -79,7 +79,7 @@ impl Puzzle for Day08 {
                 let mut count_trees = vec![];
                 for direction in Direction::straight_iterator() {
                     count_trees.push(0);
-                    self.board.set_location(x, y);
+                    self.board.set_location(BoardPoint { x, y });
                     let tree_height = self.board.get_current_value().clone();
                     while let Some(tree_height2) = self.board.step(direction) {
                         let s = count_trees.pop().unwrap().clone();
@@ -93,7 +93,7 @@ impl Puzzle for Day08 {
                 // Calculate score as multiple of count in each direction
                 let mega_score = count_trees.iter().fold(1, |a, x| a * x);
                 log::debug!("At {x},{y} score {count_trees:?} --> {mega_score}");
-                self.score.set_at(x, y, mega_score);
+                self.score.set_at(BoardPoint { x, y }, mega_score);
             }
         }
 

@@ -1,7 +1,4 @@
-use std::vec;
-
 use anyhow::Result;
-use rusttype::Point;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
@@ -10,13 +7,11 @@ use crate::utils::utils::*;
 pub struct Day12 {
     grid: Board<char>,
     step_count: Board<u32>,
-    start_x: i32,
-    start_y: i32,
-    end_x: i32,
-    end_y: i32,
+    start: BoardPoint,
+    end: BoardPoint,
 }
 
-fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut Vec<u32>) {
+fn move_it(day: &mut Day12, location: BoardPoint, count: u32, total_count: &mut Vec<u32>) {
     if count > 600 {
         return;
     }
@@ -26,23 +21,19 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
     if count >= step_count {
         return;
     }
-    day.step_count.set_at(location.x, location.y, count);
+    day.step_count.set_at(location, count);
 
     // Force current location
-    day.grid.set_location(location.x, location.y);
+    day.grid.set_location(location);
     let my_char = day.grid.get_current_value();
 
     // Try all new locations
     let directions = day.grid.get_nearby_squares(0);
     for direction in directions {
         // Try this location
-        day.grid.set_location(location.x, location.y);
+        day.grid.set_location(location);
         day.grid.step(direction).unwrap();
         let new_location = day.grid.get_player_location(0);
-        let point = Point {
-            x: new_location.0,
-            y: new_location.1,
-        };
         let near_char = day.grid.get_current_value();
 
         // See if we are allowed to move here
@@ -50,13 +41,13 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
         let to = near_char as u32;
         if to <= from + 1 {
             // Check if we are done
-            if point.x == day.end_x && point.y == day.end_y {
+            if new_location.x == day.end.x && new_location.y == day.end.y {
                 log::debug!("THIS IS THE END = {}", count);
                 total_count.push(count + 1);
                 return;
             }
             // We can move, so do it!
-            move_it(day, point, count + 1, total_count);
+            move_it(day, new_location, count + 1, total_count);
         }
     }
 }
@@ -68,25 +59,23 @@ impl Puzzle for Day12 {
         let mut day = Day12 {
             grid: Board::new(),
             step_count: Board::new(),
-            start_x: 0,
-            start_y: 0,
-            end_x: 0,
-            end_y: 0,
+            start: BoardPoint { x: 0, y: 0 },
+            end: BoardPoint { x: 0, y: 0 },
         };
 
-        day.grid.add_player(0, 0, 'S');
-        day.grid.add_player(0, 0, 'E');
+        day.grid.add_player(BoardPoint { x: 0, y: 0 }, 'S');
+        day.grid.add_player(BoardPoint { x: 0, y: 0 }, 'E');
 
         for (i, mut line) in input.lines().enumerate() {
             if char_in_string(&'S', &line.to_string()) {
-                day.start_x = line.find("S").unwrap() as i32;
-                day.start_y = i as i32;
-                day.grid.set_player_location(0, day.start_x, day.start_y);
+                day.start.x = line.find("S").unwrap() as i32;
+                day.start.y = i as i32;
+                day.grid.set_player_location(0, day.start);
             }
             if char_in_string(&'E', &line.to_string()) {
-                day.end_x = line.find("E").unwrap() as i32;
-                day.end_y = i as i32;
-                day.grid.set_player_location(1, day.end_x, day.end_y);
+                day.end.x = line.find("E").unwrap() as i32;
+                day.end.y = i as i32;
+                day.grid.set_player_location(1, day.end);
             }
             let line2 = &line.replace("S", "a");
             line = line2;
@@ -104,9 +93,8 @@ impl Puzzle for Day12 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let me = self.grid.get_player_location(0);
-        let point = Point { x: me.0, y: me.1 };
         let mut total_count = vec![];
-        move_it(self, point, 0, &mut total_count);
+        move_it(self, me, 0, &mut total_count);
         total_count.sort();
         self.step_count.print_board_with_players();
         println!("{:?}", total_count);
@@ -127,10 +115,11 @@ impl Puzzle for Day12 {
             for x in 0..self.grid.grid().cols() {
                 let chr = self.grid.grid()[y][x];
                 if chr == 'a' {
-                    let x_i32 = x as i32;
-                    let y_i32 = y as i32;
-                    self.grid.set_location(x_i32, y_i32);
-                    let point = Point { x: x_i32, y: y_i32 };
+                    let point = BoardPoint {
+                        x: x as i32,
+                        y: y as i32,
+                    };
+                    self.grid.set_location(point);
                     let mut total_count = vec![];
                     move_it(self, point, 0, &mut total_count);
                     total_count.sort();

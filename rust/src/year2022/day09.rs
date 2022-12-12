@@ -15,9 +15,12 @@ fn move_it(day: &mut Day09, player_count: usize) -> u32 {
         true => 6,
         false => 1000,
     };
-    let (initx, inity) = match debug {
-        true => (0, 5),
-        false => (dim as i32 / 2, dim as i32 / 2),
+    let init = match debug {
+        true => BoardPoint { x: 0, y: 5 },
+        false => BoardPoint {
+            x: dim as i32 / 2,
+            y: dim as i32 / 2,
+        },
     };
     for _ in 0..dim {
         day.board.push_row(vec!['.'; dim]);
@@ -25,11 +28,11 @@ fn move_it(day: &mut Day09, player_count: usize) -> u32 {
     }
     for player in 0..player_count {
         day.board
-            .add_player(initx, inity, char::from_digit(player as u32, 10).unwrap());
+            .add_player(init, char::from_digit(player as u32, 10).unwrap());
     }
 
-    day.board.add_player(initx, inity, 'S');
-    day.visited.set_at(initx, inity, '#');
+    day.board.add_player(init, 'S');
+    day.visited.set_at(init, '#');
     day.board.print_board_with_players();
 
     for (direction, step_count) in &day.commands {
@@ -44,7 +47,7 @@ fn move_it(day: &mut Day09, player_count: usize) -> u32 {
                     day.board.step_player(player, way_to_go);
                     let p2_loc = day.board.get_player_location(player);
                     if player == player_count - 1 {
-                        day.visited.set_at(p2_loc.0, p2_loc.1, '#');
+                        day.visited.set_at(p2_loc, '#');
                     }
                 }
             }
