@@ -125,7 +125,7 @@ impl Puzzle for Day11 {
         #[allow(unused_mut)]
         let mut day = Day11 { monkeys: vec![] };
 
-        let monkeys = input.split("\r\n\r\n");
+        let monkeys = input.split("\n\n");
         for monkey in monkeys {
             let mut lines = monkey.lines();
             _ = lines.next(); // Drop "Monkey 0:"

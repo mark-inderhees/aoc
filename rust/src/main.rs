@@ -123,13 +123,13 @@ fn bootstrap(day: u32, year: u32) -> Result<()> {
     main = re_day.replace(&main, format!("{day}${{1}}")).to_string();
     main = re_part.replace(&main, "1${1}").to_string();
     main = re_test.replace(&main, "true${1}").to_string();
-    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<year{year}::day{day:02}::Day{day:02}>(part, input, test)?,\r\n${{1}}${{2}}")).to_string();
+    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<year{year}::day{day:02}::Day{day:02}>(part, input, test)?,\n${{1}}${{2}}")).to_string();
     fs::write(main_rs, main)?;
 
     // Add a line to year's mod.rs
     let mod_rs = &format!("src/year{year}/mod.rs");
     let mut mod_text = fs::read_to_string(mod_rs)?;
-    mod_text += &format!("\r\npub mod day{day:02};");
+    mod_text += &format!("\npub mod day{day:02};");
     fs::write(mod_rs, mod_text)?;
 
     Ok(())
