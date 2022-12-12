@@ -18,6 +18,12 @@ where
     id: T,
 }
 
+// State about this current square in the gird
+#[derive(Debug, Clone, Copy)]
+struct State {
+    step_count: u32, // Most optimized step count so far at this square
+}
+
 #[derive(Debug)]
 pub struct Board<T>
 where
@@ -26,6 +32,7 @@ where
     T: Debug,
 {
     grid: Grid<T>,
+    grid_state: Grid<State>,
     players: Vec<Player<T>>,
 }
 
@@ -66,6 +73,7 @@ where
     pub fn new() -> Board<T> {
         Board {
             grid: grid![],
+            grid_state: grid![],
             players: vec![],
         }
     }
@@ -75,7 +83,17 @@ where
     }
 
     pub fn push_row(&mut self, row: Vec<T>) {
+        let len = row.len();
         self.grid.push_row(row);
+
+        // Push in empty state for this row
+        let empty = vec![
+            State {
+                step_count: u32::MAX
+            };
+            len
+        ];
+        self.grid_state.push_row(empty);
     }
 
     pub fn add_player(&mut self, point: BoardPoint, id: T) -> usize {
@@ -237,6 +255,63 @@ where
         log::debug!("{:#?}", self.grid);
         for (player, id) in zip(self.players.clone(), orig) {
             self.set_at(player.point, id);
+        }
+    }
+
+    /// Find the shortest path from a point to a player. This uses recursive calling!
+    /// Find the quickest path or route.
+    /// Find the fastest path or route
+    pub fn find_shortest_path(
+        &mut self,
+        location: BoardPoint,
+        count: u32,
+        total_count: &mut Vec<u32>,
+        valid_move: fn(T, T) -> bool,
+        taget_player: usize,
+    ) {
+        if count > 600 {
+            return;
+        }
+
+        // Check if we've ever been here at a more optimized path
+        let step_count = self.grid_state[location.y as usize][location.x as usize].step_count;
+        if count >= step_count {
+            return;
+        }
+        self.grid_state[location.y as usize][location.x as usize].step_count = count;
+
+        // Force current location
+        self.set_location(location);
+        let my_char = self.get_current_value();
+
+        // Try all new locations
+        let directions = self.get_nearby_squares(0);
+        for direction in directions {
+            // Try this location
+            self.set_location(location);
+            self.step(direction).unwrap();
+            let new_location = self.get_player_location(0);
+            let near_char = self.get_current_value();
+
+            // See if we are allowed to move here
+            if valid_move(my_char, near_char) {
+                // Check if we are done
+                let taget = self.get_player_location(taget_player);
+                if new_location.x == taget.x && new_location.y == taget.y {
+                    log::debug!("THIS IS THE END = {}", count);
+                    total_count.push(count + 1);
+                    return;
+                }
+
+                // We can move, so do it!
+                self.find_shortest_path(
+                    new_location,
+                    count + 1,
+                    total_count,
+                    valid_move,
+                    taget_player,
+                );
+            }
         }
     }
 }
