@@ -1,3 +1,4 @@
+#![recursion_limit = "1000"]
 use anyhow::{bail, Result};
 use clap::Parser;
 use puzzle::Puzzle;

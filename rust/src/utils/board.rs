@@ -24,11 +24,11 @@ where
     T: Copy,
     T: Debug,
 {
-    grid: Grid<T>,
+    pub grid: Grid<T>,
     players: Vec<Player<T>>,
 }
 
-#[derive(Debug, EnumIter, Clone, Copy)]
+#[derive(Debug, EnumIter, Clone, Copy, PartialEq)]
 pub enum Direction {
     Up,
     Down,
@@ -53,7 +53,6 @@ impl Direction {
             Direction::Left,
             Direction::Right,
         ]
-
     }
 }
 
@@ -84,7 +83,7 @@ where
     }
 
     pub fn width(&self) -> i32 {
-        self.grid.size().0.try_into().unwrap()
+        self.grid.cols() as i32
     }
 
     pub fn height(&self) -> i32 {
@@ -111,23 +110,23 @@ where
         (self.players[player].x, self.players[player].y)
     }
 
-    pub fn get_current_value(&self) -> &T {
+    pub fn get_current_value(&self) -> T {
         let player = 0;
         self.get_player_value(player)
     }
 
-    pub fn get_player_value(&self, player: usize) -> &T {
+    pub fn get_player_value(&self, player: usize) -> T {
         let x: usize = self.players[player].x.try_into().unwrap();
         let y: usize = self.players[player].y.try_into().unwrap();
-        self.grid.get(y, x).unwrap()
+        self.grid[y][x]
     }
 
-    pub fn step(&mut self, direction: Direction) -> Option<&T> {
+    pub fn step(&mut self, direction: Direction) -> Option<T> {
         let player = 0;
         self.step_player(player, direction)
     }
 
-    pub fn step_player(&mut self, player: usize, direction: Direction) -> Option<&T> {
+    pub fn step_player(&mut self, player: usize, direction: Direction) -> Option<T> {
         let (step_x, step_y) = match direction {
             Direction::Up => (0, -1),
             Direction::Down => (0, 1),
@@ -145,8 +144,8 @@ where
             id: self.players[player].id,
         };
 
-        let x_max: i32 = self.grid.size().0.try_into().unwrap();
-        let y_max: i32 = self.grid.size().1.try_into().unwrap();
+        let x_max = self.grid.cols() as i32;
+        let y_max = self.grid.rows() as i32;
         match new_location {
             _ if new_location.x == -1 => None,
             _ if new_location.y == -1 => None,
@@ -156,7 +155,7 @@ where
                 self.players[player] = new_location;
                 let x: usize = new_location.x.try_into().unwrap();
                 let y: usize = new_location.y.try_into().unwrap();
-                Some(self.grid.get(y, x).unwrap())
+                Some(self.grid[y][x])
             }
         }
     }
@@ -170,6 +169,36 @@ where
         }
 
         false
+    }
+
+    pub fn get_nearby_square(&self, player: usize, direction: Direction) -> T {
+        let (step_x, step_y) = match direction {
+            Direction::Up => (0, -1),
+            Direction::Down => (0, 1),
+            Direction::Left => (-1, 0),
+            Direction::Right => (1, 0),
+            Direction::UpLeft => (-1, -1),
+            Direction::UpRight => (1, -1),
+            Direction::DownLeft => (-1, 1),
+            Direction::DownRight => (1, 1),
+        };
+
+        let x = (self.players[player].x + step_x) as usize;
+        let y = (self.players[player].y + step_y) as usize;
+        self.grid[y][x]
+    }
+
+    pub fn get_nearby_squares(&mut self, player: usize) -> Vec<Direction> {
+        let mut values = vec![];
+        let orig_point = self.get_player_location(player);
+        for direction in Direction::straight_iterator() {
+            if let Some(value) = self.step_player(player, direction) {
+                values.push(direction);
+            }
+            self.set_player_location(player, orig_point.0, orig_point.1);
+        }
+
+        values
     }
 
     pub fn where_to_move(&self, start: usize, destination: usize) -> Direction {
@@ -186,6 +215,23 @@ where
             s if s.x > d.x && s.y < d.y => Direction::DownLeft,
             s if s.x < d.x && s.y > d.y => Direction::UpRight,
             s if s.x < d.x && s.y < d.y => Direction::DownRight,
+            _ => panic!("Fix me"),
+        }
+    }
+
+    pub fn where_to_move_straight(&self, start: usize, destination: usize) -> Direction {
+        let s = self.players[start];
+        let d = self.players[destination];
+
+        let dx = d.x - s.x;
+        let dy = d.y - s.y;
+
+        match s {
+            // Move straight
+            _ if dx >= 0 && i32::abs(dx) >= i32::abs(dy) => Direction::Right,
+            _ if dx < 0 && i32::abs(dx) > i32::abs(dy) => Direction::Left,
+            _ if dy >= 0 => Direction::Up,
+            _ if dy < 0 => Direction::Down,
             _ => panic!("Fix me"),
         }
     }

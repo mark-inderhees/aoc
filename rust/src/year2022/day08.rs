@@ -84,7 +84,7 @@ impl Puzzle for Day08 {
                     while let Some(tree_height2) = self.board.step(direction) {
                         let s = count_trees.pop().unwrap().clone();
                         count_trees.push(s + 1);
-                        if *tree_height2 >= tree_height {
+                        if tree_height2 >= tree_height {
                             break;
                         }
                     }
