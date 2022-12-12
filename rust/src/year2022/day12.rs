@@ -20,50 +20,24 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
     if count > 600 {
         return;
     }
-    if total_count.len() > 0 && count >= *total_count.iter().min().unwrap() {
-        return;
-    }
+
+    // Check if we've ever been here at a more optimized path
     let step_count = day.step_count.grid()[location.y as usize][location.x as usize];
     if count >= step_count {
         return;
     }
     day.step_count.set_at(location.x, location.y, count);
+
     // Force current location
     day.grid.set_location(location.x, location.y);
     let my_char = day.grid.get_current_value();
-    // print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-
-    // day.grid.print_board_with_players();
-
-    let directions = day.grid.get_nearby_squares(0);
-    // let where_to_go = day.grid.where_to_move_straight(0, 1);
-    // if directions.contains(&where_to_go) {
-    //     let index = directions.iter().position(|x| *x == where_to_go).unwrap();
-    //     directions.remove(index);
-    //     let copy = directions.clone();
-    //     directions = vec![where_to_go];
-    //     directions.extend(copy.iter());
-    // }
-
-    // log::debug!(
-    //     "[{}] At {}, {} = {}, go {:?}",
-    //     count,
-    //     location.x,
-    //     location.y,
-    //     my_char,
-    //     directions
-    // );
 
     // Try all new locations
+    let directions = day.grid.get_nearby_squares(0);
     for direction in directions {
-        if total_count.len() > 0 && count + 1 >= *total_count.iter().min().unwrap() {
-            return;
-        }
-
         // Try this location
         day.grid.set_location(location.x, location.y);
         day.grid.step(direction).unwrap();
-        // log::debug!("Just moved {:?}", direction);
         let new_location = day.grid.get_player_location(0);
         let point = Point {
             x: new_location.0,
@@ -72,7 +46,6 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
         let near_char = day.grid.get_current_value();
 
         // See if we are allowed to move here
-        // log::debug!("I have never been here");
         let from = my_char as u32;
         let to = near_char as u32;
         if to <= from + 1 {
@@ -80,29 +53,10 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
             if point.x == day.end_x && point.y == day.end_y {
                 log::debug!("THIS IS THE END = {}", count);
                 total_count.push(count + 1);
+                return;
             }
             // We can move, so do it!
-            // log::debug!(
-            //     "Moving from {}, {} = {} to {}, {} = {}",
-            //     location.x,
-            //     location.y,
-            //     my_char,
-            //     point.x,
-            //     point.y,
-            //     near_char
-            // );
-
             move_it(day, point, count + 1, total_count);
-        } else {
-            // log::debug!(
-            //     "Cannot step from {}, {} = {} to {}, {} = {}",
-            //     location.x,
-            //     location.y,
-            //     my_char,
-            //     point.x,
-            //     point.y,
-            //     near_char
-            // );
         }
     }
 }
