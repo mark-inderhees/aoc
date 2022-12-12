@@ -54,11 +54,7 @@ impl Puzzle for Day12 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let me = self.grid.get_player_location(0);
-        let mut total_count = vec![];
-        self.grid.find_shortest_path(me, 0, &mut total_count, valid_move, 1);
-        total_count.sort();
-        println!("{:?}", total_count);
-        let answer = total_count[0];
+        let answer = self.grid.find_shortest_path(me, 0, valid_move, 1);
         Ok(answer.to_string())
     }
 
@@ -70,7 +66,7 @@ impl Puzzle for Day12 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let mut answers = vec![];
+        let mut answer = 0;
         for y in 0..self.grid.grid().rows() {
             for x in 0..self.grid.grid().cols() {
                 let chr = self.grid.grid()[y][x];
@@ -80,18 +76,10 @@ impl Puzzle for Day12 {
                         y: y as i32,
                     };
                     self.grid.set_location(point);
-                    let mut total_count = vec![];
-                    self.grid.find_shortest_path(point, 0, &mut total_count, valid_move, 1);
-                    total_count.sort();
-                    if total_count.len() > 0 {
-                        answers.push(total_count[0]);
-                    }
+                    answer = self.grid.find_shortest_path(point, 0, valid_move, 1);
                 }
             }
         }
-        answers.sort();
-        println!("{:?}", answers);
-        let answer = answers[0];
         Ok(answer.to_string())
     }
 

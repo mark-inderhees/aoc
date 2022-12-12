@@ -34,6 +34,7 @@ where
     grid: Grid<T>,
     grid_state: Grid<State>,
     players: Vec<Player<T>>,
+    shortest_path: u32,
 }
 
 #[derive(Debug, EnumIter, Clone, Copy, PartialEq)]
@@ -75,6 +76,7 @@ where
             grid: grid![],
             grid_state: grid![],
             players: vec![],
+            shortest_path: u32::MAX,
         }
     }
 
@@ -265,18 +267,17 @@ where
         &mut self,
         location: BoardPoint,
         count: u32,
-        total_count: &mut Vec<u32>,
         valid_move: fn(T, T) -> bool,
         taget_player: usize,
-    ) {
+    ) -> u32 {
         if count > 600 {
-            return;
+            return self.shortest_path;
         }
 
         // Check if we've ever been here at a more optimized path
         let step_count = self.grid_state[location.y as usize][location.x as usize].step_count;
         if count >= step_count {
-            return;
+            return self.shortest_path;
         }
         self.grid_state[location.y as usize][location.x as usize].step_count = count;
 
@@ -299,19 +300,18 @@ where
                 let taget = self.get_player_location(taget_player);
                 if new_location.x == taget.x && new_location.y == taget.y {
                     log::debug!("THIS IS THE END = {}", count);
-                    total_count.push(count + 1);
-                    return;
+                    let final_count = count + 1;
+                    if final_count < self.shortest_path {
+                        self.shortest_path = final_count;
+                    }
+                    return self.shortest_path;
                 }
 
                 // We can move, so do it!
-                self.find_shortest_path(
-                    new_location,
-                    count + 1,
-                    total_count,
-                    valid_move,
-                    taget_player,
-                );
+                self.find_shortest_path(new_location, count + 1, valid_move, taget_player);
             }
         }
+
+        self.shortest_path
     }
 }
