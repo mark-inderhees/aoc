@@ -175,7 +175,7 @@ where
         let mut values = vec![];
         let orig_point = self.get_player_location(player);
         for direction in Direction::straight_iterator() {
-            if let Some(value) = self.step_player(player, direction) {
+            if let Some(_value) = self.step_player(player, direction) {
                 values.push(direction);
             }
             self.set_player_location(player, orig_point.0, orig_point.1);
@@ -202,6 +202,7 @@ where
         }
     }
 
+    #[allow(dead_code)]
     pub fn where_to_move_straight(&self, start: usize, destination: usize) -> Direction {
         let s = self.players[start];
         let d = self.players[destination];

@@ -35,7 +35,7 @@ fn move_it(day: &mut Day12, location: Point<i32>, count: u32, total_count: &mut 
 
     // day.grid.print_board_with_players();
 
-    let mut directions = day.grid.get_nearby_squares(0);
+    let directions = day.grid.get_nearby_squares(0);
     // let where_to_go = day.grid.where_to_move_straight(0, 1);
     // if directions.contains(&where_to_go) {
     //     let index = directions.iter().position(|x| *x == where_to_go).unwrap();
