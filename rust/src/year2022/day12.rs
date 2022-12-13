@@ -6,8 +6,8 @@ use crate::utils::utils::*;
 
 pub struct Day12 {
     grid: Board<char>,
-    start: BoardPoint,
-    end: BoardPoint,
+    start_player: PlayerId,
+    end_player: PlayerId,
 }
 
 fn valid_move(from: char, to: char) -> bool {
@@ -22,23 +22,24 @@ impl Puzzle for Day12 {
         #[allow(unused_mut)]
         let mut day = Day12 {
             grid: Board::new(),
-            start: BoardPoint { x: 0, y: 0 },
-            end: BoardPoint { x: 0, y: 0 },
+            start_player: INVALID_PLAYER,
+            end_player: INVALID_PLAYER,
         };
-
-        day.grid.add_player(BoardPoint { x: 0, y: 0 }, 'S');
-        day.grid.add_player(BoardPoint { x: 0, y: 0 }, 'E');
 
         for (i, mut line) in input.lines().enumerate() {
             if char_in_string(&'S', &line.to_string()) {
-                day.start.x = line.find("S").unwrap() as i32;
-                day.start.y = i as i32;
-                day.grid.set_player_location(0, day.start);
+                let start = BoardPoint {
+                    x: line.find("S").unwrap() as i32,
+                    y: i as i32,
+                };
+                day.start_player = day.grid.add_player(start, 'S');
             }
             if char_in_string(&'E', &line.to_string()) {
-                day.end.x = line.find("E").unwrap() as i32;
-                day.end.y = i as i32;
-                day.grid.set_player_location(1, day.end);
+                let end = BoardPoint {
+                    x: line.find("E").unwrap() as i32,
+                    y: i as i32,
+                };
+                day.end_player = day.grid.add_player(end, 'E');
             }
             let line2 = &line.replace("S", "a");
             line = line2;
@@ -53,8 +54,9 @@ impl Puzzle for Day12 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let me = self.grid.get_player_location(0);
-        let answer = self.grid.find_shortest_path(me, 0, valid_move, 1);
+        let answer = self
+            .grid
+            .find_shortest_path(self.start_player, self.end_player, valid_move);
         Ok(answer.to_string())
     }
 
@@ -66,7 +68,7 @@ impl Puzzle for Day12 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let mut answer = 0;
+        let mut answers = vec![];
         for y in 0..self.grid.grid().rows() {
             for x in 0..self.grid.grid().cols() {
                 let chr = self.grid.grid()[y][x];
@@ -75,12 +77,17 @@ impl Puzzle for Day12 {
                         x: x as i32,
                         y: y as i32,
                     };
-                    self.grid.set_location(point);
-                    answer = self.grid.find_shortest_path(point, 0, valid_move, 1);
+                    let new_player = self.grid.add_player(point, '?');
+                    answers.push(self.grid.find_shortest_path(
+                        new_player,
+                        self.end_player,
+                        valid_move,
+                    ));
                 }
             }
         }
-        Ok(answer.to_string())
+        answers.sort();
+        Ok(answers[0].to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
