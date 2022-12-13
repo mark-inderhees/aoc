@@ -19,7 +19,7 @@ where
     // Remove common text seperators
     let remove = [';', ','];
     for r in remove {
-        line = line.replace(r, "");
+        line = line.replace(r, " ");
     }
 
     // Start adding values to the list
