@@ -281,10 +281,6 @@ where
         while jobs.len() > 0 {
             let job = jobs.pop().unwrap();
 
-            if job.count > 600 {
-                continue;
-            }
-
             // Check if we've ever been here at a more optimized path
             let x: usize = job.location.x as usize;
             let y: usize = job.location.y as usize;
@@ -321,7 +317,6 @@ where
                     }
 
                     // We can move, so do it!
-                    // self.find_shortest_path(new_location, count + 1, valid_move, taget_player);
                     jobs.push(PathWork {
                         location: new_location,
                         count: job.count + 1,
