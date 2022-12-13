@@ -278,6 +278,7 @@ where
             count: 0,
         }];
         let mut shortest_path = u32::MAX;
+        let taget = self.get_player_location(taget_player);
 
         while jobs.len() > 0 {
             let job = jobs.pop().unwrap();
@@ -309,7 +310,6 @@ where
                     // See if we are allowed to move here
                     if valid_move(my_char, near_char) {
                         // Check if we are done
-                        let taget = self.get_player_location(taget_player);
                         if new_location.x == taget.x && new_location.y == taget.y {
                             log::debug!("THIS IS THE END = {}", job.count);
                             let final_count = job.count + 1;
