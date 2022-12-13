@@ -5,13 +5,13 @@ use crate::puzzle::Puzzle;
 #[allow(unused_imports)]
 use crate::utils::utils::*;
 
-pub struct DayXX {}
+pub struct Day13 {}
 
-impl Puzzle for DayXX {
+impl Puzzle for Day13 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = DayXX {};
+        let mut day = Day13 {};
 
         Ok(day)
     }
