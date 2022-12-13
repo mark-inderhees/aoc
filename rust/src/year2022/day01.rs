@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
+use crate::utils::utils::*;
 
 pub struct Day01 {
     elves: Vec<u32>,
@@ -11,10 +12,7 @@ impl Puzzle for Day01 {
         let mut day = Day01 { elves: vec![] };
 
         for elf in input.split("\n\n") {
-            let calories: u32 = elf
-                .lines()
-                .map(|calorie| calorie.parse::<u32>().expect("Parse error"))
-                .sum();
+            let calories: u32 = elf.lines().map(|calorie| get_val::<u32>(calorie)).sum();
             day.elves.push(calories);
         }
 

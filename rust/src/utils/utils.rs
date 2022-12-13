@@ -32,3 +32,13 @@ where
 
     values
 }
+
+/// Get a single value, the first value found in the line
+pub fn get_val<T>(s: &str) -> T
+where
+    T: FromStr,
+    T: Copy,
+{
+    let values = get_vals(s);
+    values[0]
+}
