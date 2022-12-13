@@ -281,6 +281,11 @@ where
         while jobs.len() > 0 {
             let job = jobs.pop().unwrap();
 
+            // Check if this count is already too long
+            if job.count >= shortest_path {
+                continue;
+            }
+
             // Check if we've ever been here at a more optimized path
             let x: usize = job.location.x as usize;
             let y: usize = job.location.y as usize;
