@@ -291,17 +291,17 @@ where
             self.grid_state[y][x].step_count = job.count;
 
             // Force current location
-            self.set_location(job.location);
-            let my_char = self.get_current_value();
+            self.set_player_location(from_player, job.location);
+            let my_char = self.get_player_value(from_player);
 
             // Try all new locations
-            let directions = self.get_nearby_squares(0);
+            let directions = self.get_nearby_squares(from_player);
             for direction in directions {
                 // Try this location
-                self.set_location(job.location);
-                self.step(direction).unwrap();
-                let new_location = self.get_player_location(0);
-                let near_char = self.get_current_value();
+                self.set_player_location(from_player, job.location);
+                self.step_player(from_player, direction).unwrap();
+                let new_location = self.get_player_location(from_player);
+                let near_char = self.get_player_value(from_player);
 
                 // See if we are allowed to move here
                 if valid_move(my_char, near_char) {
