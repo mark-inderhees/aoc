@@ -35,6 +35,7 @@ fn drop_sand(day: &mut Day14) -> u32 {
             }
             if !okay {
                 // Player can no longer move
+                day.grid.set_at(day.grid.get_player_location(id), 'o');
                 break;
             }
         }
@@ -87,6 +88,7 @@ impl Puzzle for Day14 {
 
         // Add wall types
         day.grid.add_wall('#');
+        day.grid.add_wall('o');
         day.grid.set_players_as_walls();
 
         for line in input.lines() {
@@ -158,7 +160,7 @@ impl Puzzle for Day14 {
             }
         }
 
-        println!("{:?}, {:?}", day.min, day.max);
+        log::debug!("{:?}, {:?}", day.min, day.max);
 
         Ok(day)
     }
