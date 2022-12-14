@@ -12,9 +12,7 @@ pub const INVALID_PLAYER: usize = usize::MAX;
 #[derive(Debug, Clone, Copy)]
 struct Player<T>
 where
-    T: Clone,
-    T: Copy,
-    T: Debug,
+    T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
 {
     point: BoardPoint,
     id: T,
@@ -29,13 +27,13 @@ struct State {
 #[derive(Debug)]
 pub struct Board<T>
 where
-    T: Clone,
-    T: Copy,
-    T: Debug,
+    T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
 {
     grid: Grid<T>,
     grid_state: Grid<State>,
     players: Vec<Player<T>>,
+    walls: Vec<T>,
+    players_are_walls: bool,
 }
 
 #[derive(Debug, EnumIter, Clone, Copy, PartialEq)]
@@ -68,15 +66,15 @@ impl Direction {
 
 impl<T> Board<T>
 where
-    T: Clone,
-    T: Copy,
-    T: Debug,
+    T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
 {
     pub fn new() -> Board<T> {
         Board {
             grid: grid![],
             grid_state: grid![],
             players: vec![],
+            walls: vec![],
+            players_are_walls: false,
         }
     }
 
@@ -101,6 +99,24 @@ where
     pub fn add_player(&mut self, point: BoardPoint, id: T) -> PlayerId {
         self.players.push(Player { point, id });
         self.players.len() - 1
+    }
+
+    pub fn add_wall(&mut self, wall: T) {
+        self.walls.push(wall);
+    }
+
+    pub fn set_players_as_walls(&mut self) {
+        self.players_are_walls = true;
+    }
+
+    pub fn player_is_here(&self, location: BoardPoint) -> bool {
+        for player in &self.players {
+            if player.point == location {
+                return true;
+            }
+        }
+
+        false
     }
 
     pub fn width(&self) -> i32 {
@@ -174,10 +190,17 @@ where
             _ if new_location.point.x == x_max => None,
             _ if new_location.point.y == y_max => None,
             _ => {
-                self.players[player] = new_location;
                 let x: usize = new_location.point.x as usize;
                 let y: usize = new_location.point.y as usize;
-                Some(self.grid[y][x])
+                let value = self.grid[y][x];
+                if self.walls.contains(&value) {
+                    return None;
+                }
+                if self.players_are_walls && self.player_is_here(new_location.point) {
+                    return None;
+                }
+                self.players[player] = new_location;
+                Some(value)
             }
         }
     }
@@ -246,6 +269,14 @@ where
     }
 
     pub fn print_board_with_players(&mut self) {
+        self.print_board_with_players_helper(false);
+    }
+
+    pub fn print_board_with_players_pretty(&mut self) {
+        self.print_board_with_players_helper(true);
+    }
+
+    fn print_board_with_players_helper(&mut self, pretty: bool) {
         let orig: Vec<T> = self
             .players
             .iter()
@@ -255,7 +286,16 @@ where
         for player in self.players.clone().iter().rev() {
             self.set_at(player.point, player.id);
         }
-        log::debug!("{:#?}", self.grid);
+        if pretty {
+            for row in 0..self.height() as usize {
+                for t in self.grid.iter_row(row) {
+                    print!("{}", t);
+                }
+                println!("");
+            }
+        } else {
+            log::debug!("{:#?}", self.grid);
+        }
         for (player, id) in zip(self.players.clone(), orig) {
             self.set_at(player.point, id);
         }
