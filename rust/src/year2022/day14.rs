@@ -9,6 +9,8 @@ use crate::utils::utils::*;
 pub struct Day14 {
     grid: Board<char>,
     offset: BoardPoint,
+    min: BoardPoint,
+    max: BoardPoint,
 }
 
 fn drop_sand(day: &mut Day14) -> u32 {
@@ -41,6 +43,7 @@ fn drop_sand(day: &mut Day14) -> u32 {
             if location.x == 0
                 || location.x == day.grid.width() - 1
                 || location.y == day.grid.height() - 1
+                || (location.x == origin.x && location.y == origin.y)
             {
                 break;
             }
@@ -58,22 +61,24 @@ impl Puzzle for Day14 {
         let mut day = Day14 {
             grid: Board::new(),
             offset: BoardPoint { x: 0, y: 0 },
+            min: BoardPoint { x: 1000, y: 1000 },
+            max: BoardPoint { x: 0, y: 0 },
         };
 
         let test = input.lines().count() < 10;
         if test {
             // 11x11 grid
             // min, max: Point { x: 494, y: 4 }, Point { x: 503, y: 9 }
-            day.offset.x = 493;
-            let row = vec!['.'; 11];
-            for _ in 0..11 {
+            day.offset.x = 400;
+            let row = vec!['.'; 200];
+            for _ in 0..13 {
                 day.grid.push_row(row.clone());
             }
         } else {
             // min, max: Point { x: 483, y: 16 }, Point { x: 544, y: 164 }
-            day.offset.x = 480;
-            let row = vec!['.'; 100];
-            for _ in 0..200 {
+            day.offset.x = 330;
+            let row = vec!['.'; 340];
+            for _ in 0..167 {
                 day.grid.push_row(row.clone());
             }
         }
@@ -81,9 +86,6 @@ impl Puzzle for Day14 {
         // Add wall types
         day.grid.add_wall('#');
         day.grid.set_players_as_walls();
-
-        let mut p_max = BoardPoint { x: 0, y: 0 };
-        let mut p_min = BoardPoint { x: 1000, y: 1000 };
 
         for line in input.lines() {
             let mut started = false;
@@ -94,17 +96,17 @@ impl Puzzle for Day14 {
                     x: values[0],
                     y: values[1],
                 };
-                if second.x > p_max.x {
-                    p_max.x = second.x;
+                if second.x > day.max.x {
+                    day.max.x = second.x;
                 }
-                if second.x < p_min.x {
-                    p_min.x = second.x;
+                if second.x < day.min.x {
+                    day.min.x = second.x;
                 }
-                if second.y > p_max.y {
-                    p_max.y = second.y;
+                if second.y > day.max.y {
+                    day.max.y = second.y;
                 }
-                if second.y < p_min.y {
-                    p_min.y = second.y;
+                if second.y < day.min.y {
+                    day.min.y = second.y;
                 }
                 if started {
                     // connect lines
@@ -154,8 +156,8 @@ impl Puzzle for Day14 {
             }
         }
 
-        println!("{:?}, {:?}", p_min, p_max);
-        day.grid.print_board_with_players_pretty();
+        println!("{:?}, {:?}", day.min, day.max);
+        // day.grid.print_board_with_players_pretty();
 
         Ok(day)
     }
@@ -176,13 +178,27 @@ impl Puzzle for Day14 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        for x in 0..self.grid.width() {
+            self.grid.set_at(
+                BoardPoint {
+                    x,
+                    y: self.max.y + 2,
+                },
+                '#',
+            );
+        }
+        self.grid.print_board_with_players_pretty();
+        let count = drop_sand(self) + 1;
+        println!("{count}");
+        self.grid.print_board_with_players_pretty();
+
+        Ok(count.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(93.to_string()),
+            false => Some(26170.to_string()),
         }
     }
 }
