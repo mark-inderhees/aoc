@@ -14,6 +14,7 @@ pub struct Day14 {
 }
 
 fn drop_sand(day: &mut Day14) -> u32 {
+    // day.grid.print_board_with_players_pretty();
     let origin = BoardPoint {
         x: 500 - day.offset.x,
         y: 0,
@@ -50,6 +51,7 @@ fn drop_sand(day: &mut Day14) -> u32 {
         }
         count += 1;
     }
+    // day.grid.print_board_with_players_pretty();
 
     count
 }
@@ -157,16 +159,12 @@ impl Puzzle for Day14 {
         }
 
         println!("{:?}, {:?}", day.min, day.max);
-        // day.grid.print_board_with_players_pretty();
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
         let count = drop_sand(self);
-        println!("{count}");
-        self.grid.print_board_with_players_pretty();
-
         Ok(count.to_string())
     }
 
@@ -187,11 +185,7 @@ impl Puzzle for Day14 {
                 '#',
             );
         }
-        self.grid.print_board_with_players_pretty();
         let count = drop_sand(self) + 1;
-        println!("{count}");
-        self.grid.print_board_with_players_pretty();
-
         Ok(count.to_string())
     }
 

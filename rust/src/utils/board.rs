@@ -272,6 +272,7 @@ where
         self.print_board_with_players_helper(false);
     }
 
+    #[allow(dead_code)]
     pub fn print_board_with_players_pretty(&mut self) {
         self.print_board_with_players_helper(true);
     }
