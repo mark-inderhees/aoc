@@ -21,7 +21,6 @@ struct Pair {
     sensor: BoardPoint,
     beacon: BoardPoint,
     distance: i32,
-    id: u32,
 }
 
 fn manhattan_distance(p1: BoardPoint, p2: BoardPoint) -> i32 {
@@ -55,13 +54,6 @@ fn sensor_covers_row(pair: &Pair, row: i32) -> bool {
 //     }
 // }
 
-fn offset_point(p: BoardPoint, offset: BoardPoint) -> BoardPoint {
-    BoardPoint {
-        x: p.x - offset.x,
-        y: p.y - offset.y,
-    }
-}
-
 impl Puzzle for Day15 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -84,8 +76,6 @@ impl Puzzle for Day15 {
         log::debug!("Part 1 target {}", day.target_row);
         log::debug!("Part 2 max {}", day.max);
 
-        let mut id = 0;
-
         for line in input.lines() {
             let vals: Vec<i32> = get_vals(line);
             let sensor = BoardPoint {
@@ -100,9 +90,7 @@ impl Puzzle for Day15 {
                 sensor,
                 beacon,
                 distance: manhattan_distance(sensor, beacon),
-                id,
             };
-            id += 1;
             day.pairs.push(pair);
         }
 
@@ -161,20 +149,6 @@ impl Puzzle for Day15 {
         log::debug!("Min {min_x},{min_y} to max {max_x}, {max_y}");
         log::debug!("Max distance {max_dist}");
 
-        // let mut board = Board::<char>::new();
-        // let width = max_x - min_x + 1;
-        // let height = max_y - min_y + 1;
-        // let offset = BoardPoint { x: min_x, y: min_y };
-        // for _ in 0..height {
-        //     board.push_row(vec!['.'; width as usize]);
-        // }
-        // for pair in pairs {
-        //     board.add_player(offset_point(pair.sensor, offset), 'S');
-        //     board.add_player(offset_point(pair.beacon, offset), 'B');
-        //     draw_manhattan_radius(offset_point(pair.sensor, offset), pair.distance, &mut board);
-        // }
-        // board.print_board_with_players_pretty();
-
         let mut count = 0;
         for x in min_x..=max_x {
             let here = BoardPoint {
@@ -183,22 +157,17 @@ impl Puzzle for Day15 {
             };
 
             // Compare manhattan distance to each pair and if that's inside the distance
-            let mut hash = '.';
             for pair in &self.pairs {
                 let dist = manhattan_distance(here, pair.sensor);
                 if pair.distance > dist {
                     count += 1;
-                    hash = '#';
                     break;
                 } else if pair.distance == dist && pair.beacon.x != x {
                     count += 1;
-                    hash = '#';
                     break;
                 }
             }
-            // print!("{hash}");
         }
-        println!("");
 
         Ok(count.to_string())
     }
@@ -231,25 +200,12 @@ impl Puzzle for Day15 {
                         let x_to_move_to = pair.sensor.x + pair.distance - y_from_sensor + 1;
                         if x_to_move_to <= self.max {
                             x = x_to_move_to;
-
-                            let bob = manhattan_distance(BoardPoint { x, y }, pair.sensor);
-                            let info = manhattan_distance(pair.sensor, pair.beacon);
-                            assert_eq!(bob, pair.distance + 1);
-                            // log::debug!(
-                            //     "Using {}, Skipping from {old_x}, {old_y} right to {x}, {y}",
-                            //     pair.id
-                            // );
-                            // let dist2 = manhattan_distance(BoardPoint { x, y }, pair.sensor);
-                            // log::debug!("{dist2} vs {}", pair.distance);
-                        } else {
-                            // Skip to the start of the next line
-                            x = 0;
-                            y += 1;
-                            // log::debug!(
-                            //     "Using {}, Skipping from {old_x}, {old_y} down to {x}, {y}",
-                            //     pair.id
-                            // );
+                            break;
                         }
+
+                        // Skip to the start of the next line
+                        x = 0;
+                        y += 1;
                         break;
                     }
                 }

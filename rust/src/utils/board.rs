@@ -133,6 +133,7 @@ where
         self.grid[y_][x_] = value;
     }
 
+    #[allow(dead_code)]
     pub fn get_at(&self, point: BoardPoint) -> T {
         let x_: usize = point.x as usize;
         let y_: usize = point.y as usize;

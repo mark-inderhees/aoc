@@ -23,7 +23,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 2, // __BOOTSTRAP_PART__
+        default_value_t = 1, // __BOOTSTRAP_PART__
     )]
     part: u32,
 
@@ -37,7 +37,7 @@ struct Args {
         short,
         value_name = "BOOL",
         action = clap::ArgAction::Set,
-        default_value_t = false, // __BOOTSTRAP_TEST__
+        default_value_t = true, // __BOOTSTRAP_TEST__
     )]
     test: bool,
 
