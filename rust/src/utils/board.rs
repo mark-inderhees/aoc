@@ -133,6 +133,12 @@ where
         self.grid[y_][x_] = value;
     }
 
+    pub fn get_at(&self, point: BoardPoint) -> T {
+        let x_: usize = point.x as usize;
+        let y_: usize = point.y as usize;
+        self.grid[y_][x_]
+    }
+
     pub fn set_location(&mut self, point: BoardPoint) {
         let player = 0;
         self.set_player_location(player, point);

@@ -17,7 +17,7 @@ where
     let mut line: String = s.clone().to_string();
 
     // Remove common text seperators
-    let remove = [';', ','];
+    let remove = [';', ',', '=', ':'];
     for r in remove {
         line = line.replace(r, " ");
     }
