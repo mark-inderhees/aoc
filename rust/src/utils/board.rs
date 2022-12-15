@@ -379,4 +379,24 @@ where
 
         shortest_path
     }
+
+    #[allow(dead_code)]
+    pub fn draw_manhattan_radius(&mut self, point: BoardPoint, dist: i32, value: T) {
+        let mut x_offset = 0;
+        let y_min = point.y - dist;
+        let y_max = point.y + dist;
+        for y in y_min..point.y {
+            for x in (point.x - x_offset)..=(point.x + x_offset) {
+                self.set_at(BoardPoint { x, y }, value);
+            }
+            x_offset += 1;
+        }
+
+        for y in point.y..=y_max {
+            for x in (point.x - x_offset)..=(point.x + x_offset) {
+                self.set_at(BoardPoint { x, y }, value);
+            }
+            x_offset -= 1;
+        }
+    }
 }

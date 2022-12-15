@@ -1,4 +1,7 @@
 use std::str::FromStr;
+use rusttype::Point;
+
+pub type UtilsPoint = Point<i32>;
 
 /// Tests if this character is in the string
 pub fn char_in_string(c: &char, s: &String) -> bool {
@@ -41,4 +44,11 @@ where
 {
     let values = get_vals(s);
     values[0]
+}
+
+/// Get the taxi cab distance between two points
+pub fn manhattan_distance(p1: UtilsPoint, p2: UtilsPoint) -> i32 {
+    let x = (p1.x - p2.x).abs();
+    let y = (p1.y - p2.y).abs();
+    x + y
 }

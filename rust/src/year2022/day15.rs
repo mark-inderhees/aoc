@@ -1,9 +1,7 @@
 use anyhow::Result;
-use rusttype::Point;
 use std::cmp::*;
 
 use crate::puzzle::Puzzle;
-// use crate::utils::board::*;
 
 #[allow(unused_imports)]
 use crate::utils::utils::*;
@@ -14,19 +12,11 @@ pub struct Day15 {
     max: i32,
 }
 
-type BoardPoint = Point<i32>;
-
 #[derive(Debug)]
 struct Pair {
-    sensor: BoardPoint,
-    beacon: BoardPoint,
+    sensor: UtilsPoint,
+    beacon: UtilsPoint,
     distance: i32,
-}
-
-fn manhattan_distance(p1: BoardPoint, p2: BoardPoint) -> i32 {
-    let x = (p1.x - p2.x).abs();
-    let y = (p1.y - p2.y).abs();
-    x + y
 }
 
 fn sensor_covers_row(pair: &Pair, row: i32) -> bool {
@@ -34,25 +24,6 @@ fn sensor_covers_row(pair: &Pair, row: i32) -> bool {
     let maximum = pair.sensor.y + pair.distance;
     (minimum..=maximum).contains(&row)
 }
-
-// fn draw_manhattan_radius(p: BoardPoint, dist: i32, board: &mut Board<char>) {
-//     let mut x_offset = 0;
-//     let y_min = p.y - dist;
-//     let y_max = p.y + dist;
-//     for y in y_min..p.y {
-//         for x in (p.x - x_offset)..=(p.x + x_offset) {
-//             board.set_at(BoardPoint { x, y }, '#');
-//         }
-//         x_offset += 1;
-//     }
-
-//     for y in p.y..=y_max {
-//         for x in (p.x - x_offset)..=(p.x + x_offset) {
-//             board.set_at(BoardPoint { x, y }, '#');
-//         }
-//         x_offset -= 1;
-//     }
-// }
 
 impl Puzzle for Day15 {
     #[allow(unused_variables)]
@@ -78,11 +49,11 @@ impl Puzzle for Day15 {
 
         for line in input.lines() {
             let vals: Vec<i32> = get_vals(line);
-            let sensor = BoardPoint {
+            let sensor = UtilsPoint {
                 x: vals[0],
                 y: vals[1],
             };
-            let beacon = BoardPoint {
+            let beacon = UtilsPoint {
                 x: vals[2],
                 y: vals[3],
             };
@@ -151,7 +122,7 @@ impl Puzzle for Day15 {
 
         let mut count = 0;
         for x in min_x..=max_x {
-            let here = BoardPoint {
+            let here = UtilsPoint {
                 x,
                 y: self.target_row,
             };
@@ -186,7 +157,7 @@ impl Puzzle for Day15 {
             let mut x = 0;
             while x <= self.max {
                 let mut keep_going = false;
-                let here = BoardPoint { x, y };
+                let here = UtilsPoint { x, y };
                 for pair in self.pairs.iter() {
                     let dist = manhattan_distance(here, pair.sensor);
                     perf += 1;
@@ -194,8 +165,6 @@ impl Puzzle for Day15 {
                         keep_going = true;
 
                         // Try to jump to the right most unknown spot for this sensor
-                        // let old_x = x;
-                        // let old_y = y;
                         let y_from_sensor = (here.y - pair.sensor.y).abs();
                         let x_to_move_to = pair.sensor.x + pair.distance - y_from_sensor + 1;
                         if x_to_move_to <= self.max {
@@ -209,7 +178,6 @@ impl Puzzle for Day15 {
                         break;
                     }
                 }
-                // assert!(y <= self.max, "Y is toooo big");
                 if !keep_going {
                     let answer = here.x as i64 * 4000000 + here.y as i64;
                     log::debug!("Perf {perf}");
@@ -220,7 +188,7 @@ impl Puzzle for Day15 {
             y += 1;
         }
 
-        Ok("to do".to_string())
+        Ok("Unexpected result".to_string()) // Should be unreachable
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
