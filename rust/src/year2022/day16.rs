@@ -126,12 +126,6 @@ fn highest_score(day: &Day16) -> u32 {
 
         // Always turn on if not start
         if job.id != "AA" {
-            let done = tick(&mut job, 1);
-            if done {
-                finalize(&job, &mut highest_score);
-                continue;
-            }
-
             // Valve is on
             job.turned_on.push(job.id.to_string());
             job.rate += day.valves[&job.id].rate;
@@ -154,6 +148,143 @@ fn highest_score(day: &Day16) -> u32 {
             }
 
             jobs.push(new_job.clone());
+        }
+    }
+
+    highest_score
+}
+
+fn tick_p2(job: &mut PathWorkP2) -> bool {
+    // let to_tick = std::cmp::min(time, job.time_left);
+    let mut to_tick = std::cmp::min(job.p1_dist, job.p2_dist);
+    to_tick = std::cmp::min(job.time_left, to_tick);
+
+    job.score += job.rate * to_tick;
+    job.time_left -= to_tick;
+    job.time_passed += to_tick;
+
+    job.p1_dist -= to_tick;
+    job.p2_dist -= to_tick;
+
+    job.time_left == 0
+}
+
+fn finalize_p2(job: &PathWorkP2, highest_score: &mut u32) {
+    log::debug!("Part 2 all done {}", job.score);
+    if job.score > *highest_score {
+        *highest_score = job.score;
+    }
+}
+
+#[derive(Clone)]
+struct PathWorkP2 {
+    p1_id: String,
+    p2_id: String,
+    p1_dist: u32,
+    p2_dist: u32,
+    time_left: u32,
+    time_passed: u32,
+    score: u32,
+    rate: u32,
+    turned_on: Vec<String>,
+}
+
+fn highest_score_p2(day: &Day16) -> u32 {
+    // THIS P2 does NOT WORK
+    // It's CLOSE on the test data, but too low by 2
+    // For the input data, it runs forever :'(
+    let mut jobs = vec![PathWorkP2 {
+        p1_id: "AA".to_string(),
+        p2_id: "AA".to_string(),
+        p1_dist: 0,
+        p2_dist: 0,
+        time_left: 26,
+        time_passed: 1,
+        score: 0,
+        rate: 0,
+        turned_on: vec![],
+    }];
+    let mut highest_score = 0;
+
+    while jobs.len() > 0 {
+        let mut job = jobs.pop().unwrap();
+
+        // Turn on if not start and player dist == 0
+        if job.p1_id != "AA" && job.p1_dist == 0 {
+            log::debug!("P1 opened {}", job.p1_id);
+            job.turned_on.push(job.p1_id.to_string());
+            job.rate += day.valves[&job.p1_id].rate;
+        }
+
+        if job.p2_id != "AA" && job.p2_dist == 0 {
+            log::debug!("P2 opened {}", job.p1_id);
+            job.turned_on.push(job.p2_id.to_string());
+            job.rate += day.valves[&job.p2_id].rate;
+        }
+
+        // Only do new work if ready
+        let potential_p1_targets = match job.p1_dist {
+            0 => day.valves[&job.p1_id].distances.clone(),
+            _ => HashMap::from([(job.p1_id.clone(), job.p1_dist)]),
+        };
+
+        let potential_p2_targets = match job.p2_dist {
+            0 => day.valves[&job.p2_id].distances.clone(),
+            _ => HashMap::from([(job.p2_id.clone(), job.p2_dist)]),
+        };
+
+        let mut did_new_work = false;
+        for (new_id_p1, dist_p1) in &potential_p1_targets {
+            for (new_id_p2, dist_p2) in &potential_p2_targets {
+                if new_id_p1 == new_id_p2 {
+                    continue;
+                } else if job.turned_on.contains(&new_id_p1) {
+                    continue;
+                } else if job.turned_on.contains(&new_id_p2) {
+                    continue;
+                }
+
+                did_new_work = true;
+
+                log::debug!(
+                    "New job: P1 {}->{}, P2 {}->{}",
+                    job.p1_id.clone(),
+                    new_id_p1,
+                    job.p2_id.clone(),
+                    new_id_p2
+                );
+                let mut new_job = PathWorkP2 {
+                    p1_id: new_id_p1.to_string(),
+                    p2_id: new_id_p2.to_string(),
+                    p1_dist: *dist_p1,
+                    p2_dist: *dist_p2,
+                    time_left: job.time_left,
+                    time_passed: job.time_passed,
+                    score: job.score,
+                    rate: job.rate,
+                    turned_on: job.turned_on.clone(),
+                };
+
+                let done = tick_p2(&mut new_job);
+                if done {
+                    finalize_p2(&new_job, &mut highest_score);
+                    continue;
+                }
+
+                jobs.push(new_job.clone());
+            }
+        }
+
+        if !did_new_work {
+            // End the game
+            job.p1_dist = job.time_left;
+            job.p2_dist = job.time_left;
+            let done = tick_p2(&mut job);
+            assert!(done);
+            if done {
+                finalize_p2(&job, &mut highest_score);
+                continue;
+            }
         }
     }
 
@@ -197,7 +328,7 @@ impl Puzzle for Day16 {
                 for end in copy.values() {
                     if !end.on && start.id != end.id {
                         let distance = distance(&copy, &start.id, &end.id);
-                        start.distances.insert(end.id.clone(), distance);
+                        start.distances.insert(end.id.clone(), distance + 1);
                     }
                 }
             }
@@ -222,7 +353,7 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let score = 0;
+        let score = highest_score_p2(self);
 
         Ok(score.to_string())
     }
