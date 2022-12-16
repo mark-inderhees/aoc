@@ -100,10 +100,10 @@ fn finalize(job: &PathWork, highest_score: &mut u32) {
     }
 }
 
-fn highest_score(day: &Day16, start_time: u32, player_count: u32) -> u32 {
+fn highest_score(day: &Day16) -> u32 {
     let mut jobs = vec![PathWork {
         id: "AA".to_string(),
-        time_left: start_time,
+        time_left: 30,
         time_passed: 1,
         score: 0,
         rate: 0,
@@ -137,26 +137,23 @@ fn highest_score(day: &Day16, start_time: u32, player_count: u32) -> u32 {
             job.rate += day.valves[&job.id].rate;
         }
 
-        // Try all new locations
-        for _ in 0..player_count {
-            for (new_id, dist) in &day.valves[&job.id].distances {
-                let mut new_job = PathWork {
-                    id: new_id.to_string(),
-                    time_left: job.time_left,
-                    time_passed: job.time_passed,
-                    score: job.score,
-                    rate: job.rate,
-                    turned_on: job.turned_on.clone(),
-                };
+        for (new_id, dist) in &day.valves[&job.id].distances {
+            let mut new_job = PathWork {
+                id: new_id.to_string(),
+                time_left: job.time_left,
+                time_passed: job.time_passed,
+                score: job.score,
+                rate: job.rate,
+                turned_on: job.turned_on.clone(),
+            };
 
-                let done = tick(&mut new_job, *dist);
-                if done {
-                    finalize(&new_job, &mut highest_score);
-                    continue;
-                }
-
-                jobs.push(new_job.clone());
+            let done = tick(&mut new_job, *dist);
+            if done {
+                finalize(&new_job, &mut highest_score);
+                continue;
             }
+
+            jobs.push(new_job.clone());
         }
     }
 
@@ -212,7 +209,7 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let score = highest_score(self, 30, 1);
+        let score = highest_score(self);
 
         Ok(score.to_string())
     }
@@ -225,15 +222,14 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        // part 2 noooooope, not correct
-        let score = highest_score(self, 26, 2);
+        let score = 0;
 
         Ok(score.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(1707.to_string()),
             false => None,
         }
     }
