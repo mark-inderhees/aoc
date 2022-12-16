@@ -7,12 +7,7 @@ use crate::puzzle::Puzzle;
 #[allow(unused_imports)]
 use crate::utils::utils::*;
 
-// NONE OF THIS WORKS ??!?!?!?! I DUNNOOOOOOO ANY PART 1 OR PART 2
-
-// maybe shrink list just to val >0
-// then use fastest routes you calculated to jump time by distance
-// stop once all val>0 turned on
-// that should kill trees fast ?
+// PART 1 WOOOOOORKS
 
 pub struct Day16 {
     valves: HashMap<String, Valve>,
@@ -121,7 +116,7 @@ fn highest_score(day: &Day16) -> u32 {
 
         // If this is turned on, then leave
         if job.turned_on.contains(&job.id) {
-            let done = tick(&mut job, 100);
+            let done = tick(&mut job, u32::MAX);
             assert!(done);
             if done {
                 finalize(&job, &mut highest_score);
@@ -155,7 +150,7 @@ fn highest_score(day: &Day16) -> u32 {
 
             let done = tick(&mut new_job, *dist);
             if done {
-                finalize(&job, &mut highest_score);
+                finalize(&new_job, &mut highest_score);
                 continue;
             }
 
