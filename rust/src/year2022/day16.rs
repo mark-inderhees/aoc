@@ -16,7 +16,6 @@ use crate::utils::utils::*;
 
 pub struct Day16 {
     valves: HashMap<String, Valve>,
-    pipes_to_open: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -88,24 +87,22 @@ struct PathWork {
     score: u32,
     rate: u32,
     turned_on: Vec<String>,
-    turn_it_on: bool,
 }
 
-fn tick(job: &mut PathWork) {
-    log::debug!("== Minute {} ==", job.time_passed);
-    if job.turned_on.len() > 0 {
-        log::debug!(
-            "Valves {:?} are open, releasing {} pressure.",
-            job.turned_on,
-            job.rate
-        );
-    } else {
-        log::debug!("No valves are open.");
-    }
+fn tick(job: &mut PathWork, time: u32) -> bool {
+    let to_tick = std::cmp::min(time, job.time_left);
 
-    job.score += job.rate;
-    job.time_left -= 1;
-    job.time_passed += 1;
+    job.score += job.rate * to_tick;
+    job.time_left -= to_tick;
+    job.time_passed += to_tick;
+
+    job.time_left == 0
+}
+
+fn finalize(job: &PathWork, highest_score: &mut u32) {
+    if job.score > *highest_score {
+        *highest_score = job.score;
+    }
 }
 
 fn highest_score(day: &Day16) -> u32 {
@@ -116,65 +113,37 @@ fn highest_score(day: &Day16) -> u32 {
         score: 0,
         rate: 0,
         turned_on: vec![],
-        turn_it_on: false,
     }];
     let mut highest_score = 0;
-    // let mut score_map: HashMap<String, u32> = HashMap::new();
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
 
-        // Check if we've ever been here at a more optimized path
-        // let my_score = job.score + job.rate * job.time_left;
-        // if let Some(best_score) = score_map.get(&job.id) {
-        //     if my_score <= *best_score && job.pipes_to_open == 0 {
-        //         continue;
-        //     }
-        // }
-        // score_map.insert(job.id.clone(), my_score);
-        // if my_score > highest_score {
-        //     highest_score = my_score;
-        // }
-
         // If this is turned on, then leave
         if job.turned_on.contains(&job.id) {
-            continue;
+            let done = tick(&mut job, 100);
+            assert!(done);
+            if done {
+                finalize(&job, &mut highest_score);
+                continue;
+            }
         }
 
-        // Check if this location can turn on
-        // if !job.turned_on.contains(&job.id) && day.valves[&job.id].rate != 0 {
-        if job.turn_it_on {
-            tick(&mut job);
-
-            // Check if we are done
-            if job.time_left == 0 {
-                log::trace!("THIS IS THE END = {}", job.score);
-                if job.score > highest_score {
-                    highest_score = job.score;
-                }
+        // Always turn on if not start
+        if job.id != "AA" {
+            let done = tick(&mut job, 1);
+            if done {
+                finalize(&job, &mut highest_score);
                 continue;
             }
 
             // Valve is on
-            log::debug!("You open valve {}.\n", job.id);
             job.turned_on.push(job.id.to_string());
             job.rate += day.valves[&job.id].rate;
         }
 
-        tick(&mut job);
-
-        // Check if we are done
-        if job.time_left == 0 {
-            log::trace!("THIS IS THE END = {}", job.score);
-            if job.score > highest_score {
-                highest_score = job.score;
-            }
-            continue;
-        }
-
         // Try all new locations
-        for new_id in &day.valves[&job.id].connections {
-            log::debug!("You move to valve {new_id}.\n");
+        for (new_id, dist) in &day.valves[&job.id].distances {
             let mut new_job = PathWork {
                 id: new_id.to_string(),
                 time_left: job.time_left,
@@ -182,16 +151,15 @@ fn highest_score(day: &Day16) -> u32 {
                 score: job.score,
                 rate: job.rate,
                 turned_on: job.turned_on.clone(),
-                turn_it_on: false,
             };
-            jobs.push(new_job.clone());
 
-            if day.valves[new_id].rate != 0 {
-                new_job.turn_it_on = true;
-                jobs.push(new_job);
+            let done = tick(&mut new_job, *dist);
+            if done {
+                finalize(&job, &mut highest_score);
+                continue;
             }
 
-            // break; // TODO REMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+            jobs.push(new_job.clone());
         }
     }
 
@@ -204,10 +172,8 @@ impl Puzzle for Day16 {
         #[allow(unused_mut)]
         let mut day = Day16 {
             valves: HashMap::new(),
-            pipes_to_open: 0,
         };
 
-        let mut pipes_to_open = 0;
         for line in input.lines() {
             let rate = get_val(line);
             let line2 = line.replace(",", "");
@@ -217,9 +183,6 @@ impl Puzzle for Day16 {
                 0 => true,
                 _ => false,
             };
-            if !on {
-                pipes_to_open += 1;
-            }
             let mut valve = Valve {
                 id: id.clone(),
                 rate,
@@ -232,12 +195,6 @@ impl Puzzle for Day16 {
             }
             day.valves.insert(id, valve.clone());
         }
-        day.pipes_to_open = pipes_to_open;
-
-        // let mut valves: Vec<&Valve> = day.valves.values().collect();
-        // valves.sort_by(|a, b| a.rate.cmp(&b.rate));
-        // valves.reverse();
-        // log::debug!("{:#?}", valves);
 
         // Calculate all distances between points we care about
         let copy = day.valves.clone();
