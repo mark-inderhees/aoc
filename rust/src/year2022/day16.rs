@@ -357,7 +357,7 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let score = 0;
+        let score = "to do";
         // let score = highest_score_p2(self);
 
         Ok(score.to_string())
