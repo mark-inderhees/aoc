@@ -5,13 +5,36 @@ use crate::puzzle::Puzzle;
 #[allow(unused_imports)]
 use crate::utils::utils::*;
 
-pub struct Day17 {}
+enum Command {
+    Left,
+    Right,
+}
+
+enum Shapes {
+    Flat,
+    Plus,
+    L,
+    Tall,
+    Square,
+}
+
+pub struct Day17 {
+    commands: Vec<Command>,
+}
 
 impl Puzzle for Day17 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = Day17 {};
+        let mut day = Day17 { commands: vec![] };
+
+        for char in input.chars() {
+            match char {
+                '<' => day.commands.push(Command::Left),
+                '>' => day.commands.push(Command::Right),
+                _ => panic!("Unexpected char"),
+            }
+        }
 
         Ok(day)
     }
