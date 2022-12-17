@@ -1,27 +1,10 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
+use crate::utils::tetris::*;
 
 #[allow(unused_imports)]
 use crate::utils::utils::*;
-
-enum Command {
-    Left,
-    Right,
-}
-
-enum Shapes {
-    Flat, // ####
-
-    Plus, //  #
-    // ###
-    //  #
-    L, //   #
-    //   #
-    // ###
-    Tall,
-    Square,
-}
 
 pub struct Day17 {
     commands: Vec<Command>,

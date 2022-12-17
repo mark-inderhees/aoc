@@ -96,9 +96,27 @@ where
         self.grid_state.push_row(empty);
     }
 
+    pub fn push_front_row(&mut self, row: Vec<T>) {
+        let len = row.len();
+        self.grid.insert_row(0, row);
+
+        // Push in empty state for this row
+        let empty = vec![
+            State {
+                step_count: u32::MAX
+            };
+            len
+        ];
+        self.grid_state.insert_row(0, empty);
+    }
+
     pub fn add_player(&mut self, point: BoardPoint, id: T) -> PlayerId {
         self.players.push(Player { point, id });
         self.players.len() - 1
+    }
+
+    pub fn get_players_len(&self) -> usize {
+        self.players.len()
     }
 
     pub fn add_wall(&mut self, wall: T) {
@@ -170,6 +188,20 @@ where
     }
 
     pub fn step_player(&mut self, player: PlayerId, direction: Direction) -> Option<T> {
+        self.step_player_optionally(player, direction, true)
+    }
+
+    pub fn can_step_player(&mut self, player: PlayerId, direction: Direction) -> bool {
+        self.step_player_optionally(player, direction, false)
+            .is_some()
+    }
+
+    fn step_player_optionally(
+        &mut self,
+        player: PlayerId,
+        direction: Direction,
+        do_step: bool,
+    ) -> Option<T> {
         let (step_x, step_y) = match direction {
             Direction::Up => (0, -1),
             Direction::Down => (0, 1),
@@ -206,7 +238,9 @@ where
                 if self.players_are_walls && self.player_is_here(new_location.point) {
                     return None;
                 }
-                self.players[player] = new_location;
+                if do_step {
+                    self.players[player] = new_location;
+                }
                 Some(value)
             }
         }
