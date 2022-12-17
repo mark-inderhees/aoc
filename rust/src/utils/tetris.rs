@@ -84,13 +84,13 @@ impl Shape {
             Shapes::Square => 2,
         };
 
-        let mut max_player_y = 0;
+        let mut min_player_y = 0;
         for i in 0..grid.get_players_len() {
             let player_location = grid.get_player_location(i);
-            max_player_y = std::cmp::max(max_player_y, player_location.y);
+            min_player_y = std::cmp::min(min_player_y, player_location.y);
         }
 
-        let air_rows_to_add = 3 - grid.height() - max_player_y;
+        let air_rows_to_add = 3 - min_player_y;
         assert!(air_rows_to_add >= 0);
         let width = grid.width() as usize;
         for _ in 0..rows + air_rows_to_add {
@@ -102,7 +102,7 @@ impl Shape {
             let player = grid.add_player(
                 BoardPoint {
                     x: location.x + 2,
-                    y: location.y + max_player_y + 3,
+                    y: location.y + min_player_y + 3,
                 },
                 '#',
             );
@@ -209,8 +209,14 @@ impl Tetris {
             grid: Board::new(),
             shapes: vec![],
         };
+        me.grid.push_row(vec!['.'; 7]);
         me.grid.set_players_as_walls();
         me
+    }
+
+    pub fn print(&mut self) {
+        self.grid.print_board_with_players_pretty();
+        println!("");
     }
 
     pub fn add_shape(&mut self, shape_type: Shapes) -> ShapeId {

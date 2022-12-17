@@ -111,6 +111,7 @@ where
     }
 
     pub fn add_player(&mut self, point: BoardPoint, id: T) -> PlayerId {
+        assert!(point.x < self.width() && point.y < self.height());
         self.players.push(Player { point, id });
         self.players.len() - 1
     }

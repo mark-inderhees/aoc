@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
+use crate::utils::board::*;
 use crate::utils::tetris::*;
 
 #[allow(unused_imports)]
@@ -8,21 +9,34 @@ use crate::utils::utils::*;
 
 pub struct Day17 {
     commands: Vec<Command>,
+    tetris: Tetris,
 }
 
 impl Puzzle for Day17 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = Day17 { commands: vec![] };
+        let mut day = Day17 {
+            commands: vec![],
+            tetris: Tetris::new(),
+        };
 
-        for char in input.chars() {
+        for char in input.trim().to_string().chars() {
             match char {
                 '<' => day.commands.push(Command::Left),
                 '>' => day.commands.push(Command::Right),
                 _ => panic!("Unexpected char"),
             }
         }
+
+        let id = day.tetris.add_shape(Shapes::Flat);
+        day.tetris.print();
+        day.tetris.move_shape(id, Direction::Right);
+        day.tetris.print();
+        day.tetris.move_shape(id, Direction::Down);
+        day.tetris.print();
+        day.tetris.move_shape(id, Direction::Right);
+        day.tetris.print();
 
         Ok(day)
     }
