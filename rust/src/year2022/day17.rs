@@ -11,9 +11,14 @@ enum Command {
 }
 
 enum Shapes {
-    Flat,
-    Plus,
-    L,
+    Flat, // ####
+
+    Plus, //  #
+    // ###
+    //  #
+    L, //   #
+    //   #
+    // ###
     Tall,
     Square,
 }
