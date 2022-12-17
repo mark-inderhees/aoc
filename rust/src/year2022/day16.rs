@@ -160,6 +160,10 @@ fn tick_p2(job: &mut PathWorkP2) -> bool {
     let mut to_tick = std::cmp::min(job.p1_dist, job.p2_dist);
     to_tick = std::cmp::min(job.time_left, to_tick);
 
+    if job.p1_done && job.p2_done {
+        to_tick = job.time_left;
+    }
+
     job.score += job.rate * to_tick;
     job.time_left -= to_tick;
     job.time_passed += to_tick;
@@ -185,6 +189,8 @@ struct PathWorkP2 {
     p2_id: String,
     p1_dist: u32,
     p2_dist: u32,
+    p1_done: bool,
+    p2_done: bool,
     time_left: u32,
     time_passed: u32,
     score: u32,
@@ -202,6 +208,8 @@ fn highest_score_p2(day: &Day16) -> u32 {
         p2_id: "AA".to_string(),
         p1_dist: 0,
         p2_dist: 0,
+        p1_done: false,
+        p2_done: false,
         time_left: 26,
         time_passed: 1,
         score: 0,
@@ -214,13 +222,13 @@ fn highest_score_p2(day: &Day16) -> u32 {
         let mut job = jobs.pop().unwrap();
 
         // Turn on if not start and player dist == 0
-        if job.p1_id != "AA" && job.p1_dist == 0 {
+        if job.p1_id != "AA" && job.p1_dist == 0 && !job.turned_on.contains(&job.p1_id) {
             log::debug!("P1 opened {}", job.p1_id);
             job.turned_on.push(job.p1_id.to_string());
             job.rate += day.valves[&job.p1_id].rate;
         }
 
-        if job.p2_id != "AA" && job.p2_dist == 0 {
+        if job.p2_id != "AA" && job.p2_dist == 0 && !job.turned_on.contains(&job.p1_id) {
             log::debug!("P2 opened {}", job.p1_id);
             job.turned_on.push(job.p2_id.to_string());
             job.rate += day.valves[&job.p2_id].rate;
@@ -241,7 +249,7 @@ fn highest_score_p2(day: &Day16) -> u32 {
         for (new_id_p1, dist_p1) in &potential_p1_targets {
             for (new_id_p2, dist_p2) in &potential_p2_targets {
                 if new_id_p1 == new_id_p2 {
-                    continue;
+                    // continue;
                 } else if job.turned_on.contains(&new_id_p1) {
                     continue;
                 } else if job.turned_on.contains(&new_id_p2) {
@@ -262,6 +270,8 @@ fn highest_score_p2(day: &Day16) -> u32 {
                     p2_id: new_id_p2.to_string(),
                     p1_dist: *dist_p1,
                     p2_dist: *dist_p2,
+                    p1_done: job.p1_done,
+                    p2_done: job.p2_done,
                     time_left: job.time_left,
                     time_passed: job.time_passed,
                     score: job.score,
@@ -281,14 +291,20 @@ fn highest_score_p2(day: &Day16) -> u32 {
 
         if !did_new_work {
             // End the game
-            job.p1_dist = job.time_left;
-            job.p2_dist = job.time_left;
             let done = tick_p2(&mut job);
-            assert!(done);
             if done {
                 finalize_p2(&job, &mut highest_score);
                 continue;
             }
+
+            if job.p1_dist == 0 {
+                job.p1_done = true;
+            }
+            if job.p2_dist == 0 {
+                job.p2_done = true;
+            }
+
+            jobs.push(job.clone());
         }
     }
 
@@ -357,15 +373,15 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let score = "to do";
-        // let score = highest_score_p2(self);
+        // let score = "to do";
+        let score = highest_score_p2(self);
 
         Ok(score.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None, //Some(1707.to_string()),
+            true => Some(1707.to_string()),
             false => None,
         }
     }
