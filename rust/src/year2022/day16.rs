@@ -157,12 +157,16 @@ fn highest_score(day: &Day16) -> u32 {
 #[allow(dead_code)]
 fn tick_p2(job: &mut PathWorkP2) -> bool {
     // let to_tick = std::cmp::min(time, job.time_left);
-    let mut to_tick = std::cmp::min(job.p1_dist, job.p2_dist);
-    to_tick = std::cmp::min(job.time_left, to_tick);
-
-    if job.p1_done && job.p2_done {
-        to_tick = job.time_left;
+    let mut to_tick = job.time_left;
+    if !job.p1_done {
+        to_tick = std::cmp::min(job.p1_dist, to_tick);
     }
+
+    if !job.p2_done {
+        to_tick = std::cmp::min(job.p2_dist, to_tick);
+    }
+
+    // assert_ne!(to_tick, 0);
 
     job.score += job.rate * to_tick;
     job.time_left -= to_tick;
@@ -217,9 +221,25 @@ fn highest_score_p2(day: &Day16) -> u32 {
         turned_on: vec![],
     }];
     let mut highest_score = 0;
+    // let mut high_score_map: HashMap<u32, u32> = HashMap::new();
+    // for i in (0..=26).rev() {
+    //     high_score_map.insert(i, 0);
+    // }
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
+
+        // let best_so_far = high_score_map[&job.time_left];
+        // if best_so_far > job.score {
+        //     // Quit this path
+        //     continue;
+        // }
+        // // Update high score map
+        // for i in (job.time_left..=26).rev() {
+        //     if job.score > high_score_map[&i] {
+        //         high_score_map.insert(i, job.score);
+        //     }
+        // }
 
         // Turn on if not start and player dist == 0
         if job.p1_id != "AA" && job.p1_dist == 0 && !job.turned_on.contains(&job.p1_id) {
@@ -354,7 +374,7 @@ impl Puzzle for Day16 {
             }
         }
 
-        log::debug!("{:#?}", day.valves);
+        log::info!("{:#?}", day.valves);
 
         Ok(day)
     }
