@@ -62,6 +62,19 @@ impl Direction {
             Direction::Right,
         ]
     }
+
+    pub fn opposite_direction(direction: Direction) -> Direction {
+        match direction {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+            Direction::UpLeft => Direction::DownRight,
+            Direction::UpRight => Direction::DownLeft,
+            Direction::DownLeft => Direction::UpRight,
+            Direction::DownRight => Direction::UpLeft,
+        }
+    }
 }
 
 impl<T> Board<T>
@@ -99,6 +112,10 @@ where
     pub fn push_front_row(&mut self, row: Vec<T>) {
         let len = row.len();
         self.grid.insert_row(0, row);
+
+        for player in self.players.iter_mut() {
+            player.point.y += 1;
+        }
 
         // Push in empty state for this row
         let empty = vec![
@@ -192,6 +209,7 @@ where
         self.step_player_optionally(player, direction, true)
     }
 
+    #[allow(dead_code)]
     pub fn can_step_player(&mut self, player: PlayerId, direction: Direction) -> bool {
         self.step_player_optionally(player, direction, false)
             .is_some()

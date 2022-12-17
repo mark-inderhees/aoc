@@ -58,7 +58,7 @@ struct Args {
         long,
         short,
         value_name = "LEVEL",
-        default_value_t = log::LevelFilter::Info,
+        default_value_t = log::LevelFilter::Warn,
     )]
     logs: log::LevelFilter,
 }
@@ -141,7 +141,6 @@ fn main() -> Result<()> {
     env_logger::Builder::from_default_env()
         .filter(None, args.logs)
         .format(|_, record| {println!("{}", record.args()); Ok(())})
-        .filter_level(log::LevelFilter::Warn)
         .init();
 
     match args.bootstrap {
