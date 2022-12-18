@@ -3,7 +3,7 @@ use strum_macros::EnumIter;
 
 use crate::utils::board::*;
 
-#[derive(Debug, Clone, Copy, EnumIter)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
 pub enum Shapes {
     // ####
     Flat,

@@ -68,11 +68,25 @@ impl Puzzle for Day17 {
             Shapes::Square,
         ];
         let total = 2022;
+        log::info!("hi mark");
+        let mut shape_flat_command_index: Vec<usize> = vec![];
         while shape_count < total {
+            if shape_count == 50 {
+                log::info!("At 50 height is {}", self.tetris.get_stack_height());
+                self.tetris.print();
+            }
+
             let shape = shapes[shape_index];
             let shape_id = self.tetris.add_shape(shape);
 
-            // self.tetris.print();
+            if shape == Shapes::Flat {
+                if shape_flat_command_index.contains(&command_index) {
+                    // log::info!("Repeat command at shape #{shape_count}");
+                }
+                shape_flat_command_index.push(command_index);
+            }
+
+
             let shape_count1 = shape_count;
             let shape_index1 = shape_index;
             let command_index1 = command_index;
@@ -105,10 +119,6 @@ impl Puzzle for Day17 {
 
             shape_count += 1;
             shape_index = shape_count % shapes.len();
-
-            if shape_index == 0 && command_index == 0 {
-                log::info!("Indexes are zero at start of shape {shape_count}");
-            }
         }
 
         Ok(self.tetris.get_stack_height().to_string())
