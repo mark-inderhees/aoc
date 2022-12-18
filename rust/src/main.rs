@@ -15,7 +15,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 17, // __BOOTSTRAP_DAY__
+        default_value_t = 16, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 

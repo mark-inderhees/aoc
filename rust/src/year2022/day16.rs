@@ -172,8 +172,12 @@ fn tick_p2(job: &mut PathWorkP2) -> bool {
     job.time_left -= to_tick;
     job.time_passed += to_tick;
 
-    job.p1_dist -= to_tick;
-    job.p2_dist -= to_tick;
+    if !job.p1_done {
+        job.p1_dist -= to_tick;
+    }
+    if !job.p2_done {
+        job.p2_dist -= to_tick;
+    }
 
     job.time_left == 0
 }
@@ -248,8 +252,8 @@ fn highest_score_p2(day: &Day16) -> u32 {
             job.rate += day.valves[&job.p1_id].rate;
         }
 
-        if job.p2_id != "AA" && job.p2_dist == 0 && !job.turned_on.contains(&job.p1_id) {
-            log::debug!("P2 opened {}", job.p1_id);
+        if job.p2_id != "AA" && job.p2_dist == 0 && !job.turned_on.contains(&job.p2_id) {
+            log::debug!("P2 opened {}", job.p2_id);
             job.turned_on.push(job.p2_id.to_string());
             job.rate += day.valves[&job.p2_id].rate;
         }
