@@ -278,7 +278,7 @@ impl Puzzle for Day18 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(58.to_string()),
-            false => None,
+            false => Some(2012.to_string()),
         }
     }
 }
