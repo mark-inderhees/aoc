@@ -225,4 +225,21 @@ impl Tetris {
         );
         answer
     }
+
+    // Does the top most line have a full row of blocks
+    pub fn is_top_line_full(&self) -> bool {
+        let mut min_player_y = self.grid.height() - 1;
+        for i in 0..self.grid.get_players_len() {
+            let player_location = self.grid.get_player_location(i);
+            min_player_y = std::cmp::min(min_player_y, player_location.y);
+        }
+        for x in 0..7 {
+            let value = self.grid.get_at(BoardPoint { x, y: min_player_y });
+            if value != '#' {
+                return false;
+            }
+        }
+
+        true
+    }
 }

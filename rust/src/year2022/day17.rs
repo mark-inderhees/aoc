@@ -69,22 +69,39 @@ impl Puzzle for Day17 {
         ];
         let total = 2022;
         let mut shape_flat_command_index: Vec<usize> = vec![];
+        log::info!("Shapes {}. Commands {}.", shapes.len(), self.commands.len());
+        let mut reapeat_hunt: Vec<Vec<i32>> = vec![vec![-1; self.commands.len()]; shapes.len()];
         while shape_count < total {
-            if shape_count == 50 {
-                log::info!("At 50 height is {}", self.tetris.get_stack_height());
-                self.tetris.print();
+            if shape_count == 51 {
+                log::info!(
+                    "At 51 height is {}. shape index {shape_index}. command index {command_index}",
+                    self.tetris.get_stack_height()
+                );
+                // self.tetris.print();
             }
+
+            if reapeat_hunt[shape_index][command_index] > 0 {
+                log::debug!(
+                    "Repeat at {shape_count}. First was at {}. For {:?}, command {command_index}",
+                    reapeat_hunt[shape_index][command_index],
+                    shapes[shape_index],
+                );
+            }
+            reapeat_hunt[shape_index][command_index] = shape_count as i32;
 
             let shape = shapes[shape_index];
             let shape_id = self.tetris.add_shape(shape);
 
-            if shape == Shapes::Flat {
+            if self.tetris.is_top_line_full() {
+                log::info!("Top line full at shape #{shape_count}");
+            }
+
+            if shape == Shapes::Flat && self.tetris.is_top_line_full() {
                 if shape_flat_command_index.contains(&command_index) {
-                    // log::info!("Repeat command at shape #{shape_count}");
+                    log::info!("Repeat command at shape #{shape_count}");
                 }
                 shape_flat_command_index.push(command_index);
             }
-
 
             let shape_count1 = shape_count;
             let shape_index1 = shape_index;
@@ -126,7 +143,7 @@ impl Puzzle for Day17 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(3068.to_string()),
-            false => None,
+            false => Some(3177.to_string()),
         }
     }
 
