@@ -406,7 +406,7 @@ impl Puzzle for Day16 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(1707.to_string()),
-            false => None,
+            false => Some(2587.to_string()),
         }
     }
 }
