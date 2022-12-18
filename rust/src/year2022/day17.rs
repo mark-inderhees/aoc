@@ -68,40 +68,27 @@ impl Puzzle for Day17 {
             Shapes::Square,
         ];
         let total = 2022;
-        let mut shape_flat_command_index: Vec<usize> = vec![];
         log::info!("Shapes {}. Commands {}.", shapes.len(), self.commands.len());
-        let mut reapeat_hunt: Vec<Vec<i32>> = vec![vec![-1; self.commands.len()]; shapes.len()];
+        #[derive(Clone, Copy)]
+        struct RepeatInfo {
+            shape_index: usize,
+            command_index: usize,
+            height: u32,
+        }
+        let mut repeats = vec![];
         while shape_count < total {
-            if shape_count == 51 {
-                log::info!(
-                    "At 51 height is {}. shape index {shape_index}. command index {command_index}",
-                    self.tetris.get_stack_height()
-                );
-                // self.tetris.print();
-            }
-
-            if reapeat_hunt[shape_index][command_index] > 0 {
-                log::debug!(
-                    "Repeat at {shape_count}. First was at {}. For {:?}, command {command_index}",
-                    reapeat_hunt[shape_index][command_index],
-                    shapes[shape_index],
-                );
-            }
-            reapeat_hunt[shape_index][command_index] = shape_count as i32;
-
-            let shape = shapes[shape_index];
-            let shape_id = self.tetris.add_shape(shape);
+            repeats.push(RepeatInfo {
+                shape_index,
+                command_index,
+                height: self.tetris.get_stack_height(),
+            });
 
             if self.tetris.is_top_line_full() {
                 log::info!("Top line full at shape #{shape_count}");
             }
 
-            if shape == Shapes::Flat && self.tetris.is_top_line_full() {
-                if shape_flat_command_index.contains(&command_index) {
-                    log::info!("Repeat command at shape #{shape_count}");
-                }
-                shape_flat_command_index.push(command_index);
-            }
+            let shape = shapes[shape_index];
+            let shape_id = self.tetris.add_shape(shape);
 
             let shape_count1 = shape_count;
             let shape_index1 = shape_index;
@@ -136,6 +123,55 @@ impl Puzzle for Day17 {
             shape_count += 1;
             shape_index = shape_count % shapes.len();
         }
+
+        let mut skip_to_use = 0;
+        let mut step_to_use = 0;
+        let mut diff_to_use = 0;
+
+        let mut done = false;
+        for skip in 0..1000 {
+            for step in 1..1000 {
+                let mut previous = RepeatInfo {
+                    shape_index: 0,
+                    command_index: 0,
+                    height: 0,
+                };
+                let mut diff = 0;
+                let mut good = false;
+                for repeat in repeats.iter().skip(skip).step_by(step) {
+                    if previous.height != 0 {
+                        if diff != 0 {
+                            good = true;
+                            let new_diff = repeat.height - previous.height;
+                            if new_diff != diff
+                                || previous.shape_index != repeat.shape_index
+                                || previous.command_index != repeat.command_index
+                            {
+                                good = false;
+                                break;
+                            }
+                        }
+                        diff = repeat.height - previous.height
+                    }
+                    previous = *repeat;
+                }
+                if good {
+                    log::info!("Potential repeat at skip {skip} step {step}, diff {diff}");
+                    skip_to_use = skip as u64;
+                    step_to_use = step as u64;
+                    diff_to_use = diff as u64;
+                    done = true;
+                    break;
+                }
+            }
+            if done {
+                break;
+            }
+        }
+
+        let part2 = (1000000000000u64 - skip_to_use) / step_to_use * diff_to_use
+            + repeats[skip_to_use as usize].height as u64;
+        println!("part2 {part2}");
 
         Ok(self.tetris.get_stack_height().to_string())
     }
