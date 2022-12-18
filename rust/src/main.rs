@@ -3,6 +3,7 @@ use clap::Parser;
 use puzzle::Puzzle;
 use regex::Regex;
 use std::fs;
+use std::time::Instant;
 
 mod puzzle;
 mod utils;
@@ -64,6 +65,7 @@ struct Args {
 }
 
 fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Result<()> {
+    let start = Instant::now();
     let raw_input = fs::read_to_string(input).expect("Input file error");
     let mut day: DayType = Puzzle::from_input(&raw_input)?;
     let output = match part {
@@ -79,14 +81,19 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
     match expect {
         Some(expected_val) => {
             println!(
-                "Solution: {} == {} is {}\n\n",
+                "Solution: {} == {} is {} in {:.3} seconds\n\n",
                 output,
                 expected_val,
-                output == expected_val
+                output == expected_val,
+                start.elapsed().as_millis() as f64 / 1000f64
             );
             assert_eq!(output, expected_val);
         }
-        _ => println!("Solution: {}\n\n", output),
+        _ => println!(
+            "Solution: {} in {:.3} seconds\n\n",
+            output,
+            start.elapsed().as_millis() as f64 / 1000f64
+        ),
     }
 
     Ok(())
