@@ -78,7 +78,7 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
     };
     match expect {
         Some(expected_val) => {
-            log::info!(
+            println!(
                 "Solution: {} == {} is {}\n\n",
                 output,
                 expected_val,
@@ -86,7 +86,7 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
             );
             assert_eq!(output, expected_val);
         }
-        _ => log::info!("Solution: {}\n\n", output),
+        _ => println!("Solution: {}\n\n", output),
     }
 
     Ok(())
@@ -140,7 +140,10 @@ fn main() -> Result<()> {
 
     env_logger::Builder::from_default_env()
         .filter(None, args.logs)
-        .format(|_, record| {println!("{}", record.args()); Ok(())})
+        .format(|_, record| {
+            println!("{}", record.args());
+            Ok(())
+        })
         .init();
 
     match args.bootstrap {

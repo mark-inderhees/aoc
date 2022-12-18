@@ -72,22 +72,43 @@ impl Puzzle for Day17 {
             let shape = shapes[shape_index];
             let shape_id = self.tetris.add_shape(shape);
 
-            self.tetris.print();
+            // self.tetris.print();
+            let shape_count1 = shape_count;
+            let shape_index1 = shape_index;
+            let command_index1 = command_index;
 
             loop {
                 let command = self.commands[command_index];
                 command_index = (command_index + 1) % self.commands.len();
+                if shape_count == 21 {
+                    // self.tetris.print();
+                }
                 self.tetris.move_shape(shape_id, command);
+                if shape_count == 21 {
+                    // self.tetris.print();
+                }
                 if !self.tetris.move_shape(shape_id, Direction::Down) {
                     break;
                 }
             }
 
-            self.tetris.print();
-            assert_eq!(help[shape_count], self.tetris.get_stack_height());
+            log::debug!(
+                "Round {} Start P: {} Start W: {} Tower height: {}",
+                shape_count1,
+                shape_index1,
+                command_index1,
+                self.tetris.get_stack_height()
+            );
+
+            // self.tetris.print();
+            // assert_eq!(help[shape_count], self.tetris.get_stack_height());
 
             shape_count += 1;
             shape_index = shape_count % shapes.len();
+
+            if shape_index == 0 && command_index == 0 {
+                log::info!("Indexes are zero at start of shape {shape_count}");
+            }
         }
 
         Ok(self.tetris.get_stack_height().to_string())

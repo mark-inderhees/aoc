@@ -137,8 +137,9 @@ impl Shape {
                 log::debug!("Cannot move {:?} {:?}", self.shape_type, direction);
                 // Need to unmove any moved parts
                 let opposite_direction = Direction::opposite_direction(direction);
-                for p in &players_moved {
-                    grid.step_player(*p, opposite_direction);
+                while players_moved.len() > 0 {
+                    log::debug!("Unmoving part of piece {:?}", opposite_direction);
+                    grid.step_player(players_moved.pop().unwrap(), opposite_direction);
                 }
                 return false;
             }
@@ -217,7 +218,7 @@ impl Tetris {
             min_player_y = std::cmp::min(min_player_y, player_location.y);
         }
         let answer = (self.grid.height() - min_player_y) as u32;
-        log::info!(
+        log::debug!(
             "Answer {answer} = {} - {}",
             self.grid.height(),
             min_player_y
