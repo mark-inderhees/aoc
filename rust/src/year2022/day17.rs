@@ -92,7 +92,34 @@ impl Puzzle for Day17 {
             tetris: Tetris::new(),
         };
 
-        for char in input.trim().to_string().chars() {
+        let input_to_use = input.trim();
+
+        // Try to find pattern in input, test data is >>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>
+        let len = input_to_use.to_string().chars().count();
+        for skip in 0..len / 2 {
+            for width in 1..len / 2 {
+                let sub_string = &input_to_use.to_string()[skip..skip + width];
+                let mut good = false;
+                for start in (skip+width..len).step_by(width) {
+                    if start + width >= len {
+                        break;
+                    }
+                    good = true;
+                    let sub_string2 = &input_to_use.to_string()[start..start + width];
+                    if sub_string != sub_string2 {
+                        // This skip and width pair are not good
+                        good = false;
+                        break;
+                    }
+                }
+                if good {
+                    log::info!("Found an input pattern at skip {skip} width {width}. Pattern {sub_string}");
+                    break;
+                }
+            }
+        }
+
+        for char in input_to_use.to_string().chars() {
             match char {
                 '<' => day.commands.push(Direction::Left),
                 '>' => day.commands.push(Direction::Right),
