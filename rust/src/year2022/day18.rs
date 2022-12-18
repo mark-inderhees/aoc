@@ -1,5 +1,3 @@
-use std::iter::Scan;
-
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -270,7 +268,7 @@ impl Puzzle for Day18 {
             }
         }
 
-        log::debug!("Found {air_pockets} air pockets");
+        log::debug!("Found {air_pockets} air pockets and {lava} lava");
 
         Ok(count.to_string())
     }
