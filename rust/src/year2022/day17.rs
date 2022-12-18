@@ -68,7 +68,6 @@ impl Puzzle for Day17 {
             Shapes::Square,
         ];
         let total = 2022;
-        log::info!("hi mark");
         let mut shape_flat_command_index: Vec<usize> = vec![];
         while shape_count < total {
             if shape_count == 50 {
