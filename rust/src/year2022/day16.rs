@@ -272,11 +272,10 @@ fn highest_score_p2(day: &Day16) -> u32 {
         let mut did_new_work = false;
         for (new_id_p1, dist_p1) in &potential_p1_targets {
             for (new_id_p2, dist_p2) in &potential_p2_targets {
-                if new_id_p1 == new_id_p2 {
-                    // continue;
-                } else if job.turned_on.contains(&new_id_p1) {
+                // If code does not work, then remove the potential_pN_targets.len() part of logic
+                if job.turned_on.contains(&new_id_p1) && potential_p1_targets.len() > 1 {
                     continue;
-                } else if job.turned_on.contains(&new_id_p2) {
+                } else if job.turned_on.contains(&new_id_p2) && potential_p2_targets.len() > 1 {
                     continue;
                 }
 
