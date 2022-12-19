@@ -348,7 +348,7 @@ fn mine_resources(robots: &Robots, resources: &mut Resources, history: &mut Stri
 fn max_geodes_we_could_get(time_left: u32, robots: &Robots, resources: &Resources) -> u32 {
     let mut count = resources.geode;
     let mut geode_robots = robots.geode;
-    for _ in 0..time_left {
+    for _ in 0..=time_left {
         count += geode_robots;
         geode_robots += 1;
     }
@@ -421,7 +421,7 @@ impl Puzzle for Day19 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(33.to_string()),
-            false => None,
+            false => Some(1962.to_string()),
         }
     }
 
