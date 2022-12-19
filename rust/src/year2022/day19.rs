@@ -47,6 +47,7 @@ struct Blueprint {
     robot_clay: Cost,
     robot_obsidian: Cost,
     robot_geode: Cost,
+    max_cost: Cost, // The maximum of each resource for each robot cost
 }
 
 // Try all possibilities based on the blueprint, return max geode made
@@ -77,7 +78,7 @@ fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
         time_left: total_time,
         time_passed: 1,
     };
-    for choice in work_choices(&job.robots) {
+    for choice in work_choices(&job.robots, &blueprint) {
         job.what_to_build = choice;
         jobs.push(job.clone());
     }
@@ -119,7 +120,7 @@ fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
                 Robot::Geode => job.robots.geode += 1,
             };
 
-            for choice in work_choices(&job.robots) {
+            for choice in work_choices(&job.robots, &blueprint) {
                 job.what_to_build = choice;
                 jobs.push(job.clone());
             }
@@ -132,10 +133,25 @@ fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
     max_geodes
 }
 
-fn work_choices(robots: &Robots) -> Vec<Robot> {
-    let mut choices = vec![Robot::Ore, Robot::Clay];
+// Return a list of the robots we can build
+fn work_choices(robots: &Robots, blueprint: &Blueprint) -> Vec<Robot> {
+    let mut choices = vec![];
+
+    // Only build this robot if we are not already maxed out on this robot type
+    if robots.ore < blueprint.max_cost.ore {
+        choices.push(Robot::Ore);
+    }
+
+    if robots.clay < blueprint.max_cost.clay {
+        choices.push(Robot::Clay);
+    }
+
     if robots.clay > 0 {
-        choices.push(Robot::Obsidian);
+        if robots.obsidian < blueprint.max_cost.obsidian {
+            choices.push(Robot::Obsidian);
+        }
+
+        // We never max out on geode robots
         if robots.obsidian > 0 {
             choices.push(Robot::Geode);
         }
@@ -230,6 +246,19 @@ impl Puzzle for Day19 {
                 robot_geode: Cost {
                     ore: geode_robot_cost_ore,
                     clay: 0,
+                    obsidian: geode_robot_cost_obsidian,
+                },
+                max_cost: Cost {
+                    ore: *vec![
+                        ore_robot_cost_ore,
+                        clay_robot_cost_ore,
+                        obsidian_robot_cost_ore,
+                        geode_robot_cost_ore,
+                    ]
+                    .iter()
+                    .max()
+                    .unwrap(),
+                    clay: obsidian_robot_cost_clay,
                     obsidian: geode_robot_cost_obsidian,
                 },
             };
