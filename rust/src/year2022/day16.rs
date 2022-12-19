@@ -76,8 +76,6 @@ struct PathWork {
     id: String,
     time_left: u32,
     time_passed: u32,
-    score: u32,
-    rate: u32,
     turned_on: Vec<String>,
     total_flow_from_on_vavles: u32,
 }
@@ -85,19 +83,9 @@ struct PathWork {
 // Move time based on how far moved and increase score
 fn tick(job: &mut PathWork, time: u32) -> bool {
     let to_tick = std::cmp::min(time, job.time_left);
-
-    job.score += job.rate * to_tick;
     job.time_left -= to_tick;
     job.time_passed += to_tick;
-
     job.time_left == 0
-}
-
-// Update overall highest score
-fn finalize(job: &PathWork, highest_score: &mut u32) {
-    if job.score > *highest_score {
-        *highest_score = job.score;
-    }
 }
 
 // Try all combinations of paths to figure out the best score
@@ -107,12 +95,9 @@ fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
         id: "AA".to_string(), // Start at AA
         time_left: total_time,
         time_passed: 1,
-        score: 0,
-        rate: 0,
         turned_on: vec![],
-        total_flow_from_on_vavles: 0, // Alternative count, instead of incrementing score on ticks
+        total_flow_from_on_vavles: 0,
     }];
-    let mut highest_score = 0;
     let mut answers: HashMap<Vec<String>, u32> = HashMap::new();
 
     while jobs.len() > 0 {
@@ -122,7 +107,6 @@ fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
         if job.id != "AA" {
             // Turn valve on
             job.turned_on.push(job.id.to_string());
-            job.rate += day.valves[&job.id].rate;
 
             // Build state map, keeping max score at this intermediate state
             job.turned_on.sort();
@@ -148,15 +132,12 @@ fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
                 id: new_id.to_string(),
                 time_left: job.time_left,
                 time_passed: job.time_passed,
-                score: job.score,
-                rate: job.rate,
                 turned_on: job.turned_on.clone(),
                 total_flow_from_on_vavles: job.total_flow_from_on_vavles,
             };
 
             let done = tick(&mut new_job, *dist);
             if done {
-                finalize(&new_job, &mut highest_score);
                 continue;
             }
 
