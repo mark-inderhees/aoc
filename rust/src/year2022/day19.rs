@@ -53,6 +53,7 @@ struct Blueprint {
 // Try all possibilities based on the blueprint, return max geode made
 fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
     #[derive(Debug, Clone)]
+    // Create the first jobs
     struct Work {
         robots: Robots,
         resources: Resources,
@@ -84,6 +85,7 @@ fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
     }
     let mut max_geodes = 0;
 
+    // Start doing work
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
 
@@ -120,6 +122,7 @@ fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
                 Robot::Geode => job.robots.geode += 1,
             };
 
+            // Start doing new work
             for choice in work_choices(&job.robots, &blueprint) {
                 job.what_to_build = choice;
                 jobs.push(job.clone());
@@ -137,7 +140,7 @@ fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
 fn work_choices(robots: &Robots, blueprint: &Blueprint) -> Vec<Robot> {
     let mut choices = vec![];
 
-    // Only build this robot if we are not already maxed out on this robot type
+    // Only build this robot (and others) if we are not already maxed out on this robot type
     if robots.ore < blueprint.max_cost.ore {
         choices.push(Robot::Ore);
     }
@@ -146,6 +149,7 @@ fn work_choices(robots: &Robots, blueprint: &Blueprint) -> Vec<Robot> {
         choices.push(Robot::Clay);
     }
 
+    // Need clay robots to be able to make obsidian robots
     if robots.clay > 0 {
         if robots.obsidian < blueprint.max_cost.obsidian {
             choices.push(Robot::Obsidian);
