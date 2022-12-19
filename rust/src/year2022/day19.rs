@@ -129,43 +129,43 @@ fn do_work(blueprint: &Blueprint) -> u32 {
             match job.what_to_build {
                 Robot::Ore => {
                     job.robots.ore += 1;
-                    job.history.push_str(
-                        format!(
-                            "The new ore-collecting robot is ready; you now have {} of them.\n",
-                            job.robots.ore
-                        )
-                        .as_str(),
-                    );
+                    // job.history.push_str(
+                    //     format!(
+                    //         "The new ore-collecting robot is ready; you now have {} of them.\n",
+                    //         job.robots.ore
+                    //     )
+                    //     .as_str(),
+                    // );
                 }
                 Robot::Clay => {
                     job.robots.clay += 1;
-                    job.history.push_str(
-                        format!(
-                            "The new clay-collecting robot is ready; you now have {} of them.\n",
-                            job.robots.clay
-                        )
-                        .as_str(),
-                    );
+                    // job.history.push_str(
+                    //     format!(
+                    //         "The new clay-collecting robot is ready; you now have {} of them.\n",
+                    //         job.robots.clay
+                    //     )
+                    //     .as_str(),
+                    // );
                 }
                 Robot::Obsidian => {
                     job.robots.obsidian += 1;
-                    job.history.push_str(
-                        format!(
-                            "The new obsidian-collecting robot is ready; you now have {} of them.\n",
-                            job.robots.obsidian
-                        )
-                        .as_str(),
-                    );
+                    // job.history.push_str(
+                    //     format!(
+                    //         "The new obsidian-collecting robot is ready; you now have {} of them.\n",
+                    //         job.robots.obsidian
+                    //     )
+                    //     .as_str(),
+                    // );
                 }
                 Robot::Geode => {
                     job.robots.geode += 1;
-                    job.history.push_str(
-                        format!(
-                            "The new geode-cracking robot is ready; you now have {} of them.\n",
-                            job.robots.geode
-                        )
-                        .as_str(),
-                    );
+                    // job.history.push_str(
+                    //     format!(
+                    //         "The new geode-cracking robot is ready; you now have {} of them.\n",
+                    //         job.robots.geode
+                    //     )
+                    //     .as_str(),
+                    // );
                 }
             };
 
@@ -220,44 +220,44 @@ fn build_robot(
         resources.clay -= cost.clay;
         resources.obsidian -= cost.obsidian;
 
-        match robot {
-            Robot::Ore => {
-                history.push_str(
-                    format!(
-                        "Spend {} ore to start building an ore-collecting robot.\n",
-                        cost.ore
-                    )
-                    .as_str(),
-                );
-            }
-            Robot::Clay => {
-                history.push_str(
-                    format!(
-                        "Spend {} ore to start building a clay-collecting robot.\n",
-                        cost.ore
-                    )
-                    .as_str(),
-                );
-            }
-            Robot::Obsidian => {
-                history.push_str(
-                    format!(
-                        "Spend {} ore and {} clay to start building an obsidian-collecting robot.\n",
-                        cost.ore, cost.clay
-                    )
-                    .as_str(),
-                );
-            }
-            Robot::Geode => {
-                history.push_str(
-                    format!(
-                        "Spend {} ore and {} obsidian to start building a geode-cracking robot.\n",
-                        cost.ore, cost.obsidian
-                    )
-                    .as_str(),
-                );
-            }
-        };
+        // match robot {
+        //     Robot::Ore => {
+        //         history.push_str(
+        //             format!(
+        //                 "Spend {} ore to start building an ore-collecting robot.\n",
+        //                 cost.ore
+        //             )
+        //             .as_str(),
+        //         );
+        //     }
+        //     Robot::Clay => {
+        //         history.push_str(
+        //             format!(
+        //                 "Spend {} ore to start building a clay-collecting robot.\n",
+        //                 cost.ore
+        //             )
+        //             .as_str(),
+        //         );
+        //     }
+        //     Robot::Obsidian => {
+        //         history.push_str(
+        //             format!(
+        //                 "Spend {} ore and {} clay to start building an obsidian-collecting robot.\n",
+        //                 cost.ore, cost.clay
+        //             )
+        //             .as_str(),
+        //         );
+        //     }
+        //     Robot::Geode => {
+        //         history.push_str(
+        //             format!(
+        //                 "Spend {} ore and {} obsidian to start building a geode-cracking robot.\n",
+        //                 cost.ore, cost.obsidian
+        //             )
+        //             .as_str(),
+        //         );
+        //     }
+        // };
 
         return true;
     }
@@ -272,76 +272,76 @@ fn mine_resources(robots: &Robots, resources: &mut Resources, history: &mut Stri
     resources.obsidian += robots.obsidian;
     resources.geode += robots.geode;
 
-    let mut robot;
-    let mut collect;
-    if robots.ore > 0 {
-        if robots.ore > 1 {
-            robot = "s";
-            collect = "";
-        } else {
-            robot = "";
-            collect = "s";
-        }
-        history.push_str(
-            format!(
-                "{} ore-collecting robot{} collect{} {} ore; you now have {} ore.\n",
-                robots.ore, robot, collect, robots.ore, resources.ore
-            )
-            .as_str(),
-        );
-    }
-    if robots.clay > 0 {
-        if robots.clay > 1 {
-            robot = "s";
-            collect = "";
-        } else {
-            robot = "";
-            collect = "s";
-        }
-        history.push_str(
-            format!(
-                "{} clay-collecting robot{} collect{} {} clay; you now have {} clay.\n",
-                robots.clay, robot, collect, robots.clay, resources.clay
-            )
-            .as_str(),
-        );
-    }
-    if robots.obsidian > 0 {
-        if robots.obsidian > 1 {
-            robot = "s";
-            collect = "";
-        } else {
-            robot = "";
-            collect = "s";
-        }
-        history.push_str(
-            format!(
-                "{} obsidian-collecting robot{} collect{} {} obsidian; you now have {} obsidian.\n",
-                robots.obsidian, robot, collect, robots.obsidian, resources.obsidian
-            )
-            .as_str(),
-        );
-    }
-    if robots.geode > 0 {
-        if robots.geode > 1 {
-            robot = "s";
-            collect = "";
-        } else {
-            robot = "";
-            collect = "s";
-        }
-        let mut geoge_str = "";
-        if resources.geode > 1 {
-            geoge_str = "s";
-        }
-        history.push_str(
-            format!(
-                "{} geode-cracking robot{} crack{} {} geode{}; you now have {} open geode{}.\n",
-                robots.geode, robot, collect, robots.geode, robot, resources.geode, geoge_str
-            )
-            .as_str(),
-        );
-    }
+    // let mut robot;
+    // let mut collect;
+    // if robots.ore > 0 {
+    //     if robots.ore > 1 {
+    //         robot = "s";
+    //         collect = "";
+    //     } else {
+    //         robot = "";
+    //         collect = "s";
+    //     }
+    //     history.push_str(
+    //         format!(
+    //             "{} ore-collecting robot{} collect{} {} ore; you now have {} ore.\n",
+    //             robots.ore, robot, collect, robots.ore, resources.ore
+    //         )
+    //         .as_str(),
+    //     );
+    // }
+    // if robots.clay > 0 {
+    //     if robots.clay > 1 {
+    //         robot = "s";
+    //         collect = "";
+    //     } else {
+    //         robot = "";
+    //         collect = "s";
+    //     }
+    //     history.push_str(
+    //         format!(
+    //             "{} clay-collecting robot{} collect{} {} clay; you now have {} clay.\n",
+    //             robots.clay, robot, collect, robots.clay, resources.clay
+    //         )
+    //         .as_str(),
+    //     );
+    // }
+    // if robots.obsidian > 0 {
+    //     if robots.obsidian > 1 {
+    //         robot = "s";
+    //         collect = "";
+    //     } else {
+    //         robot = "";
+    //         collect = "s";
+    //     }
+    //     history.push_str(
+    //         format!(
+    //             "{} obsidian-collecting robot{} collect{} {} obsidian; you now have {} obsidian.\n",
+    //             robots.obsidian, robot, collect, robots.obsidian, resources.obsidian
+    //         )
+    //         .as_str(),
+    //     );
+    // }
+    // if robots.geode > 0 {
+    //     if robots.geode > 1 {
+    //         robot = "s";
+    //         collect = "";
+    //     } else {
+    //         robot = "";
+    //         collect = "s";
+    //     }
+    //     let mut geoge_str = "";
+    //     if resources.geode > 1 {
+    //         geoge_str = "s";
+    //     }
+    //     history.push_str(
+    //         format!(
+    //             "{} geode-cracking robot{} crack{} {} geode{}; you now have {} open geode{}.\n",
+    //             robots.geode, robot, collect, robots.geode, robot, resources.geode, geoge_str
+    //         )
+    //         .as_str(),
+    //     );
+    // }
 }
 
 // Given unlimited resources, how many geode could we make?
