@@ -100,11 +100,15 @@ fn do_work(blueprint: &Blueprint) -> u32 {
         job.time_passed += 1;
         if job.time_left == 0 {
             max_geodes = std::cmp::max(max_geodes, job.resources.geode);
+            log::debug!("All done, got {} geodes", job.resources.geode);
             continue;
         }
 
         // Bail early if this is a terrible path
-        if max_geodes_we_could_get(job.time_left, &job.robots, &job.resources) < max_geodes {
+        let max_possible_geods =
+            max_geodes_we_could_get(job.time_left, &job.robots, &job.resources);
+        if max_possible_geods < max_geodes {
+            log::debug!("Giving up, geodes best possible {max_possible_geods} < {max_geodes}, the current max");
             continue;
         }
 
@@ -127,8 +131,6 @@ fn do_work(blueprint: &Blueprint) -> u32 {
             jobs.push(job)
         }
     }
-
-    log::info!("Max geodes found {max_geodes}");
 
     max_geodes
 }
@@ -181,7 +183,7 @@ fn mine_resources(robots: &Robots, resources: &mut Resources) {
 fn max_geodes_we_could_get(time_left: u32, robots: &Robots, resources: &Resources) -> u32 {
     let mut count = resources.geode;
     let mut geode_robots = robots.geode;
-    for _ in (time_left..0).rev() {
+    for _ in 0..time_left {
         count += geode_robots;
         geode_robots += 1;
     }
@@ -245,6 +247,7 @@ impl Puzzle for Day19 {
         let mut score = 0;
         for (i, blueprint) in self.blueprints.iter().enumerate() {
             let geode = do_work(&blueprint);
+            log::info!("[{i}] Max geodes found {geode}");
             score = score + (i + 1) as u32 * geode;
         }
         Ok(score.to_string())
