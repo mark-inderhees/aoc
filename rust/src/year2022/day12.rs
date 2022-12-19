@@ -27,25 +27,26 @@ impl Puzzle for Day12 {
         };
 
         for (i, mut line) in input.lines().enumerate() {
-            if char_in_string(&'S', &line.to_string()) {
-                let start = BoardPoint {
-                    x: line.find("S").unwrap() as i32,
-                    y: i as i32,
-                };
-                day.start_player = day.grid.add_player(start, 'S');
-            }
-            if char_in_string(&'E', &line.to_string()) {
-                let end = BoardPoint {
-                    x: line.find("E").unwrap() as i32,
-                    y: i as i32,
-                };
-                day.end_player = day.grid.add_player(end, 'E');
-            }
+            let line_orig = line.clone();
             let line2 = &line.replace("S", "a");
             line = line2;
             let line3 = &line.replace("E", "z");
             line = line3;
             day.grid.push_row(line.chars().collect());
+            if char_in_string(&'S', &line_orig.to_string()) {
+                let start = BoardPoint {
+                    x: line_orig.find("S").unwrap() as i32,
+                    y: i as i32,
+                };
+                day.start_player = day.grid.add_player(start, 'S');
+            }
+            if char_in_string(&'E', &line_orig.to_string()) {
+                let end = BoardPoint {
+                    x: line_orig.find("E").unwrap() as i32,
+                    y: i as i32,
+                };
+                day.end_player = day.grid.add_player(end, 'E');
+            }
         }
 
         log::debug!("{:#?}", day.grid);
