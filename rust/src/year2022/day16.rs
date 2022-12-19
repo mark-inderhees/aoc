@@ -19,6 +19,7 @@ struct Valve {
     distances: HashMap<String, u32>,
 }
 
+// Find the distance between two valves
 fn distance(valves: &HashMap<String, Valve>, start: &str, end: &str) -> u32 {
     struct PathWork {
         id: String,
@@ -71,33 +72,25 @@ fn distance(valves: &HashMap<String, Valve>, start: &str, end: &str) -> u32 {
     shortest_path
 }
 
-#[derive(Clone)]
-struct PathWork {
-    id: String,
-    time_left: u32,
-    time_passed: u32,
-    turned_on: Vec<String>,
-    total_flow_from_on_vavles: u32,
-}
-
-// Move time based on how far moved and increase score
-fn tick(job: &mut PathWork, time: u32) -> bool {
-    let to_tick = std::cmp::min(time, job.time_left);
-    job.time_left -= to_tick;
-    job.time_passed += to_tick;
-    job.time_left == 0
-}
-
 // Try all combinations of paths to figure out the best score
 // Returns a map of all best state found, this includes intermediate state
 fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
+    // Add first job
+    #[derive(Clone)]
+    struct PathWork {
+        id: String,
+        time_left: u32,
+        turned_on: Vec<String>,
+        total_flow: u32,
+    }
     let mut jobs = vec![PathWork {
         id: "AA".to_string(), // Start at AA
         time_left: total_time,
-        time_passed: 1,
         turned_on: vec![],
-        total_flow_from_on_vavles: 0,
+        total_flow: 0,
     }];
+
+    // Store best scores for all intermediate state
     let mut answers: HashMap<Vec<String>, u32> = HashMap::new();
 
     while jobs.len() > 0 {
@@ -107,18 +100,14 @@ fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
         if job.id != "AA" {
             // Turn valve on
             job.turned_on.push(job.id.to_string());
+            job.total_flow += day.valves[&job.id].rate * job.time_left;
 
             // Build state map, keeping max score at this intermediate state
             job.turned_on.sort();
-            let best_answer = match answers.get(&job.turned_on) {
-                Some(x) => *x,
-                None => 0,
-            };
-            job.total_flow_from_on_vavles =
-                job.total_flow_from_on_vavles + day.valves[&job.id].rate * job.time_left;
-                answers.insert(
+            let best_answer = *answers.get(&job.turned_on).or_else(|| Some(&0)).unwrap();
+            answers.insert(
                 job.turned_on.clone(),
-                std::cmp::max(best_answer, job.total_flow_from_on_vavles),
+                std::cmp::max(best_answer, job.total_flow),
             );
         }
 
@@ -128,16 +117,17 @@ fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
                 continue;
             }
 
+            // Create new job
             let mut new_job = PathWork {
                 id: new_id.to_string(),
                 time_left: job.time_left,
-                time_passed: job.time_passed,
                 turned_on: job.turned_on.clone(),
-                total_flow_from_on_vavles: job.total_flow_from_on_vavles,
+                total_flow: job.total_flow,
             };
 
-            let done = tick(&mut new_job, *dist);
-            if done {
+            // Tick time, stop if we are done
+            new_job.time_left -= std::cmp::min(*dist, new_job.time_left);
+            if new_job.time_left == 0 {
                 continue;
             }
 
