@@ -101,7 +101,7 @@ fn finalize(job: &PathWork, highest_score: &mut u32) {
     }
 }
 
-fn highest_score(day: &Day16, total_time: u32) -> (u32, HashMap<Vec<String>, u32>) {
+fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>,u32> {
     let mut jobs = vec![PathWork {
         id: "AA".to_string(),
         time_left: total_time,
@@ -167,9 +167,7 @@ fn highest_score(day: &Day16, total_time: u32) -> (u32, HashMap<Vec<String>, u32
         }
     }
 
-    // log::info!("answer_key {:#?}", answer_key);
-
-    (highest_score, answer_key)
+    answer_key
 }
 
 #[allow(dead_code)]
@@ -401,10 +399,8 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = highest_score(self, 30);
-        let score = answer.0;
-        let m = answer.1.values().max().unwrap();
-        log::info!("This should match {score} == {m}");
+        let answers = highest_score(self, 30);
+        let score = answers.values().max().unwrap();
 
         Ok(score.to_string())
     }
@@ -417,41 +413,21 @@ impl Puzzle for Day16 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        // Remove this if to test real data for part 2
-        if self.valves.len() < 100 {
-            // let score = highest_score_p2(self);
+        let answers = highest_score(self, 26);
+        let mut scores = vec![];
 
-            let answer_key = highest_score(self, 26).1;
-            // total_flow = max(
-            //     my_val + el_val for k1, my_val in paths.items()
-            //     for k2, el_val in paths.items() if not k1 & k2)
-            let mut scores = vec![];
-            for (key1, value1) in answer_key.iter() {
-                for (key2, value2) in answer_key.iter() {
-                    if !key1.iter().any(|x| key2.contains(x)) {
-                        scores.push(*value1 + *value2);
-                    }
+        // Find the highest score for two workers, where there is no intersection
+        for (key1, value1) in answers.iter() {
+            for (key2, value2) in answers.iter() {
+                // Test for worker path intersection
+                if !key1.iter().any(|x| key2.contains(x)) {
+                    scores.push(*value1 + *value2);
                 }
             }
-            scores.sort();
-            scores.reverse();
-            let answer2 = scores.iter().max().unwrap();
-            let m = answer_key.values().max().unwrap();
-            let b: Vec<&u32> = answer_key.values().collect();
-            let mut c = vec![];
-            for x in b {
-                c.push(*x);
-            }
-            c.sort();
-            c.reverse();
-
-            log::info!("This is key values {c:?}");
-            log::info!("This is m {m}");
-
-            return Ok(answer2.to_string());
         }
+        let score = scores.iter().max().unwrap();
 
-        Ok("Part 2 with real data takes HOURS".to_string())
+        return Ok(score.to_string());
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
