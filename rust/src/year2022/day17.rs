@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
+use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
@@ -40,7 +39,7 @@ fn play_game(day: &mut Day17) -> RepeatDetection {
         Shapes::Tall,
         Shapes::Square,
     ];
-    log::info!("Shapes {}. Commands {}.", shapes.len(), day.commands.len());
+    log::debug!("Shapes {}. Commands {}.", shapes.len(), day.commands.len());
 
     let mut round_map: HashMap<String, RoundInfo> = HashMap::new();
     let mut repeat = RepeatDetection {
@@ -48,7 +47,9 @@ fn play_game(day: &mut Day17) -> RepeatDetection {
         shape_count2: 0,
     };
 
+    // Play a round for each shape
     while shape_count < 2022 {
+        // Cache info about this round to be used in solution later
         let round_info = RoundInfo {
             shape_count,
             shape_index,
@@ -63,7 +64,7 @@ fn play_game(day: &mut Day17) -> RepeatDetection {
             if current_height > 100 {
                 let key = day.tetris.get_rows_as_string(100);
                 if round_map.contains_key(&key) {
-                    log::info!("Match at {round_info:?}. Orig was {:?}", round_map[&key]);
+                    log::debug!("Match at {round_info:?}. Orig was {:?}", round_map[&key]);
                     repeat.shape_count1 = round_map[&key].shape_count;
                     repeat.shape_count2 = shape_count;
                 } else {
@@ -72,40 +73,24 @@ fn play_game(day: &mut Day17) -> RepeatDetection {
             }
         }
 
-        if day.tetris.is_top_line_full() {
-            log::info!("Top line full at shape #{shape_count}");
-        }
-
+        // Add new shape for this round
         let shape = shapes[shape_index];
         let shape_id = day.tetris.add_shape(shape);
 
-        let shape_count1 = shape_count;
-        let shape_index1 = shape_index;
-        let command_index1 = command_index;
-
+        // Move the shape until it can no longer fall down
         loop {
+            // Move the shape based on the command. If it cannot move, it fails silently.
             let command = day.commands[command_index];
             command_index = (command_index + 1) % day.commands.len();
-            if shape_count == 21 {
-                // day.tetris.print();
-            }
             day.tetris.move_shape(shape_id, command);
-            if shape_count == 21 {
-                // day.tetris.print();
-            }
+
+            // Move the shape down, on failure stop the round
             if !day.tetris.move_shape(shape_id, Direction::Down) {
                 break;
             }
         }
 
-        log::debug!(
-            "Round {} Start P: {} Start W: {} Tower height: {}",
-            shape_count1,
-            shape_index1,
-            command_index1,
-            day.tetris.get_stack_height()
-        );
-
+        // Restart the loop
         shape_count += 1;
         shape_index = shape_count % shapes.len();
     }
@@ -150,17 +135,27 @@ impl Puzzle for Day17 {
     fn solve_part2(&mut self) -> Result<String> {
         let repeat = play_game(self);
 
+        // Calculate the height of the game after 1 trillion rounds
+        // Use the repeat info to calculate the height for repeats
+        // Use info from the head and tail to calculate the extra initial and after height
+
+        // Initial
         let height_initial = self.round_info[repeat.shape_count1].height as u64;
-        let shape_count_diff = (repeat.shape_count2 - repeat.shape_count1) as u64;
-        let shape_count_in_repeat = 1000000000000u64 - repeat.shape_count1 as u64;
-        let shape_count_extra = (shape_count_in_repeat % shape_count_diff) as usize;
-        let height_diff = (self.round_info[repeat.shape_count2].height
+
+        // Repeat
+        let shape_count_repeat = (repeat.shape_count2 - repeat.shape_count1) as u64;
+        let shape_count_repeat_total = 1000000000000u64 - repeat.shape_count1 as u64;
+        let height_repeat = (self.round_info[repeat.shape_count2].height
             - self.round_info[repeat.shape_count1].height) as u64;
-        let height_extra = (self.round_info[repeat.shape_count1 + shape_count_extra].height
+        let height_repeat_total = (shape_count_repeat_total) / shape_count_repeat * height_repeat;
+
+        // After
+        let shape_count_after = (shape_count_repeat_total % shape_count_repeat) as usize;
+        let height_after = (self.round_info[repeat.shape_count1 + shape_count_after].height
             - self.round_info[repeat.shape_count1].height) as u64;
-        let answer = height_initial
-            + (shape_count_in_repeat) / shape_count_diff * height_diff
-            + height_extra;
+
+        // Answer, sum it up
+        let answer = height_initial + height_repeat_total + height_after;
 
         Ok(answer.to_string())
     }

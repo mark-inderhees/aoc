@@ -227,6 +227,7 @@ impl Tetris {
     }
 
     // Does the top most line have a full row of blocks
+    #[allow(dead_code)]
     pub fn is_top_line_full(&self) -> bool {
         let mut min_player_y = self.grid.height() - 1;
         for i in 0..self.grid.get_players_len() {
