@@ -51,13 +51,14 @@ struct Blueprint {
 
 // Try all possibilities based on the blueprint, return max geode made
 fn do_work(blueprint: &Blueprint) -> u32 {
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone)]
     struct Work {
         robots: Robots,
         resources: Resources,
         what_to_build: Robot,
         time_left: u32,
         time_passed: u32,
+        history: String,
     }
     let mut jobs: Vec<Work> = vec![];
     let mut job = Work {
@@ -76,30 +77,40 @@ fn do_work(blueprint: &Blueprint) -> u32 {
         what_to_build: Robot::Ore,
         time_left: 24,
         time_passed: 1,
+        history: String::new(),
     };
     for choice in work_choices(&job.robots) {
         job.what_to_build = choice;
-        jobs.push(job);
+        jobs.push(job.clone());
     }
     let mut max_geodes = 0;
+    let mut max_history = String::new();
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
 
-        log::debug!("\n== Minute {} ==", job.time_passed);
+        job.history
+            .push_str(format!("\n== Minute {} ==\n", job.time_passed).as_str());
 
         // Try to build the robot
-        let build_done = build_robot(job.what_to_build, &mut job.resources, blueprint);
+        let build_done = build_robot(
+            job.what_to_build,
+            &mut job.resources,
+            blueprint,
+            &mut job.history,
+        );
 
         // Get our new resources
-        mine_resources(&job.robots, &mut job.resources);
-        log::debug!("Resources after mining: {:?}", job.resources);
+        mine_resources(&job.robots, &mut job.resources, &mut job.history);
 
         // Tick the clock
         job.time_left -= 1;
         job.time_passed += 1;
         if job.time_left == 0 {
-            max_geodes = std::cmp::max(max_geodes, job.resources.geode);
+            if job.resources.geode > max_geodes {
+                max_geodes = job.resources.geode;
+                max_history = job.history;
+            }
             log::debug!("All done, got {} geodes", job.resources.geode);
             continue;
         }
@@ -116,21 +127,59 @@ fn do_work(blueprint: &Blueprint) -> u32 {
         if build_done {
             // Add our new robot to the list
             match job.what_to_build {
-                Robot::Ore => job.robots.ore += 1,
-                Robot::Clay => job.robots.clay += 1,
-                Robot::Obsidian => job.robots.obsidian += 1,
-                Robot::Geode => job.robots.geode += 1,
+                Robot::Ore => {
+                    job.robots.ore += 1;
+                    job.history.push_str(
+                        format!(
+                            "The new ore-collecting robot is ready; you now have {} of them.\n",
+                            job.robots.ore
+                        )
+                        .as_str(),
+                    );
+                }
+                Robot::Clay => {
+                    job.robots.clay += 1;
+                    job.history.push_str(
+                        format!(
+                            "The new clay-collecting robot is ready; you now have {} of them.\n",
+                            job.robots.clay
+                        )
+                        .as_str(),
+                    );
+                }
+                Robot::Obsidian => {
+                    job.robots.obsidian += 1;
+                    job.history.push_str(
+                        format!(
+                            "The new obsidian-collecting robot is ready; you now have {} of them.\n",
+                            job.robots.obsidian
+                        )
+                        .as_str(),
+                    );
+                }
+                Robot::Geode => {
+                    job.robots.geode += 1;
+                    job.history.push_str(
+                        format!(
+                            "The new geode-cracking robot is ready; you now have {} of them.\n",
+                            job.robots.geode
+                        )
+                        .as_str(),
+                    );
+                }
             };
 
             for choice in work_choices(&job.robots) {
                 job.what_to_build = choice;
-                jobs.push(job);
+                jobs.push(job.clone());
             }
         } else {
             // Reschedule this work
             jobs.push(job)
         }
     }
+
+    log::debug!("{max_history}");
 
     max_geodes
 }
@@ -149,7 +198,12 @@ fn work_choices(robots: &Robots) -> Vec<Robot> {
 // Try to build a robot if we have the needed resources
 // If possible, the robot is built, resources are deducted, and this returns true
 // If not possible, then this returns false
-fn build_robot(robot: Robot, resources: &mut Resources, blueprint: &Blueprint) -> bool {
+fn build_robot(
+    robot: Robot,
+    resources: &mut Resources,
+    blueprint: &Blueprint,
+    history: &mut String,
+) -> bool {
     let cost = match robot {
         Robot::Ore => blueprint.robot_ore,
         Robot::Clay => blueprint.robot_clay,
@@ -165,6 +219,46 @@ fn build_robot(robot: Robot, resources: &mut Resources, blueprint: &Blueprint) -
         resources.ore -= cost.ore;
         resources.clay -= cost.clay;
         resources.obsidian -= cost.obsidian;
+
+        match robot {
+            Robot::Ore => {
+                history.push_str(
+                    format!(
+                        "Spend {} ore to start building an ore-collecting robot.\n",
+                        cost.ore
+                    )
+                    .as_str(),
+                );
+            }
+            Robot::Clay => {
+                history.push_str(
+                    format!(
+                        "Spend {} ore to start building a clay-collecting robot.\n",
+                        cost.ore
+                    )
+                    .as_str(),
+                );
+            }
+            Robot::Obsidian => {
+                history.push_str(
+                    format!(
+                        "Spend {} ore and {} clay to start building an obsidian-collecting robot.\n",
+                        cost.ore, cost.clay
+                    )
+                    .as_str(),
+                );
+            }
+            Robot::Geode => {
+                history.push_str(
+                    format!(
+                        "Spend {} ore and {} obsidian to start building a geode-cracking robot.\n",
+                        cost.ore, cost.obsidian
+                    )
+                    .as_str(),
+                );
+            }
+        };
+
         return true;
     }
 
@@ -172,11 +266,82 @@ fn build_robot(robot: Robot, resources: &mut Resources, blueprint: &Blueprint) -
 }
 
 // Based on the type of robots we have, increase resources count
-fn mine_resources(robots: &Robots, resources: &mut Resources) {
+fn mine_resources(robots: &Robots, resources: &mut Resources, history: &mut String) {
     resources.ore += robots.ore;
     resources.clay += robots.clay;
     resources.obsidian += robots.obsidian;
     resources.geode += robots.geode;
+
+    let mut robot;
+    let mut collect;
+    if robots.ore > 0 {
+        if robots.ore > 1 {
+            robot = "s";
+            collect = "";
+        } else {
+            robot = "";
+            collect = "s";
+        }
+        history.push_str(
+            format!(
+                "{} ore-collecting robot{} collect{} {} ore; you now have {} ore.\n",
+                robots.ore, robot, collect, robots.ore, resources.ore
+            )
+            .as_str(),
+        );
+    }
+    if robots.clay > 0 {
+        if robots.clay > 1 {
+            robot = "s";
+            collect = "";
+        } else {
+            robot = "";
+            collect = "s";
+        }
+        history.push_str(
+            format!(
+                "{} clay-collecting robot{} collect{} {} clay; you now have {} clay.\n",
+                robots.clay, robot, collect, robots.clay, resources.clay
+            )
+            .as_str(),
+        );
+    }
+    if robots.obsidian > 0 {
+        if robots.obsidian > 1 {
+            robot = "s";
+            collect = "";
+        } else {
+            robot = "";
+            collect = "s";
+        }
+        history.push_str(
+            format!(
+                "{} obsidian-collecting robot{} collect{} {} obsidian; you now have {} obsidian.\n",
+                robots.obsidian, robot, collect, robots.obsidian, resources.obsidian
+            )
+            .as_str(),
+        );
+    }
+    if robots.geode > 0 {
+        if robots.geode > 1 {
+            robot = "s";
+            collect = "";
+        } else {
+            robot = "";
+            collect = "s";
+        }
+        let mut geoge_str = "";
+        if resources.geode > 1 {
+            geoge_str = "s";
+        }
+        history.push_str(
+            format!(
+                "{} geode-cracking robot{} crack{} {} geode{}; you now have {} open geode{}.\n",
+                robots.geode, robot, collect, robots.geode, robot, resources.geode, geoge_str
+            )
+            .as_str(),
+        );
+    }
 }
 
 // Given unlimited resources, how many geode could we make?
