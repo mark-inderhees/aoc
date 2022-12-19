@@ -50,7 +50,7 @@ struct Blueprint {
 }
 
 // Try all possibilities based on the blueprint, return max geode made
-fn do_work(blueprint: &Blueprint) -> u32 {
+fn do_work(blueprint: &Blueprint, total_time: u32) -> u32 {
     #[derive(Debug, Clone)]
     struct Work {
         robots: Robots,
@@ -75,7 +75,7 @@ fn do_work(blueprint: &Blueprint) -> u32 {
             geode: 0,
         },
         what_to_build: Robot::Ore,
-        time_left: 24,
+        time_left: total_time,
         time_passed: 1,
         history: String::new(),
     };
@@ -411,7 +411,7 @@ impl Puzzle for Day19 {
     fn solve_part1(&mut self) -> Result<String> {
         let mut score = 0;
         for (i, blueprint) in self.blueprints.iter().enumerate() {
-            let geode = do_work(&blueprint);
+            let geode = do_work(&blueprint, 24);
             log::info!("[{i}] Max geodes found {geode}");
             score = score + (i + 1) as u32 * geode;
         }
@@ -426,13 +426,21 @@ impl Puzzle for Day19 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut score = 1;
+        let len = std::cmp::min(3, self.blueprints.len());
+        for i in 0..len {
+            let blueprint = self.blueprints[i];
+            let geode = do_work(&blueprint, 32);
+            log::info!("[{i}] Max geodes found {geode}");
+            score = score * geode;
+        }
+        Ok(score.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(3472.to_string()),
+            false => Some(88160.to_string()),
         }
     }
 }
