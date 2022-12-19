@@ -242,4 +242,20 @@ impl Tetris {
 
         true
     }
+
+    pub fn get_rows_as_string(&self, rows: u32) -> String {
+        let mut min_player_y = self.grid.height() - 1;
+        for i in 0..self.grid.get_players_len() {
+            let player_location = self.grid.get_player_location(i);
+            min_player_y = std::cmp::min(min_player_y, player_location.y);
+        }
+
+        let mut output = String::new();
+        for x in 0..7 {
+            for y in min_player_y..min_player_y + rows as i32 {
+                output.push(self.grid.get_at_with_player(BoardPoint { x, y }));
+            }
+        }
+        output
+    }
 }

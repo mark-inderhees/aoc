@@ -34,6 +34,7 @@ fn play_game(day: &mut Day17) -> Vec<RoundInfo> {
     log::info!("Shapes {}. Commands {}.", shapes.len(), day.commands.len());
 
     let mut round_info = vec![];
+    let mut key = String::new();
 
     while shape_count < total {
         round_info.push(RoundInfo {
@@ -41,6 +42,16 @@ fn play_game(day: &mut Day17) -> Vec<RoundInfo> {
             command_index,
             height: day.tetris.get_stack_height(),
         });
+
+        let current_height = day.tetris.get_stack_height();
+        if current_height == 100 {
+            key = day.tetris.get_rows_as_string(100);
+        } else if current_height > 100 {
+            let key2 = day.tetris.get_rows_as_string(100);
+            if key == key2 {
+                log::info!("Match at shape count {shape_count} and height {current_height}");
+            }
+        }
 
         if day.tetris.is_top_line_full() {
             log::info!("Top line full at shape #{shape_count}");
@@ -100,7 +111,7 @@ impl Puzzle for Day17 {
             for width in 1..len / 2 {
                 let sub_string = &input_to_use.to_string()[skip..skip + width];
                 let mut good = false;
-                for start in (skip+width..len).step_by(width) {
+                for start in (skip + width..len).step_by(width) {
                     if start + width >= len {
                         break;
                     }
@@ -113,7 +124,9 @@ impl Puzzle for Day17 {
                     }
                 }
                 if good {
-                    log::info!("Found an input pattern at skip {skip} width {width}. Pattern {sub_string}");
+                    log::info!(
+                        "Found an input pattern at skip {skip} width {width}. Pattern {sub_string}"
+                    );
                     break;
                 }
             }

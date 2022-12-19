@@ -16,6 +16,7 @@ where
 {
     point: BoardPoint,
     id: T,
+    player_id: PlayerId,
 }
 
 // State about this current square in the gird
@@ -129,7 +130,11 @@ where
 
     pub fn add_player(&mut self, point: BoardPoint, id: T) -> PlayerId {
         assert!(point.x < self.width() && point.y < self.height());
-        self.players.push(Player { point, id });
+        self.players.push(Player {
+            point,
+            id,
+            player_id: self.players.len(),
+        });
         self.players.len() - 1
     }
 
@@ -155,6 +160,16 @@ where
         false
     }
 
+    pub fn which_player_is_here(&self, location: BoardPoint) -> PlayerId {
+        for player in &self.players {
+            if player.point == location {
+                return player.player_id;
+            }
+        }
+
+        INVALID_PLAYER
+    }
+
     pub fn width(&self) -> i32 {
         self.grid.cols() as i32
     }
@@ -174,6 +189,15 @@ where
         let x_: usize = point.x as usize;
         let y_: usize = point.y as usize;
         self.grid[y_][x_]
+    }
+
+    pub fn get_at_with_player(&self, point: BoardPoint) -> T {
+        let mut value = self.get_at(point);
+        let player_id = self.which_player_is_here(point);
+        if player_id != INVALID_PLAYER {
+            value = self.players[player_id].id;
+        }
+        value
     }
 
     pub fn set_location(&mut self, point: BoardPoint) {
@@ -238,6 +262,7 @@ where
                 y: self.players[player].point.y + step_y,
             },
             id: self.players[player].id,
+            player_id: self.players[player].player_id,
         };
 
         let x_max = self.width();
