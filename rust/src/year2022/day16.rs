@@ -82,6 +82,7 @@ struct PathWork {
     score: u32,
     rate: u32,
     turned_on: Vec<String>,
+    total_flow_from_on_vavles: u32,
 }
 
 fn tick(job: &mut PathWork, time: u32) -> bool {
@@ -100,16 +101,18 @@ fn finalize(job: &PathWork, highest_score: &mut u32) {
     }
 }
 
-fn highest_score(day: &Day16) -> u32 {
+fn highest_score(day: &Day16, total_time: u32) -> (u32, HashMap<Vec<String>, u32>) {
     let mut jobs = vec![PathWork {
         id: "AA".to_string(),
-        time_left: 30,
+        time_left: total_time,
         time_passed: 1,
         score: 0,
         rate: 0,
         turned_on: vec![],
+        total_flow_from_on_vavles: 0,
     }];
     let mut highest_score = 0;
+    let mut answer_key: HashMap<Vec<String>, u32> = HashMap::new();
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
@@ -129,6 +132,18 @@ fn highest_score(day: &Day16) -> u32 {
             // Valve is on
             job.turned_on.push(job.id.to_string());
             job.rate += day.valves[&job.id].rate;
+
+            job.turned_on.sort();
+            let best_answer = match answer_key.get(&job.turned_on) {
+                Some(x) => *x,
+                None => 0,
+            };
+            job.total_flow_from_on_vavles =
+                job.total_flow_from_on_vavles + day.valves[&job.id].rate * job.time_left;
+            answer_key.insert(
+                job.turned_on.clone(),
+                std::cmp::max(best_answer, job.total_flow_from_on_vavles),
+            );
         }
 
         for (new_id, dist) in &day.valves[&job.id].distances {
@@ -139,6 +154,7 @@ fn highest_score(day: &Day16) -> u32 {
                 score: job.score,
                 rate: job.rate,
                 turned_on: job.turned_on.clone(),
+                total_flow_from_on_vavles: job.total_flow_from_on_vavles,
             };
 
             let done = tick(&mut new_job, *dist);
@@ -151,7 +167,9 @@ fn highest_score(day: &Day16) -> u32 {
         }
     }
 
-    highest_score
+    // log::info!("answer_key {:#?}", answer_key);
+
+    (highest_score, answer_key)
 }
 
 #[allow(dead_code)]
@@ -377,13 +395,16 @@ impl Puzzle for Day16 {
             }
         }
 
-        log::info!("{:#?}", day.valves);
+        log::debug!("{:#?}", day.valves);
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let score = highest_score(self);
+        let answer = highest_score(self, 30);
+        let score = answer.0;
+        let m = answer.1.values().max().unwrap();
+        log::info!("This should match {score} == {m}");
 
         Ok(score.to_string())
     }
@@ -397,9 +418,37 @@ impl Puzzle for Day16 {
 
     fn solve_part2(&mut self) -> Result<String> {
         // Remove this if to test real data for part 2
-        if self.valves.len() < 20 {
-            let score = highest_score_p2(self);
-            return Ok(score.to_string());
+        if self.valves.len() < 100 {
+            // let score = highest_score_p2(self);
+
+            let answer_key = highest_score(self, 26).1;
+            // total_flow = max(
+            //     my_val + el_val for k1, my_val in paths.items()
+            //     for k2, el_val in paths.items() if not k1 & k2)
+            let mut scores = vec![];
+            for (key1, value1) in answer_key.iter() {
+                for (key2, value2) in answer_key.iter() {
+                    if !key1.iter().any(|x| key2.contains(x)) {
+                        scores.push(*value1 + *value2);
+                    }
+                }
+            }
+            scores.sort();
+            scores.reverse();
+            let answer2 = scores.iter().max().unwrap();
+            let m = answer_key.values().max().unwrap();
+            let b: Vec<&u32> = answer_key.values().collect();
+            let mut c = vec![];
+            for x in b {
+                c.push(*x);
+            }
+            c.sort();
+            c.reverse();
+
+            log::info!("This is key values {c:?}");
+            log::info!("This is m {m}");
+
+            return Ok(answer2.to_string());
         }
 
         Ok("Part 2 with real data takes HOURS".to_string())
@@ -408,7 +457,7 @@ impl Puzzle for Day16 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(1707.to_string()),
-            false => None, // Some(2587.to_string()),
+            false => Some(2587.to_string()),
         }
     }
 }
