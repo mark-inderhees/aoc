@@ -138,6 +138,7 @@ where
         self.players.len() - 1
     }
 
+    #[allow(dead_code)]
     pub fn get_players_len(&self) -> usize {
         self.players.len()
     }
@@ -222,6 +223,15 @@ where
         let x: usize = self.players[player].point.x as usize;
         let y: usize = self.players[player].point.y as usize;
         self.grid[y][x]
+    }
+
+    // Search all players, finding the smallest y value
+    pub fn get_player_minimum_height(&self) -> i32 {
+        let mut min_player_y = self.height() - 1;
+        for player in &self.players {
+            min_player_y = std::cmp::min(min_player_y, player.point.y);
+        }
+        min_player_y
     }
 
     pub fn step(&mut self, direction: Direction) -> Option<T> {

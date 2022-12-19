@@ -29,14 +29,74 @@ pub enum Shapes {
     Square,
 }
 
+// A shape consists of a couple of players on the grid
 struct Shape {
     shape_type: Shapes,
     players: Vec<PlayerId>,
 }
 
 impl Shape {
-    pub fn new(shape_type: Shapes, grid: &mut Board<char>) -> Shape {
-        let locations = match shape_type {
+    // Create a new shape and add it to the grid
+    pub fn new(shape_type: Shapes, grid: &mut Board<char>, new_shape_air_gap: i32) -> Shape {
+        let locations = Shape::get_shape_locations(shape_type);
+        let rows_for_shape = match shape_type {
+            Shapes::Flat => 1,
+            Shapes::Plus => 3,
+            Shapes::L => 3,
+            Shapes::Tall => 4,
+            Shapes::Square => 2,
+        };
+
+        // Add new rows to the grid based of the current highest block, the
+        // rows this shape needs, and configurable rows between new block and
+        // current highest block
+        let min_player_y = if grid.height() > 1 {
+            grid.get_player_minimum_height()
+        } else {
+            // Special case for first shape where there are no other shapes
+            1
+        };
+        let air_rows_to_add = new_shape_air_gap - min_player_y;
+        let new_rows = rows_for_shape + air_rows_to_add;
+        let width = grid.width() as usize;
+        let mut y_offset = 0;
+        log::debug!("Adding {} rows of air", new_rows);
+        if new_rows > 0 {
+            for _ in 0..new_rows {
+                grid.push_front_row(vec!['.'; width]);
+            }
+        } else {
+            // Remove rows! Instead of modifying the grid, just place the new
+            // shape a little lower
+            log::debug!("Special case where we need to 'remove' rows");
+            y_offset = new_rows.abs();
+        }
+
+        // Add the new shape to the board
+        log::debug!("Adding {:?} at {},{}", shape_type, 2, y_offset);
+        let mut players = vec![];
+        for location in locations {
+            let player = grid.add_player(
+                BoardPoint {
+                    x: location.x + 2,
+                    y: location.y + y_offset,
+                },
+                '#',
+            );
+            players.push(player);
+        }
+
+        Shape {
+            shape_type,
+            players,
+        }
+    }
+
+    // Return a vector of location points for a new shape
+    // The top left of the shape area will be at 0,0
+    // The locations are from left->right, top->bottom
+    fn get_shape_locations(shape_type: Shapes) -> Vec<BoardPoint> {
+        match shape_type {
             Shapes::Flat => vec![
                 BoardPoint { x: 0, y: 0 },
                 BoardPoint { x: 1, y: 0 },
@@ -69,57 +129,13 @@ impl Shape {
                 BoardPoint { x: 0, y: 1 },
                 BoardPoint { x: 1, y: 1 },
             ],
-        };
-        let rows = match shape_type {
-            Shapes::Flat => 1,
-            Shapes::Plus => 3,
-            Shapes::L => 3,
-            Shapes::Tall => 4,
-            Shapes::Square => 2,
-        };
-
-        let mut min_player_y = grid.height();
-        for i in 0..grid.get_players_len() {
-            let player_location = grid.get_player_location(i);
-            min_player_y = std::cmp::min(min_player_y, player_location.y);
-        }
-
-        let new_shape_air_gap = 3;
-        let air_rows_to_add = new_shape_air_gap - min_player_y;
-        let new_rows = rows + air_rows_to_add;
-        let width = grid.width() as usize;
-        let mut y_offset = 0;
-        log::debug!("Adding {} rows of air", new_rows);
-        if new_rows > 0 {
-            for _ in 0..new_rows {
-                grid.push_front_row(vec!['.'; width]);
-            }
-        } else {
-            // Remove rows!
-            log::debug!("Special case where we need to 'remove' rows");
-            y_offset = new_rows.abs();
-        }
-
-        log::debug!("Adding {:?} at {},{}", shape_type, 2, y_offset);
-        let mut players = vec![];
-        for location in locations {
-            let player = grid.add_player(
-                BoardPoint {
-                    x: location.x + 2,
-                    y: location.y + y_offset,
-                },
-                '#',
-            );
-            players.push(player);
-        }
-
-        Shape {
-            shape_type,
-            players,
         }
     }
 
+    // Move the shape the desired direction, returning true if the move was successfull
+    // On failure to move, none of the shape was actually moved
     pub fn move_shape(&mut self, direction: Direction, grid: &mut Board<char>) -> bool {
+        // Find the order to move parts of the shape in so they do not collide with each other
         let indexes = match direction {
             Direction::Left => self.move_left_indexes(),
             Direction::Right => self.move_right_indexes(),
@@ -128,14 +144,15 @@ impl Shape {
         };
         assert_eq!(indexes.len(), self.players.len());
 
+        // Move the players one at a time
         let mut players_moved = vec![];
         for i in indexes.iter() {
             let player = self.players[*i];
             if grid.step_player(self.players[*i], direction).is_some() {
                 players_moved.push(player);
             } else {
+                // Cannot move! Need to unmove any moved parts in reverse order
                 log::debug!("Cannot move {:?} {:?}", self.shape_type, direction);
-                // Need to unmove any moved parts
                 let opposite_direction = Direction::opposite_direction(direction);
                 while players_moved.len() > 0 {
                     log::debug!("Unmoving part of piece {:?}", opposite_direction);
@@ -180,6 +197,8 @@ impl Shape {
 pub struct Tetris {
     grid: Board<char>,
     shapes: Vec<Shape>,
+    width: i32,
+    new_shape_air_gap: i32, // Rows of air between top of tower and new shape
 }
 
 pub type ShapeId = usize;
@@ -189,8 +208,10 @@ impl Tetris {
         let mut me = Tetris {
             grid: Board::new(),
             shapes: vec![],
+            width: 7,
+            new_shape_air_gap: 3,
         };
-        me.grid.push_row(vec!['.'; 7]);
+        me.grid.push_row(vec!['.'; me.width as usize]);
         me.grid.set_players_as_walls();
         me
     }
@@ -202,7 +223,7 @@ impl Tetris {
     }
 
     pub fn add_shape(&mut self, shape_type: Shapes) -> ShapeId {
-        let shape = Shape::new(shape_type, &mut self.grid);
+        let shape = Shape::new(shape_type, &mut self.grid, self.new_shape_air_gap);
         self.shapes.push(shape);
         self.shapes.len() - 1
     }
@@ -211,30 +232,18 @@ impl Tetris {
         self.shapes[id].move_shape(direction, &mut self.grid)
     }
 
+    // Get how tall the shape tower is
     pub fn get_stack_height(&self) -> u32 {
-        let mut min_player_y = self.grid.height() - 1;
-        for i in 0..self.grid.get_players_len() {
-            let player_location = self.grid.get_player_location(i);
-            min_player_y = std::cmp::min(min_player_y, player_location.y);
-        }
-        let answer = (self.grid.height() - min_player_y) as u32;
-        log::debug!(
-            "Answer {answer} = {} - {}",
-            self.grid.height(),
-            min_player_y
-        );
-        answer
+        let min_player_y = self.grid.get_player_minimum_height();
+        let stack_height = (self.grid.height() - min_player_y) as u32;
+        stack_height
     }
 
     // Does the top most line have a full row of blocks
     #[allow(dead_code)]
     pub fn is_top_line_full(&self) -> bool {
-        let mut min_player_y = self.grid.height() - 1;
-        for i in 0..self.grid.get_players_len() {
-            let player_location = self.grid.get_player_location(i);
-            min_player_y = std::cmp::min(min_player_y, player_location.y);
-        }
-        for x in 0..7 {
+        let min_player_y = self.grid.get_player_minimum_height();
+        for x in 0..self.width {
             let value = self.grid.get_at(BoardPoint { x, y: min_player_y });
             if value != '#' {
                 return false;
@@ -244,15 +253,11 @@ impl Tetris {
         true
     }
 
+    // Output a string version of the specified rows
     pub fn get_rows_as_string(&self, rows: u32) -> String {
-        let mut min_player_y = self.grid.height() - 1;
-        for i in 0..self.grid.get_players_len() {
-            let player_location = self.grid.get_player_location(i);
-            min_player_y = std::cmp::min(min_player_y, player_location.y);
-        }
-
+        let min_player_y = self.grid.get_player_minimum_height();
         let mut output = String::new();
-        for x in 0..7 {
+        for x in 0..self.width {
             for y in min_player_y..min_player_y + rows as i32 {
                 output.push(self.grid.get_at_with_player(BoardPoint { x, y }));
             }
