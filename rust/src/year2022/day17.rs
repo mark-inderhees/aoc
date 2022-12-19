@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -10,16 +12,24 @@ use crate::utils::utils::*;
 pub struct Day17 {
     commands: Vec<Direction>,
     tetris: Tetris,
+    round_info: Vec<RoundInfo>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
 struct RoundInfo {
+    shape_count: usize,
     shape_index: usize,
     command_index: usize,
     height: u32,
 }
 
-fn play_game(day: &mut Day17) -> Vec<RoundInfo> {
+struct RepeatDetection {
+    shape_count1: usize,
+    shape_count2: usize,
+}
+
+fn play_game(day: &mut Day17) -> RepeatDetection {
     let mut command_index = 0;
     let mut shape_index = 0;
     let mut shape_count = 0;
@@ -30,26 +40,35 @@ fn play_game(day: &mut Day17) -> Vec<RoundInfo> {
         Shapes::Tall,
         Shapes::Square,
     ];
-    let total = 2022;
     log::info!("Shapes {}. Commands {}.", shapes.len(), day.commands.len());
 
-    let mut round_info = vec![];
-    let mut key = String::new();
+    let mut round_map: HashMap<String, RoundInfo> = HashMap::new();
+    let mut repeat = RepeatDetection {
+        shape_count1: 0,
+        shape_count2: 0,
+    };
 
-    while shape_count < total {
-        round_info.push(RoundInfo {
+    while shape_count < 2022 {
+        let round_info = RoundInfo {
+            shape_count,
             shape_index,
             command_index,
             height: day.tetris.get_stack_height(),
-        });
+        };
+        day.round_info.push(round_info);
 
-        let current_height = day.tetris.get_stack_height();
-        if current_height == 100 {
-            key = day.tetris.get_rows_as_string(100);
-        } else if current_height > 100 {
-            let key2 = day.tetris.get_rows_as_string(100);
-            if key == key2 {
-                log::info!("Match at shape count {shape_count} and height {current_height}");
+        // Repeat detection, find where the grid starts to repeat
+        if repeat.shape_count2 == 0 {
+            let current_height = day.tetris.get_stack_height();
+            if current_height > 100 {
+                let key = day.tetris.get_rows_as_string(100);
+                if round_map.contains_key(&key) {
+                    log::info!("Match at {round_info:?}. Orig was {:?}", round_map[&key]);
+                    repeat.shape_count1 = round_map[&key].shape_count;
+                    repeat.shape_count2 = shape_count;
+                } else {
+                    round_map.insert(key, round_info);
+                }
             }
         }
 
@@ -91,7 +110,7 @@ fn play_game(day: &mut Day17) -> Vec<RoundInfo> {
         shape_index = shape_count % shapes.len();
     }
 
-    round_info
+    repeat
 }
 
 impl Puzzle for Day17 {
@@ -101,37 +120,10 @@ impl Puzzle for Day17 {
         let mut day = Day17 {
             commands: vec![],
             tetris: Tetris::new(),
+            round_info: vec![],
         };
 
         let input_to_use = input.trim();
-
-        // Try to find pattern in input, test data is >>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>
-        let len = input_to_use.to_string().chars().count();
-        for skip in 0..len / 2 {
-            for width in 1..len / 2 {
-                let sub_string = &input_to_use.to_string()[skip..skip + width];
-                let mut good = false;
-                for start in (skip + width..len).step_by(width) {
-                    if start + width >= len {
-                        break;
-                    }
-                    good = true;
-                    let sub_string2 = &input_to_use.to_string()[start..start + width];
-                    if sub_string != sub_string2 {
-                        // This skip and width pair are not good
-                        good = false;
-                        break;
-                    }
-                }
-                if good {
-                    log::info!(
-                        "Found an input pattern at skip {skip} width {width}. Pattern {sub_string}"
-                    );
-                    break;
-                }
-            }
-        }
-
         for char in input_to_use.to_string().chars() {
             match char {
                 '<' => day.commands.push(Direction::Left),
@@ -156,65 +148,27 @@ impl Puzzle for Day17 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let round_info = play_game(self);
-        let mut skip_to_use = 0;
-        let mut step_to_use = 0;
-        let mut diff_to_use = 0;
+        let repeat = play_game(self);
 
-        let mut done = false;
-        for skip in 0..1000 {
-            for step in 1..1000 {
-                let mut previous = RoundInfo {
-                    shape_index: 0,
-                    command_index: 0,
-                    height: 0,
-                };
-                let mut diff = 0;
-                let mut good = false;
-                for repeat in round_info.iter().skip(skip).step_by(step) {
-                    if previous.height != 0 {
-                        if diff != 0 {
-                            good = true;
-                            let new_diff = repeat.height - previous.height;
-                            if new_diff != diff
-                                || previous.shape_index != repeat.shape_index
-                                || previous.command_index != repeat.command_index
-                            {
-                                good = false;
-                                break;
-                            }
-                        }
-                        diff = repeat.height - previous.height
-                    }
-                    previous = *repeat;
-                }
-                if good {
-                    log::info!("Potential repeat at skip {skip} step {step}, diff {diff}");
-                    skip_to_use = skip as u64;
-                    step_to_use = step as u64;
-                    diff_to_use = diff as u64;
-                    done = true;
-                    break;
-                }
-            }
-            if done {
-                break;
-            }
-        }
+        let height_initial = self.round_info[repeat.shape_count1].height as u64;
+        let shape_count_diff = (repeat.shape_count2 - repeat.shape_count1) as u64;
+        let shape_count_in_repeat = 1000000000000u64 - repeat.shape_count1 as u64;
+        let shape_count_extra = (shape_count_in_repeat % shape_count_diff) as usize;
+        let height_diff = (self.round_info[repeat.shape_count2].height
+            - self.round_info[repeat.shape_count1].height) as u64;
+        let height_extra = (self.round_info[repeat.shape_count1 + shape_count_extra].height
+            - self.round_info[repeat.shape_count1].height) as u64;
+        let answer = height_initial
+            + (shape_count_in_repeat) / shape_count_diff * height_diff
+            + height_extra;
 
-        let mut part2 = 0;
-        if step_to_use != 0 {
-            part2 = (1000000000000u64 - skip_to_use) / step_to_use * diff_to_use
-                + round_info[skip_to_use as usize].height as u64;
-        }
-
-        Ok(part2.to_string())
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(1514285714288u64.to_string()),
-            false => None,
+            false => Some(1565517241382u64.to_string()),
         }
     }
 }
