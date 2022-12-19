@@ -1,13 +1,10 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
+use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
 
 #[allow(unused_imports)]
 use crate::utils::utils::*;
-
-// PART 1 WOOOOOORKS
 
 pub struct Day16 {
     valves: HashMap<String, Valve>,
@@ -85,6 +82,7 @@ struct PathWork {
     total_flow_from_on_vavles: u32,
 }
 
+// Move time based on how far moved and increase score
 fn tick(job: &mut PathWork, time: u32) -> bool {
     let to_tick = std::cmp::min(time, job.time_left);
 
@@ -95,58 +93,57 @@ fn tick(job: &mut PathWork, time: u32) -> bool {
     job.time_left == 0
 }
 
+// Update overall highest score
 fn finalize(job: &PathWork, highest_score: &mut u32) {
     if job.score > *highest_score {
         *highest_score = job.score;
     }
 }
 
-fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>,u32> {
+// Try all combinations of paths to figure out the best score
+// Returns a map of all best state found, this includes intermediate state
+fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>, u32> {
     let mut jobs = vec![PathWork {
-        id: "AA".to_string(),
+        id: "AA".to_string(), // Start at AA
         time_left: total_time,
         time_passed: 1,
         score: 0,
         rate: 0,
         turned_on: vec![],
-        total_flow_from_on_vavles: 0,
+        total_flow_from_on_vavles: 0, // Alternative count, instead of incrementing score on ticks
     }];
     let mut highest_score = 0;
-    let mut answer_key: HashMap<Vec<String>, u32> = HashMap::new();
+    let mut answers: HashMap<Vec<String>, u32> = HashMap::new();
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
 
-        // If this is turned on, then leave
-        if job.turned_on.contains(&job.id) {
-            let done = tick(&mut job, u32::MAX);
-            assert!(done);
-            if done {
-                finalize(&job, &mut highest_score);
-                continue;
-            }
-        }
-
         // Always turn on if not start
         if job.id != "AA" {
-            // Valve is on
+            // Turn valve on
             job.turned_on.push(job.id.to_string());
             job.rate += day.valves[&job.id].rate;
 
+            // Build state map, keeping max score at this intermediate state
             job.turned_on.sort();
-            let best_answer = match answer_key.get(&job.turned_on) {
+            let best_answer = match answers.get(&job.turned_on) {
                 Some(x) => *x,
                 None => 0,
             };
             job.total_flow_from_on_vavles =
                 job.total_flow_from_on_vavles + day.valves[&job.id].rate * job.time_left;
-            answer_key.insert(
+                answers.insert(
                 job.turned_on.clone(),
                 std::cmp::max(best_answer, job.total_flow_from_on_vavles),
             );
         }
 
         for (new_id, dist) in &day.valves[&job.id].distances {
+            // Dont go places we have been
+            if job.turned_on.contains(&new_id) {
+                continue;
+            }
+
             let mut new_job = PathWork {
                 id: new_id.to_string(),
                 time_left: job.time_left,
@@ -167,7 +164,7 @@ fn highest_score(day: &Day16, total_time: u32) -> HashMap<Vec<String>,u32> {
         }
     }
 
-    answer_key
+    answers
 }
 
 #[allow(dead_code)]
