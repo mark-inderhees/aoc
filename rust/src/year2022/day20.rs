@@ -6,7 +6,49 @@ use crate::puzzle::Puzzle;
 use crate::utils::utils::*;
 
 pub struct Day20 {
-    values: Vec<i32>,
+    values: Vec<i64>,
+}
+
+fn decode(values: &Vec<i64>, iterations: usize, magic: i64) -> Vec<i64> {
+    // First, multiply by the magic
+    let decrypt: Vec<i64> = values.iter().map(|r| *r as i64 * magic).collect();
+
+    // Enumerate to keep the original index so numbers are uniquely searchable
+    let mut decoded: Vec<(usize, &i64)> = decrypt.iter().enumerate().collect();
+
+    // Run the requested iterations
+    for _ in 0..iterations {
+        // Loop over every value once
+        for (original_index, value) in decrypt.iter().enumerate() {
+            // Find where this value is in the currently list and remove it
+            let current_index = decoded
+                .iter()
+                .position(|r| r == &(original_index, value))
+                .unwrap();
+            decoded.remove(current_index);
+
+            // Use non negative remainder magic to find new index
+            let mut new_index = value + current_index as i64;
+            new_index = new_index.rem_euclid(decoded.len() as i64);
+            if new_index == 0 {
+                // Edge case, zero is actually end of list
+                new_index = decoded.len() as i64;
+            }
+            decoded.insert(new_index as usize, (original_index, value));
+            log::debug!("{decoded:?}");
+        }
+    }
+
+    decoded.iter().map(|r| *r.1).collect::<Vec<i64>>()
+}
+
+fn get_answer(decoded: &Vec<i64>) -> i64 {
+    let zero = decoded.iter().position(|&r| r == 0).unwrap();
+    let len = decoded.len();
+    let one = decoded[(zero + 1000) % len];
+    let two = decoded[(zero + 2000) % len];
+    let three = decoded[(zero + 3000) % len];
+    one + two + three
 }
 
 impl Puzzle for Day20 {
@@ -23,47 +65,28 @@ impl Puzzle for Day20 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let mut decoded: Vec<(usize, &i32)> = self.values.iter().enumerate().collect();
-        for (original_index, value) in self.values.iter().enumerate() {
-            let current_index = decoded
-                .iter()
-                .position(|r| r == &(original_index, value))
-                .unwrap();
-            decoded.remove(current_index);
-            let mut new_index = value + current_index as i32;
-            new_index = new_index.rem_euclid(decoded.len() as i32);
-            if new_index == 0 {
-                new_index = decoded.len() as i32;
-            }
-            decoded.insert(new_index as usize, (new_index as usize, value));
-            log::debug!("{decoded:?}");
-        }
+        let decoded = decode(&self.values, 1, 1);
 
-        let zero = decoded.iter().position(|&r| *r.1 == 0).unwrap();
-        let len = decoded.len();
-        let one = decoded[(zero + 1000) % len].1;
-        let two = decoded[(zero + 2000) % len].1;
-        let three = decoded[(zero + 3000) % len].1;
-        let answer = one + two + three;
-
-        Ok(answer.to_string())
+        Ok(get_answer(&decoded).to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(3.to_string()),
-            false => None,
+            false => Some(6640.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let decoded = decode(&self.values, 10, 811589153);
+
+        Ok(get_answer(&decoded).to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(1623178306.to_string()),
+            false => Some(11893839037215u64.to_string()),
         }
     }
 }
