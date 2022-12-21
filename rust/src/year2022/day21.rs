@@ -30,13 +30,32 @@ struct Monkey {
     try_count: u32,
 }
 
-fn do_math(operator: Operator, value1: i128, value2: i128, invert_operations: bool) -> i128 {
+fn do_math(
+    operator: Operator,
+    value1: i128,
+    value2: i128,
+    invert_operations: bool,
+    i_am_part_1: bool,
+) -> i128 {
     if invert_operations {
+        let key = value1;
         match operator {
-            Operator::Add => value1 - value2,
-            Operator::Subtract => value1 + value2,
-            Operator::Multiply => value1 / value2,
-            Operator::Divide => value1 * value2,
+            Operator::Add => key - value2,
+            Operator::Subtract => {
+                if i_am_part_1 {
+                    return key + value2;
+                } else {
+                    return value2 - key;
+                }
+            }
+            Operator::Multiply => key / value2,
+            Operator::Divide => {
+                if i_am_part_1 {
+                    return key * value2
+                }else {
+                    return value2 / key;
+                }
+            }
         }
     } else {
         match operator {
@@ -87,7 +106,7 @@ fn populate(day: &mut Day21, start_id: &str, invert_operations: bool) {
 
             if let (Some(value1), Some(value2)) = (monkey1.value, monkey2.value) {
                 // We can comput now, so do it!
-                monkey.value = Some(do_math(monkey.operator, value1, value2, invert_operations));
+                monkey.value = Some(do_math(monkey.operator, value1, value2, invert_operations, false));
                 log::debug!(
                     "Doing math {} = {} {:?} {}, {} {:?} {} = {}",
                     monkey.id,
@@ -117,13 +136,23 @@ fn populate(day: &mut Day21, start_id: &str, invert_operations: bool) {
     }
 }
 
-fn find_monkeys(day: &Day21, my_id: &str) -> (String, String, Operator) {
+fn find_monkeys(day: &Day21, my_id: &str) -> (String, String, Operator, bool) {
     // Search the hash map, find the monkey that depends on me
     for (id1, monkey) in day.monkeys.iter() {
         if monkey.part1 == my_id {
-            return (id1.to_string(), monkey.part2.to_string(), monkey.operator);
+            return (
+                id1.to_string(),
+                monkey.part2.to_string(),
+                monkey.operator,
+                true,
+            );
         } else if monkey.part2 == my_id {
-            return (id1.to_string(), monkey.part1.to_string(), monkey.operator);
+            return (
+                id1.to_string(),
+                monkey.part1.to_string(),
+                monkey.operator,
+                false,
+            );
         }
     }
     panic!("Could not find your monkey");
@@ -153,12 +182,19 @@ fn populate_backwards(day: &mut Day21, start_id: &str, invert_operations: bool) 
             let monkey_id1 = monkey_ids.0;
             let monkey_id2 = monkey_ids.1;
             let operator = monkey_ids.2;
+            let i_am_part_1 = monkey_ids.3;
             let monkey1 = &day.monkeys[&monkey_id1];
             let monkey2 = &day.monkeys[&monkey_id2];
 
             if let (Some(value1), Some(value2)) = (monkey1.value, monkey2.value) {
                 // We can comput now, so do it!
-                monkey.value = Some(do_math(operator, value1, value2, invert_operations));
+                monkey.value = Some(do_math(
+                    operator,
+                    value1,
+                    value2,
+                    invert_operations,
+                    i_am_part_1,
+                ));
                 log::debug!(
                     "Doing math {} = {} {:?} {}, {} {:?} {} = {}",
                     monkey.id,
@@ -280,7 +316,7 @@ impl Puzzle for Day21 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(301.to_string()),
-            false => None,
+            false => Some(3617613952378u64.to_string()),
         }
     }
 }
