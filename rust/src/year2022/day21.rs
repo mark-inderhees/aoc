@@ -10,15 +10,6 @@ pub struct Day21 {
     monkeys: HashMap<String, Monkey>,
 }
 
-#[derive(Default, Debug, Clone, Copy)]
-enum Operator {
-    #[default]
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-}
-
 #[derive(Default, Debug, Clone)]
 struct Monkey {
     value: Option<i128>,
@@ -29,44 +20,7 @@ struct Monkey {
     try_count: u32,
 }
 
-fn do_math(
-    operator: Operator,
-    value1: i128,
-    value2: i128,
-    invert_operations: bool,
-    i_am_part_1: bool,
-) -> i128 {
-    if invert_operations {
-        let key = value1;
-        match operator {
-            Operator::Add => key - value2,
-            Operator::Subtract => {
-                if i_am_part_1 {
-                    return key + value2;
-                } else {
-                    return value2 - key;
-                }
-            }
-            Operator::Multiply => key / value2,
-            Operator::Divide => {
-                if i_am_part_1 {
-                    return key * value2;
-                } else {
-                    return value2 / key;
-                }
-            }
-        }
-    } else {
-        match operator {
-            Operator::Add => value1 + value2,
-            Operator::Subtract => value1 - value2,
-            Operator::Multiply => value1 * value2,
-            Operator::Divide => value1 / value2,
-        }
-    }
-}
-
-fn populate(day: &mut Day21, start_id: &str, invert_operations: bool) {
+fn populate(day: &mut Day21, start_id: &str) {
     #[derive(Clone)]
     struct Work {
         id: String,
@@ -105,13 +59,7 @@ fn populate(day: &mut Day21, start_id: &str, invert_operations: bool) {
 
             if let (Some(value1), Some(value2)) = (monkey_left.value, monkey_right.value) {
                 // We can comput now, so do it!
-                monkey.value = Some(do_math(
-                    monkey.operator,
-                    value1,
-                    value2,
-                    invert_operations,
-                    false,
-                ));
+                monkey.value = Some(do_math(monkey.operator, value1, value2));
                 log::debug!(
                     "Doing math {} = {} {:?} {}, {} {:?} {} = {}",
                     monkey.id,
@@ -164,7 +112,7 @@ fn find_monkeys(day: &Day21, my_id: &str) -> (String, String, Operator, bool) {
     panic!("Could not find your monkey");
 }
 
-fn populate_backwards(day: &mut Day21, start_id: &str, invert_operations: bool) {
+fn populate_backwards(day: &mut Day21, start_id: &str) {
     #[derive(Clone, Debug)]
     struct Work {
         id: String,
@@ -194,13 +142,7 @@ fn populate_backwards(day: &mut Day21, start_id: &str, invert_operations: bool) 
 
             if let (Some(value1), Some(value2)) = (monkey1.value, monkey2.value) {
                 // We can comput now, so do it!
-                monkey.value = Some(do_math(
-                    operator,
-                    value1,
-                    value2,
-                    invert_operations,
-                    i_am_part_1,
-                ));
+                monkey.value = Some(solve_math(operator, value1, value2, i_am_part_1));
                 log::debug!(
                     "Doing math {} = {} {:?} {}, {} {:?} {} = {}",
                     monkey.id,
@@ -271,7 +213,7 @@ impl Puzzle for Day21 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        populate(self, "root", false);
+        populate(self, "root");
         // log::debug!("Monkies {:#?}", self.monkeys);
         let answer = self.monkeys["root"].value.unwrap();
         Ok(answer.to_string())
@@ -297,10 +239,10 @@ impl Puzzle for Day21 {
 
         // Solve side 2 first
         log::debug!("Populate side 2, find {}", id_right);
-        populate(self, &id_right, false);
+        populate(self, &id_right);
 
         log::debug!("Trying to pre populate side 1, find {}", id_left);
-        populate(self, &id_left, false);
+        populate(self, &id_left);
 
         // Now we know what monkey on side 1 value should be
         let mut monkey1 = self.monkeys[&id_left].clone();
@@ -312,7 +254,7 @@ impl Puzzle for Day21 {
         // Now use reverse logic to find human value
         log::debug!("Solve for human using inverse logic");
         // log::debug!("Monkies {:#?}", self.monkeys);
-        populate_backwards(self, "humn", true);
+        populate_backwards(self, "humn");
         let answer = self.monkeys["humn"].value.unwrap();
 
         // log::debug!("Monkies {:#?}", self.monkeys);

@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use rusttype::Point;
+use std::str::FromStr;
 
 pub type UtilsPoint = Point<i32>;
 
@@ -51,4 +51,48 @@ pub fn manhattan_distance(p1: UtilsPoint, p2: UtilsPoint) -> i32 {
     let x = (p1.x - p2.x).abs();
     let y = (p1.y - p2.y).abs();
     x + y
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub enum Operator {
+    #[default]
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+}
+
+// Do some simple math, returns the value of result, for example:
+// result = value_left ? value_right
+pub fn do_math(operator: Operator, value_left: i128, value_right: i128) -> i128 {
+    match operator {
+        Operator::Add => value_left + value_right,
+        Operator::Subtract => value_left - value_right,
+        Operator::Multiply => value_left * value_right,
+        Operator::Divide => value_left / value_right,
+    }
+}
+
+// Solve a math equation, returns the value of x, for example:
+// result = x ? value
+// result = value ? x
+pub fn solve_math(operator: Operator, result: i128, value: i128, solve_for_left: bool) -> i128 {
+    match operator {
+        Operator::Add => result - value,
+        Operator::Subtract => {
+            if solve_for_left {
+                return result + value;
+            } else {
+                return value - result;
+            }
+        }
+        Operator::Multiply => result / value,
+        Operator::Divide => {
+            if solve_for_left {
+                return result * value;
+            } else {
+                return value / result;
+            }
+        }
+    }
 }
