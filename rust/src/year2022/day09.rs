@@ -4,8 +4,8 @@ use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 
 pub struct Day09 {
-    board: Board<char>,
-    visited: Board<char>,
+    board: Board<char, BoardDefaultContext>,
+    visited: Board<char, BoardDefaultContext>,
     commands: Vec<(Direction, u32)>,
 }
 

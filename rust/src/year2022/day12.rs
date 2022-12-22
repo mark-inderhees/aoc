@@ -5,7 +5,7 @@ use crate::utils::board::*;
 use crate::utils::utils::*;
 
 pub struct Day12 {
-    grid: Board<char>,
+    grid: Board<char, BoardDefaultContext>,
     start_player: PlayerId,
     end_player: PlayerId,
 }
@@ -49,7 +49,8 @@ impl Puzzle for Day12 {
             }
         }
 
-        log::debug!("{:#?}", day.grid);
+        log::debug!("Input Grid:");
+        // day.board.print_board_with_players_pretty();
 
         Ok(day)
     }

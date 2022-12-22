@@ -7,7 +7,7 @@ use crate::utils::board::*;
 use crate::utils::utils::*;
 
 pub struct Day14 {
-    grid: Board<char>,
+    grid: Board<char, BoardDefaultContext>,
     offset: BoardPoint,
     min: BoardPoint,
     max: BoardPoint,

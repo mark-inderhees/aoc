@@ -4,9 +4,9 @@ use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 
 pub struct Day08 {
-    board: Board<u32>,
-    visible: Board<char>,
-    score: Board<u32>,
+    board: Board<u32, BoardDefaultContext>,
+    visible: Board<char, BoardDefaultContext>,
+    score: Board<u32, BoardDefaultContext>,
 }
 
 impl Puzzle for Day08 {
@@ -29,7 +29,8 @@ impl Puzzle for Day08 {
 
         day.board.add_player(BoardPoint { x: 0, y: 0 }, 0);
 
-        log::debug!("Input Grid: {:#?}", day.board);
+        log::debug!("Input Grid:");
+        // day.board.print_board_with_players_pretty();
 
         Ok(day)
     }

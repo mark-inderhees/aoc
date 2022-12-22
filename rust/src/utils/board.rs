@@ -7,6 +7,7 @@ use strum_macros::EnumIter;
 
 pub type BoardPoint = Point<i32>;
 pub type PlayerId = usize;
+pub type BoardDefaultContext = u32;
 pub const INVALID_PLAYER: usize = usize::MAX;
 
 #[derive(Debug, Clone, Copy)]
@@ -25,10 +26,10 @@ struct State {
     step_count: u32, // Most optimized step count so far at this square
 }
 
-#[derive(Debug)]
-pub struct Board<T>
+pub struct Board<T, Context>
 where
     T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
+    Context: Clone + Debug,
 {
     grid: Grid<T>,
     grid_state: Grid<State>,
@@ -37,9 +38,12 @@ where
     players_are_walls: bool,
     wraparound: Vec<T>,
     wraparound_mode: bool,
+    wraparound_custom_mode: bool,
+    wraparound_custom: fn(&mut Context, BoardPoint, Direction) -> BoardPoint,
+    context: Option<Context>,
 }
 
-#[derive(Debug, EnumIter, Clone, Copy, PartialEq)]
+#[derive(Debug, EnumIter, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
     Up,
     Down,
@@ -80,11 +84,20 @@ impl Direction {
     }
 }
 
-impl<T> Board<T>
+fn default_custom_wraparound<Context>(
+    _context: &mut Context,
+    _point: BoardPoint,
+    _direction: Direction,
+) -> BoardPoint {
+    panic!("Custom wraparound not implemented")
+}
+
+impl<T, Context> Board<T, Context>
 where
     T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
+    Context: Clone + Debug,
 {
-    pub fn new() -> Board<T> {
+    pub fn new() -> Board<T, Context> {
         Board {
             grid: grid![],
             grid_state: grid![],
@@ -93,6 +106,9 @@ where
             players_are_walls: false,
             wraparound: vec![],
             wraparound_mode: false,
+            wraparound_custom_mode: false,
+            wraparound_custom: default_custom_wraparound,
+            context: None,
         }
     }
 
@@ -161,6 +177,22 @@ where
 
     pub fn set_wraparound_mode(&mut self) {
         self.wraparound_mode = true;
+    }
+
+    pub fn set_wraparound_custom_mode(
+        &mut self,
+        wraparound_custom: fn(&mut Context, BoardPoint, Direction) -> BoardPoint,
+    ) {
+        self.wraparound_custom_mode = true;
+        self.wraparound_custom = wraparound_custom;
+    }
+
+    pub fn set_context(&mut self, context: &Context) {
+        self.context = Some(context.clone());
+    }
+
+    pub fn get_context(&mut self) -> Context {
+        self.context.as_ref().unwrap().clone()
     }
 
     pub fn player_is_here(&self, location: BoardPoint) -> bool {
@@ -280,10 +312,11 @@ where
             Direction::DownRight => (1, 1),
         };
 
+        let start_location = self.players[player].point;
         let mut new_location = Player {
             point: BoardPoint {
-                x: self.players[player].point.x + step_x,
-                y: self.players[player].point.y + step_y,
+                x: start_location.x + step_x,
+                y: start_location.y + step_y,
             },
             id: self.players[player].id,
             player_id: self.players[player].player_id,
@@ -298,12 +331,20 @@ where
                 || new_location.point.x == x_max
                 || new_location.point.y == y_max
             {
-                match direction {
-                    Direction::Up => new_location.point.y = y_max - 1,
-                    Direction::Down => new_location.point.y = 0,
-                    Direction::Left => new_location.point.x = x_max - 1,
-                    Direction::Right => new_location.point.x = 0,
-                    _ => panic!("Unsupported wrap around direction"),
+                if self.wraparound_custom_mode {
+                    new_location.point = (self.wraparound_custom)(
+                        &mut self.context.as_mut().unwrap(),
+                        start_location,
+                        direction,
+                    );
+                } else {
+                    match direction {
+                        Direction::Up => new_location.point.y = y_max - 1,
+                        Direction::Down => new_location.point.y = 0,
+                        Direction::Left => new_location.point.x = x_max - 1,
+                        Direction::Right => new_location.point.x = 0,
+                        _ => panic!("Unsupported wrap around direction"),
+                    }
                 }
             }
         } else {
@@ -317,11 +358,18 @@ where
             }
         }
 
-        let x: usize = new_location.point.x as usize;
-        let y: usize = new_location.point.y as usize;
-        let mut value = self.grid[y][x];
+        let mut value = self.get_at(new_location.point);
         if self.wraparound.contains(&value) {
-            value = self.step_player_wraparound(&mut new_location.point, direction);
+            if self.wraparound_custom_mode {
+                new_location.point = (self.wraparound_custom)(
+                    &mut self.context.as_mut().unwrap(),
+                    start_location,
+                    direction,
+                );
+                value = self.get_at(new_location.point);
+            } else {
+                value = self.step_player_wraparound(&mut new_location.point, direction);
+            }
         }
         if self.walls.contains(&value) {
             return None;
