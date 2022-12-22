@@ -35,6 +35,8 @@ where
     players: Vec<Player<T>>,
     walls: Vec<T>,
     players_are_walls: bool,
+    wraparound: Vec<T>,
+    wraparound_mode: bool,
 }
 
 #[derive(Debug, EnumIter, Clone, Copy, PartialEq)]
@@ -89,6 +91,8 @@ where
             players: vec![],
             walls: vec![],
             players_are_walls: false,
+            wraparound: vec![],
+            wraparound_mode: false,
         }
     }
 
@@ -151,6 +155,14 @@ where
         self.players_are_walls = true;
     }
 
+    pub fn add_wraparound(&mut self, wraparound: T) {
+        self.wraparound.push(wraparound);
+    }
+
+    pub fn set_wraparound_mode(&mut self) {
+        self.wraparound_mode = true;
+    }
+
     pub fn player_is_here(&self, location: BoardPoint) -> bool {
         for player in &self.players {
             if player.point == location {
@@ -185,6 +197,8 @@ where
         self.grid[y_][x_] = value;
     }
 
+    /// Get the grid value at this location.
+    /// This does not include players.
     #[allow(dead_code)]
     pub fn get_at(&self, point: BoardPoint) -> T {
         let x_: usize = point.x as usize;
@@ -266,7 +280,7 @@ where
             Direction::DownRight => (1, 1),
         };
 
-        let new_location = Player {
+        let mut new_location = Player {
             point: BoardPoint {
                 x: self.players[player].point.x + step_x,
                 y: self.players[player].point.y + step_y,
@@ -277,26 +291,84 @@ where
 
         let x_max = self.width();
         let y_max = self.height();
-        match new_location {
-            _ if new_location.point.x == -1 => None,
-            _ if new_location.point.y == -1 => None,
-            _ if new_location.point.x == x_max => None,
-            _ if new_location.point.y == y_max => None,
-            _ => {
-                let x: usize = new_location.point.x as usize;
-                let y: usize = new_location.point.y as usize;
-                let value = self.grid[y][x];
-                if self.walls.contains(&value) {
-                    return None;
+        if self.wraparound_mode {
+            // Wrap around when moving off grid
+            if new_location.point.x == -1
+                || new_location.point.y == -1
+                || new_location.point.x == x_max
+                || new_location.point.y == y_max
+            {
+                match direction {
+                    Direction::Up => new_location.point.y = y_max - 1,
+                    Direction::Down => new_location.point.y = 0,
+                    Direction::Left => new_location.point.x = x_max - 1,
+                    Direction::Right => new_location.point.x = 0,
+                    _ => panic!("Unsupported wrap around direction"),
                 }
-                if self.players_are_walls && self.player_is_here(new_location.point) {
-                    return None;
-                }
-                if do_step {
-                    self.players[player] = new_location;
-                }
-                Some(value)
             }
+        } else {
+            // Fail this move if trying to move off grid
+            match new_location {
+                _ if new_location.point.x == -1 => return None,
+                _ if new_location.point.y == -1 => return None,
+                _ if new_location.point.x == x_max => return None,
+                _ if new_location.point.y == y_max => return None,
+                _ => (),
+            }
+        }
+
+        let x: usize = new_location.point.x as usize;
+        let y: usize = new_location.point.y as usize;
+        let mut value = self.grid[y][x];
+        if self.wraparound.contains(&value) {
+            value = self.step_player_wraparound(&mut new_location.point, direction);
+        }
+        if self.walls.contains(&value) {
+            return None;
+        }
+        if self.players_are_walls && self.player_is_here(new_location.point) {
+            return None;
+        }
+        if do_step {
+            self.players[player] = new_location;
+        }
+        Some(value)
+    }
+
+    /// When a wrap around happens, need to find the first non wrap around value
+    fn step_player_wraparound(&self, location: &mut BoardPoint, direction: Direction) -> T {
+        if direction == Direction::Up || direction == Direction::Down {
+            // Search the column
+            let (offset, start_y) = match direction {
+                Direction::Up => (-1, self.height() - 1),
+                Direction::Down => (1, 0),
+                _ => panic!("Unexpected"),
+            };
+            location.y = start_y;
+            loop {
+                let value = self.grid[location.y as usize][location.x as usize];
+                if !self.wraparound.contains(&value) {
+                    return value;
+                }
+                location.y += offset;
+            }
+        } else if direction == Direction::Left || direction == Direction::Right {
+            // Search the row
+            let (offset, start_x) = match direction {
+                Direction::Left => (-1, self.width() - 1),
+                Direction::Right => (1, 0),
+                _ => panic!("Unexpected"),
+            };
+            location.x = start_x;
+            loop {
+                let value = self.grid[location.y as usize][location.x as usize];
+                if !self.wraparound.contains(&value) {
+                    return value;
+                }
+                location.x += offset;
+            }
+        } else {
+            panic!("Unsupported wrap around direction");
         }
     }
 
