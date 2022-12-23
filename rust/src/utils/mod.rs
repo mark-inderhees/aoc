@@ -1,4 +1,5 @@
 pub mod board;
+pub mod board3d;
 pub mod cpu;
 pub mod crt;
 pub mod file_system;
