@@ -373,6 +373,150 @@ fn test_test_input(day: &mut Day22) {
     panic!("TODO test all done");
 }
 
+#[allow(dead_code)]
+fn test_real_input(day: &mut Day22) {
+    day.board.set_wraparound_custom_mode(custom_wraparound);
+    struct TestCase {
+        name: String,
+        start: BoardPoint,
+        direction: Direction,
+        expect: BoardPoint,
+    }
+    let mut tests = vec![];
+    let side = 50;
+    tests.push(TestCase {
+        name: "1 top -> 6 left".to_string(),
+        start: BoardPoint { x: side + 20, y: 0 },
+        direction: Direction::Up,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "1 left -> 4 left (inverse)".to_string(),
+        start: BoardPoint { x: side, y: 30 },
+        direction: Direction::Left,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "2 top -> 6 bottom".to_string(),
+        start: BoardPoint { x: side * 2, y: 0 },
+        direction: Direction::Up,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "2 right -> 5 right (inverse)".to_string(),
+        start: BoardPoint {
+            x: side * 3 - 1,
+            y: 3,
+        },
+        direction: Direction::Right,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "2 bottom -> 3 right".to_string(),
+        start: BoardPoint {
+            x: side * 3 - 1,
+            y: side - 1,
+        },
+        direction: Direction::Down,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "3 left -> 4 top".to_string(),
+        start: BoardPoint { x: side, y: side },
+        direction: Direction::Left,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "3 right -> 2 bottom".to_string(),
+        start: BoardPoint {
+            x: side * 2 - 1,
+            y: side + 2,
+        },
+        direction: Direction::Right,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "4 top -> 3 left".to_string(),
+        start: BoardPoint { x: 0, y: side * 2 },
+        direction: Direction::Up,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "4 left -> 1 left (inverse)".to_string(),
+        start: BoardPoint { x: 0, y: side * 2 },
+        direction: Direction::Left,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "5 right -> 2 right (inverse)".to_string(),
+        start: BoardPoint {
+            x: 2 * side - 1,
+            y: side * 2 + 20,
+        },
+        direction: Direction::Right,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "5 bottom -> 6 right".to_string(),
+        start: BoardPoint {
+            x: side + 10,
+            y: side * 3 - 1,
+        },
+        direction: Direction::Down,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "6 left -> 1 top".to_string(),
+        start: BoardPoint { x: 0, y: side * 3 },
+        direction: Direction::Left,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "6 right -> 5 bottom".to_string(),
+        start: BoardPoint {
+            x: side - 1,
+            y: side * 3 + 30,
+        },
+        direction: Direction::Right,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    tests.push(TestCase {
+        name: "6 bottom -> 2 top".to_string(),
+        start: BoardPoint {
+            x: side - 1,
+            y: side * 4 - 1,
+        },
+        direction: Direction::Right,
+        expect: BoardPoint { x: 0, y: 0 },
+    });
+    // Fold is like
+    // _12
+    // _3_
+    // 45_
+    // 6__
+
+    let abc: Vec<char> = ('a'..'z').collect();
+    for (i, test) in tests.iter().enumerate() {
+        log::debug!("Test {}: {}", abc[i], test.name);
+        let mut direction = test.direction;
+        let player = day.board.add_player(test.start, abc[i]);
+        day.board.print_board_with_players_pretty();
+        day.board.step_player(player, direction);
+        day.board.print_board_with_players_pretty();
+        let mut context = day.board.get_context();
+        if context.wrapped {
+            direction = context.new_direction;
+            context.wrapped = false;
+        }
+        day.board.step_player(player, direction);
+        log::debug!("");
+        day.board.print_board_with_players_pretty();
+        assert_eq!(test.expect, day.board.get_player_location(player));
+    }
+
+    panic!("TODO test all done");
+}
+
 impl Puzzle for Day22 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -666,11 +810,30 @@ impl Puzzle for Day22 {
                 }),
             );
         } else {
-            // TODO support real input
+            // Fold is like
+            // _12
+            // _3_
+            // 45_
+            // 6__
+            // 1 top -> 6 left
+            // 1 left -> 4 left (inverse)
+            // 2 top -> 6 bottom
+            // 2 right -> 5 right (inverse)
+            // 2 bottom -> 3 right
+            // 3 left -> 4 top
+            // 3 right -> 2 bottom
+            // 4 top -> 3 left
+            // 4 left -> 1 left (inverse)
+            // 5 right -> 2 right (inverse)
+            // 5 bottom -> 6 right
+            // 6 left -> 1 top
+            // 6 right -> 5 bottom
+            // 6 bottom -> 2 top
         }
 
         day.board.set_context(&day.context);
         // test_test_input(&mut day);
+        // test_real_input(&mut day);
 
         day.board.add_wall('#');
 
