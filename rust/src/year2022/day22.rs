@@ -7,6 +7,7 @@ use std::vec;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
+use crate::utils::board3d::*;
 
 #[allow(unused_imports)]
 use crate::utils::utils::*;
@@ -16,6 +17,7 @@ use std::collections::VecDeque;
 
 pub struct Day22 {
     board: Board<char, Day22BoardContext>,
+    board3d: Board3D<char>,
     commands: Vec<Command>,
     context: Day22BoardContext,
 }
@@ -132,6 +134,34 @@ fn navigate(day: &mut Day22) -> Direction {
     }
 
     // day.board.print_board_with_players_pretty();
+    direction
+}
+
+fn navigate3d(day: &mut Day22) -> Direction {
+    let mut direction = Direction::Right;
+
+    let mut line = String::new();
+    let player_id = 0;
+    for command in &day.commands {
+        match command {
+            Command::Move(distance) => {
+                log::debug!("Move {distance}");
+                for _ in 0..*distance {
+                    if day.board3d.step_player(player_id, direction).is_none() {
+                        break;
+                    }
+
+                    day.board3d.print_board3d_with_players_pretty();
+                    let _ = std::io::stdin().read_line(&mut line).unwrap();
+                }
+            }
+            _ => direction = turn_me(direction, command.clone()),
+        }
+        day.board3d.print_board3d_with_players_pretty();
+        let _ = std::io::stdin().read_line(&mut line).unwrap();
+    }
+
+    day.board3d.print_board3d_with_players_pretty();
     direction
 }
 
@@ -523,6 +553,7 @@ impl Puzzle for Day22 {
         #[allow(unused_mut)]
         let mut day = Day22 {
             board: Board::new(),
+            board3d: Board3D::new(),
             commands: vec![],
             context: Day22BoardContext {
                 horizontal_edge: HashMap::new(),
@@ -542,17 +573,40 @@ impl Puzzle for Day22 {
         for line in &lines {
             width = std::cmp::max(line.chars().count(), width);
         }
-        log::debug!("Width is {width}");
+
+        // Find 3d width
+        let test = width < 20;
+        let width3d = match test {
+            true => 4,
+            false => 50,
+        };
 
         // Add map lines to board
-        for line in &lines {
+        let mut board_id_offset = 0;
+        for (i, line) in lines.iter().enumerate() {
             let mut chars: Vec<char> = line.chars().collect();
             let need_more = width - chars.len();
             if need_more > 0 {
                 let more = vec![' '; need_more];
                 chars.extend(more);
             }
-            day.board.push_row(chars);
+            day.board.push_row(chars.clone());
+
+            // Add lines to 3d board
+            let lines3d: Vec<&[char]> = chars.chunks(width3d).collect();
+            let mut board_id = 0;
+            for line3d in lines3d {
+                if line3d.contains(&' ') {
+                    continue;
+                }
+                day.board3d
+                    .push_row(board_id + board_id_offset, line3d.to_vec());
+                board_id += 1;
+            }
+
+            if (i + 1) % width3d == 0 {
+                board_id_offset += board_id;
+            }
         }
 
         // Add player at left most top row
@@ -564,6 +618,7 @@ impl Puzzle for Day22 {
             }
         }
         day.board.add_player(BoardPoint { x: start_x, y: 0 }, '+');
+        day.board3d.add_player(0, BoardPoint { x: 0, y: 0 }, '+');
 
         // Config the board
         day.board.add_wraparound(' ');
@@ -592,7 +647,6 @@ impl Puzzle for Day22 {
 
         // Build wrap around support
         // Each folding for input looks different, I'm hard coding how test and my real work here
-        let test = width < 20;
         if test {
             // Fold is like
             // __1_
@@ -836,6 +890,7 @@ impl Puzzle for Day22 {
         // test_real_input(&mut day);
 
         day.board.add_wall('#');
+        day.board3d.add_wall('#');
 
         Ok(day)
     }
@@ -857,7 +912,8 @@ impl Puzzle for Day22 {
 
     fn solve_part2(&mut self) -> Result<String> {
         self.board.set_wraparound_custom_mode(custom_wraparound);
-        let direction = navigate(self);
+        let direction = navigate3d(self);
+        panic!("todo");
         let point = self.board.get_player_location(0);
         log::debug!("Ended at {:?}", point);
         let answer = (point.y + 1) * 1000 + (point.x + 1) * 4 + direction_value(direction);

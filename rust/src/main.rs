@@ -24,7 +24,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 1, // __BOOTSTRAP_PART__
+        default_value_t = 2, // __BOOTSTRAP_PART__
     )]
     part: u32,
 

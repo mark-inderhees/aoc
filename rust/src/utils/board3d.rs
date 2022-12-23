@@ -16,6 +16,7 @@ where
 struct Player3D {
     id: PlayerId,
     board_id: BoardId,
+    direction_offset: i32,
 }
 
 #[derive(Clone)]
@@ -39,9 +40,9 @@ impl BoardConfig {
 #[derive(Clone, Default)]
 pub enum Edge {
     Top = 0,
+    Right,
     Bottom,
     Left,
-    Right,
     #[default]
     None = 100,
 }
@@ -54,14 +55,14 @@ pub struct BoardEdge {
 
 #[derive(Clone, Default)]
 struct BoardEdgeConnection {
-    edge: BoardEdge,
+    board_edge: BoardEdge,
     inverse: bool,
 }
 
 #[derive(Clone, Default)]
 pub struct EdgeConnection {
-    edge1: BoardEdge,
-    edge2: BoardEdge,
+    board_edge1: BoardEdge,
+    board_edge2: BoardEdge,
     inverse: bool,
 }
 
@@ -108,9 +109,16 @@ where
         self.players.push(Player3D {
             id: player_id,
             board_id,
+            direction_offset: 0,
         });
 
         player_id
+    }
+
+    pub fn add_wall(&mut self, wall: T) {
+        for board in self.boards.iter_mut() {
+            board.add_wall(wall);
+        }
     }
 
     pub fn get_player_location(&self, player_id: PlayerId) -> (BoardId, BoardPoint) {
@@ -120,32 +128,121 @@ where
     }
 
     pub fn set_edge_connection(&mut self, connection: EdgeConnection) {
-        self.configs[connection.edge1.id].connections[connection.edge1.edge.clone() as usize] =
-            BoardEdgeConnection {
-                edge: connection.edge2.clone(),
-                inverse: connection.inverse,
-            };
-        self.configs[connection.edge2.id].connections[connection.edge2.edge.clone() as usize] =
-            BoardEdgeConnection {
-                edge: connection.edge1.clone(),
-                inverse: connection.inverse,
-            };
+        self.configs[connection.board_edge1.id].connections
+            [connection.board_edge1.edge.clone() as usize] = BoardEdgeConnection {
+            board_edge: connection.board_edge2.clone(),
+            inverse: connection.inverse,
+        };
+        self.configs[connection.board_edge2.id].connections
+            [connection.board_edge2.edge.clone() as usize] = BoardEdgeConnection {
+            board_edge: connection.board_edge1.clone(),
+            inverse: connection.inverse,
+        };
+    }
+
+    fn get_new_value(&self, value: i32, inverse: bool) -> i32 {
+        assert_eq!(self.width(), self.height()); // This logic assumes cube only
+        match inverse {
+            false => value,
+            true => self.width() - 1 - value,
+        }
+    }
+
+    fn get_direction_offset(&self, direction: Direction, new_edge: Edge) -> i32 {
+        let directions = vec![
+            // This order is intentionally different than Edge:: as it should be offset by index 2
+            Direction::Down,
+            Direction::Left,
+            Direction::Up,
+            Direction::Right,
+        ];
+        let direction_index = directions.iter().position(|&x| x == direction).unwrap() as i32;
+        let new_edge_index = new_edge as i32;
+        if new_edge_index == direction_index {
+            return 0;
+        } else if new_edge_index > direction_index {
+            return new_edge_index - direction_index;
+        } else {
+            return directions.len() as i32 + new_edge_index - direction_index;
+        }
     }
 
     pub fn step_player(&mut self, player_id: PlayerId, direction: Direction) -> Option<T> {
+        let player3d = &self.players[player_id];
         let (board_id, location) = self.get_player_location(player_id);
 
+        // Use requested direction with current board direction offset to find real direction
+        let directions = vec![
+            Direction::Up,
+            Direction::Right,
+            Direction::Down,
+            Direction::Left,
+        ];
+        let direction_index = directions.iter().position(|&x| x == direction).unwrap();
+        let new_index = (direction_index as i32 + player3d.direction_offset)
+            .rem_euclid(directions.len() as i32) as usize;
+        let real_direction = directions[new_index];
+
         // Test for moving off board condition
-        let moved_to_new_board = false;
-        // let new_board_id;
-        if direction == Direction::Left && location.x == 0 {
-        } else if direction == Direction::Right && location.x == self.width() - 1 {
-        } else if direction == Direction::Up && location.y == 0 {
-        } else if direction == Direction::Down && location.y == self.height() - 1 {
+        let mut moved_to_new_board = true;
+        let mut connection = BoardEdgeConnection {
+            ..Default::default()
+        };
+        if real_direction == Direction::Left && location.x == 0 {
+            connection = self.configs[board_id].connections[Edge::Left as usize].clone();
+        } else if real_direction == Direction::Right && location.x == self.width() - 1 {
+        } else if real_direction == Direction::Up && location.y == 0 {
+        } else if real_direction == Direction::Down && location.y == self.height() - 1 {
         } else {
-            panic!("Unsupported move direction");
+            moved_to_new_board = false;
         }
 
-        return self.boards[board_id].step_player(player_id, direction);
+        if moved_to_new_board {
+            let new_board_id = connection.board_edge.id;
+            let new_board_edge = connection.board_edge.edge;
+            let new_location = match new_board_edge {
+                Edge::Left => BoardPoint {
+                    x: 0,
+                    y: self.get_new_value(location.y, connection.inverse),
+                },
+                Edge::Right => BoardPoint {
+                    x: self.width() - 1,
+                    y: self.get_new_value(location.y, connection.inverse),
+                },
+                Edge::Top => BoardPoint {
+                    x: self.get_new_value(location.y, connection.inverse),
+                    y: 0,
+                },
+                Edge::Bottom => BoardPoint {
+                    x: self.get_new_value(location.y, connection.inverse),
+                    y: self.height() - 1,
+                },
+                _ => panic!("Unsupported edge"),
+            };
+            if !self.boards[new_board_id].is_wall_here(new_location) {
+                log::debug!("Moving to new board {board_id} -> {new_board_id}");
+                self.boards[new_board_id].set_player_location(player_id, new_location);
+                self.boards[new_board_id].set_player_visible(player_id, true);
+                self.boards[board_id].set_player_visible(player_id, true);
+                self.boards[new_board_id].set_player_visible(player_id, false);
+                self.players[player_id].direction_offset +=
+                    self.get_direction_offset(real_direction, new_board_edge);
+
+                return Some(self.boards[new_board_id].get_at(new_location));
+            } else {
+                log::debug!("Cannot move to new board, there is a wall");
+                return None;
+            }
+        }
+
+        return self.boards[board_id].step_player(player_id, real_direction);
+    }
+
+    pub fn print_board3d_with_players_pretty(&mut self) {
+        for (i, board) in self.boards.iter_mut().enumerate() {
+            println!("Board {i}");
+            board.print_board_with_players_pretty();
+            println!("");
+        }
     }
 }

@@ -301,6 +301,17 @@ where
             .is_some()
     }
 
+    pub fn is_wall_here(&self, point: BoardPoint) -> bool {
+        let value = self.get_at(point);
+        if self.walls.contains(&value) {
+            return true;
+        }
+        if self.players_are_walls && self.player_is_here(point) {
+            return true;
+        }
+        false
+    }
+
     fn step_player_optionally(
         &mut self,
         player: PlayerId,
@@ -507,7 +518,9 @@ where
             .map(|(i, _)| self.get_player_value(i).clone())
             .collect();
         for player in self.players.clone().iter().rev() {
-            self.set_at(player.point, player.id);
+            if player.visible {
+                self.set_at(player.point, player.id);
+            }
         }
         if pretty {
             for row in 0..self.height() as usize {
