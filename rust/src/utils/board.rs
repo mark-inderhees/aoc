@@ -18,6 +18,7 @@ where
     point: BoardPoint,
     id: T,
     player_id: PlayerId,
+    visible: bool,
 }
 
 // State about this current square in the gird
@@ -154,8 +155,13 @@ where
             point,
             id,
             player_id: self.players.len(),
+            visible: true,
         });
         self.players.len() - 1
+    }
+
+    pub fn set_player_visible(&mut self, id: PlayerId, visible: bool) {
+        self.players[id].visible = visible;
     }
 
     #[allow(dead_code)]
@@ -320,6 +326,7 @@ where
             },
             id: self.players[player].id,
             player_id: self.players[player].player_id,
+            visible: self.players[player].visible,
         };
 
         let x_max = self.width();
