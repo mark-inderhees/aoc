@@ -103,18 +103,31 @@ fn turn_me(current_direction: Direction, how_to_turn: Command) -> Direction {
 fn navigate(day: &mut Day22) -> Direction {
     let mut direction = Direction::Right;
 
+    // let mut line = String::new();
+
     for command in &day.commands {
         match command {
             Command::Move(distance) => {
                 log::debug!("Move {distance}");
                 for _ in 0..*distance {
-                    day.board.step(direction);
+                    if day.board.step(direction).is_none() {
+                        break;
+                    }
+
+                    let mut context = day.board.get_context();
+                    if context.wrapped {
+                        direction = context.new_direction;
+                        context.wrapped = false;
+                        day.board.set_context(&context);
+                    }
+
+                    // day.board.print_board_with_players_pretty();
+                    // let _ = std::io::stdin().read_line(&mut line).unwrap();
                 }
             }
             _ => direction = turn_me(direction, command.clone()),
         }
         // day.board.print_board_with_players_pretty();
-        // let mut line = String::new();
         // let _ = std::io::stdin().read_line(&mut line).unwrap();
     }
 
@@ -213,6 +226,7 @@ fn custom_wraparound(
     panic!("Could not find matching custom wraparound");
 }
 
+#[allow(dead_code)]
 fn test_test_input(day: &mut Day22) {
     day.board.set_wraparound_custom_mode(custom_wraparound);
     struct TestCase {
@@ -679,12 +693,17 @@ impl Puzzle for Day22 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        self.board.set_wraparound_custom_mode(custom_wraparound);
+        let direction = navigate(self);
+        let point = self.board.get_player_location(0);
+        log::debug!("Ended at {:?}", point);
+        let answer = (point.y + 1) * 1000 + (point.x + 1) * 4 + direction_value(direction);
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(5031.to_string()),
             false => None,
         }
     }
