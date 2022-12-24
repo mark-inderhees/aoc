@@ -210,14 +210,19 @@ where
         let mut connection = BoardEdgeConnection {
             ..Default::default()
         };
+        let mut value = 0;
         if real_direction == Direction::Left && location.x == 0 {
             connection = self.configs[board_id].connections[Edge::Left as usize].clone();
+            value = location.y;
         } else if real_direction == Direction::Right && location.x == self.width() - 1 {
             connection = self.configs[board_id].connections[Edge::Right as usize].clone();
+            value = location.y;
         } else if real_direction == Direction::Up && location.y == 0 {
             connection = self.configs[board_id].connections[Edge::Top as usize].clone();
+            value = location.x;
         } else if real_direction == Direction::Down && location.y == self.height() - 1 {
             connection = self.configs[board_id].connections[Edge::Bottom as usize].clone();
+            value = location.x;
         } else {
             moved_to_new_board = false;
         }
@@ -228,18 +233,18 @@ where
             let new_location = match new_board_edge {
                 Edge::Left => BoardPoint {
                     x: 0,
-                    y: self.get_new_value(location.y, connection.inverse),
+                    y: self.get_new_value(value, connection.inverse),
                 },
                 Edge::Right => BoardPoint {
                     x: self.width() - 1,
-                    y: self.get_new_value(location.y, connection.inverse),
+                    y: self.get_new_value(value, connection.inverse),
                 },
                 Edge::Top => BoardPoint {
-                    x: self.get_new_value(location.x, connection.inverse),
+                    x: self.get_new_value(value, connection.inverse),
                     y: 0,
                 },
                 Edge::Bottom => BoardPoint {
-                    x: self.get_new_value(location.x, connection.inverse),
+                    x: self.get_new_value(value, connection.inverse),
                     y: self.height() - 1,
                 },
                 _ => panic!("Unsupported edge {new_board_edge:?}"),
