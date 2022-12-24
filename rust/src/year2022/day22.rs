@@ -1,22 +1,21 @@
+// 2022 Day 22
+// https://adventofcode.com/2022/day/22
+// --- Day 22: Monkey Map ---
+// The monkeys want you to follow a weird map that transports you to vairous spots.
+// But it's actually a 3D cube!
+
 use anyhow::Result;
 use core::panic;
-use std::cmp::Eq;
-use std::ops::Range;
 use std::vec;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 use crate::utils::board3d::*;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
-#[allow(unused_imports)]
-use std::collections::VecDeque;
-
 pub struct Day22 {
-    board: Board<char>,
-    board3d: Board3D<char>,
+    board: Board<char>,     // part 1
+    board3d: Board3D<char>, // part 2
     commands: Vec<Command>,
     board_offsets: Vec<BoardPoint>,
 }
@@ -28,22 +27,7 @@ enum Command {
     TurnCounterClockwise, // L
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct HorizontalEdge {
-    y: i32,
-    x_range: Range<i32>,
-    direction: Direction,
-    inverse: bool,
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct VerticalEdge {
-    x: i32,
-    y_range: Range<i32>,
-    direction: Direction,
-    inverse: bool,
-}
-
+// Find the new direction based on the current direction and to turn 90 or -90 degrees.
 fn turn_me(current_direction: Direction, how_to_turn: Command) -> Direction {
     log::debug!("Turn {how_to_turn:?}");
     let directions = vec![
@@ -67,10 +51,9 @@ fn turn_me(current_direction: Direction, how_to_turn: Command) -> Direction {
     new_direction
 }
 
+// Move through the 2d board. When you get to an edge, you zap back to the other side.
 fn navigate(day: &mut Day22) -> Direction {
     let mut direction = Direction::Right;
-
-    // let mut line = String::new();
 
     for command in &day.commands {
         match command {
@@ -80,25 +63,19 @@ fn navigate(day: &mut Day22) -> Direction {
                     if day.board.step(direction).is_none() {
                         break;
                     }
-
-                    // day.board.print_board_with_players_pretty();
-                    // let _ = std::io::stdin().read_line(&mut line).unwrap();
                 }
             }
             _ => direction = turn_me(direction, command.clone()),
         }
-        // day.board.print_board_with_players_pretty();
-        // let _ = std::io::stdin().read_line(&mut line).unwrap();
     }
 
-    // day.board.print_board_with_players_pretty();
     direction
 }
 
+// Move throught he 3d cube!
 fn navigate3d(day: &mut Day22) -> Direction {
     let mut direction = Direction::Right;
 
-    // let mut line = String::new();
     let player_id = 0;
     for command in &day.commands {
         match command {
@@ -108,21 +85,16 @@ fn navigate3d(day: &mut Day22) -> Direction {
                     if day.board3d.step_player(player_id, direction).is_none() {
                         break;
                     }
-
-                    // day.board3d.print_board3d_with_players_pretty();
-                    // let _ = std::io::stdin().read_line(&mut line).unwrap();
                 }
             }
             _ => direction = turn_me(direction, command.clone()),
         }
-        // day.board3d.print_board3d_with_players_pretty();
-        // let _ = std::io::stdin().read_line(&mut line).unwrap();
     }
 
-    day.board3d.print_board3d_with_players_pretty();
     direction
 }
 
+// A direction has a score value to get answer
 fn direction_value(direction: Direction) -> i32 {
     match direction {
         Direction::Right => 0,
@@ -216,9 +188,8 @@ impl Puzzle for Day22 {
         day.board3d.add_player(0, BoardPoint { x: 0, y: 0 }, '+');
 
         // Config the board
-        day.board.add_wraparound(' ');
+        day.board.add_wraparound(' '); // This does the magic moves for part 1
         day.board.set_wraparound_mode();
-        // day.board.print_board_with_players_pretty();
 
         // Parse the commands
         let commands_move: Vec<_> = commands.split(|c| c == 'L' || c == 'R').collect();
@@ -240,7 +211,7 @@ impl Puzzle for Day22 {
         }
         log::trace!("Commands {:?}", day.commands);
 
-        // Build wrap around support
+        // Build 3d board, need to connect the edges
         // Each folding for input looks different, I'm hard coding how test and my real work here
         if test {
             // Fold is like
@@ -352,8 +323,10 @@ impl Puzzle for Day22 {
 
     fn solve_part2(&mut self) -> Result<String> {
         let direction = navigate3d(self);
+        // Need to convert from 2d based direction to 3d based direction
         let real_direction = self.board3d.get_player_direction(0, direction);
         let (board_id, point) = self.board3d.get_player_location(0);
+        // Also need to convert from 3d point to 2d point
         let real_point = BoardPoint {
             x: point.x + self.board_offsets[board_id].x,
             y: point.y + self.board_offsets[board_id].y,

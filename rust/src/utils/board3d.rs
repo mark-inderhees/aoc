@@ -283,6 +283,7 @@ where
         return self.boards[board_id].step_player(player_id, real_direction);
     }
 
+    #[allow(dead_code)]
     pub fn print_board3d_with_players_pretty(&mut self) {
         for (i, board) in self.boards.iter_mut().enumerate() {
             println!("Board {i}");
