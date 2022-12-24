@@ -1,5 +1,5 @@
 // 2022 Day 24
-// // https://adventofcode.com/2022/day/24
+// https://adventofcode.com/2022/day/24
 // --- Day 24: Blizzard Basin ---
 // There's a blizzard! Used a game board with a depth first search.
 // Instead of using moves, need to place all blizzard pieces based on time.
@@ -68,7 +68,7 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
         time,
         location: start,
     });
-    let mut lowest_time = 1000; // kinda magic :)
+    let mut lowest_time = 750; // kinda magic :)
 
     // Track where we have been in the grid. If this state is a repeat based on
     // LCM, then bail.
@@ -95,21 +95,20 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
             continue;
         }
 
+        // Check if we are done
         if job.location == end {
             log::info!("Found end in {} steps from", job.time);
             lowest_time = job.time;
             continue;
         }
 
-        // Bail if this is a really bad path
-        let x_ = job.location.x as usize;
-        let y_ = job.location.y as usize;
-        let counts = &lowest_grid[y_][x_];
+        // Bail if we have already been here at this state before
+        let counts = &mut lowest_grid[job.location.y as usize][job.location.x as usize];
         let my_time = job.time % lcm;
         if counts.contains(&my_time) {
             continue;
         }
-        lowest_grid[y_][x_].push(my_time);
+        counts.push(my_time);
 
         // Move the blizzards
         set_blizzards_location(day, job.time);
@@ -166,6 +165,7 @@ impl Puzzle for Day24 {
             height: 0,
         };
 
+        // First find grid size and blizzard grid area
         let mut width = 0;
         for line in input.lines() {
             width = std::cmp::max(width, line.chars().count());
@@ -175,6 +175,7 @@ impl Puzzle for Day24 {
         day.height = height as i32 - 2;
         log::info!("Play area {} by {}", day.width, day.height);
 
+        // Draw the map. We know how it looks, start at top left, end at bottom right.
         let mut row1 = vec!['#'; width];
         row1[1] = '.';
         day.grid.push_row(row1.clone());
@@ -190,8 +191,10 @@ impl Puzzle for Day24 {
         day.grid.add_wall('#');
         day.grid.set_players_as_walls();
 
+        // Add our main player, the expedition
         day.grid.add_player(BoardPoint { x: 1, y: 0 }, 'E');
 
+        // Scan the input for the blizzrds and add players for each one
         for (y, line) in input.lines().enumerate() {
             for (x, char) in line.char_indices() {
                 let mut blizzard = match char {
@@ -222,12 +225,11 @@ impl Puzzle for Day24 {
             }
         }
 
-        // day.grid.print_board_with_players_pretty();
-
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find how long it takes to go from start to end
         let start = BoardPoint { x: 1, y: 0 };
         let end = BoardPoint {
             x: self.grid.width() - 2,
@@ -245,6 +247,7 @@ impl Puzzle for Day24 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Go from start -> end -> start -> end
         let start = BoardPoint { x: 1, y: 0 };
         let end = BoardPoint {
             x: self.grid.width() - 2,
