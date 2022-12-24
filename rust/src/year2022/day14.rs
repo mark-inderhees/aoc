@@ -1,9 +1,12 @@
+// 2022 Day 14
+// https://adventofcode.com/2022/day/14
+// --- Day 14: Regolith Reservoir ---
+// Sand dropping into a pit
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 pub struct Day14 {
@@ -14,7 +17,6 @@ pub struct Day14 {
 }
 
 fn drop_sand(day: &mut Day14) -> u32 {
-    // day.grid.print_board_with_players_pretty();
     let origin = BoardPoint {
         x: 500 - day.offset.x,
         y: 0,
@@ -52,7 +54,6 @@ fn drop_sand(day: &mut Day14) -> u32 {
         }
         count += 1;
     }
-    // day.grid.print_board_with_players_pretty();
 
     count
 }
