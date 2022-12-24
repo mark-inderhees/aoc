@@ -1,19 +1,22 @@
+// 2022 Day 23
+// https://adventofcode.com/2022/day/23
+// --- Day 23: Unstable Diffusion ---
+// Elves are looking where to plan star fruit trees
+// They need to spread out (diffuse)
+
 use anyhow::Result;
+use std::collections::HashMap;
+use std::collections::VecDeque;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
-
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day23 {
     board: Board<char>,
 }
 
+// There are a whole bunch of specific rules on how the game works.
+// Just need to read the details and follow correctly. No optimizations.
 fn play(day: &mut Day23, rounds: u32) -> u32 {
     struct ElfMove {
         location: BoardPoint,
@@ -42,7 +45,7 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
 
     // If no conflict, then move. If conflict, then neither moves!
     // Then rotate the order of the proposed preferences
-    // Repeate 10x
+    // Repeate 10x (for part 1)
 
     let step_offsets = HashMap::from([
         (Direction::Up, BoardPoint { x: 0, y: -1 }),
@@ -55,6 +58,7 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
         (Direction::DownRight, BoardPoint { x: 1, y: 1 }),
     ]);
 
+    // Get started with rounds
     for round in 0..rounds {
         log::debug!("Start of round {round}");
         let mut elves = vec![];
@@ -65,7 +69,8 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
             }
         }
 
-        // Propose one of the thoughts
+        // Propose one of the thoughts, if the thought is good then add the thought to the list
+        // If no thoughts are good, then do nothing
         let mut elf_proposals = vec![];
         for elf_id in elves {
             let elf_location = day.board.get_player_location(elf_id);
@@ -82,6 +87,8 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
                         break;
                     }
                 }
+
+                // This is a good thought
                 if good {
                     let good_direction = proposal_choice[i];
                     let good_offset = step_offsets[&good_direction];
@@ -132,7 +139,6 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
         proposal_choice.push_back(pc);
 
         log::debug!("Round {round} done");
-        // day.board.print_board_with_players_pretty();
     }
 
     return 0;
@@ -146,6 +152,7 @@ impl Puzzle for Day23 {
             board: Board::new(),
         };
 
+        // Find the size of the initial bozrd
         let mut width = 0;
         for line in input.lines() {
             width = std::cmp::max(width, line.chars().count());
@@ -153,6 +160,8 @@ impl Puzzle for Day23 {
 
         let test = width < 20;
 
+        // Add some extra rows. This is not actually needed as we do not step players
+        // But is useful for printing the debug game board to screen
         let num_extra = match test {
             true => 15,
             false => 50,
@@ -162,6 +171,7 @@ impl Puzzle for Day23 {
             day.board.push_row(full_line.clone());
         }
 
+        // Now build the game board with some extra space
         let extra_chars = vec!['.'; num_extra];
         for line in input.lines() {
             let chars: Vec<char> = line.chars().collect();
@@ -171,18 +181,19 @@ impl Puzzle for Day23 {
             day.board.push_row(row);
         }
 
+        // Extra space at bottom
         for _ in 0..num_extra {
             day.board.push_row(full_line.clone());
         }
 
         day.board.add_players_from_value('#', '.');
         log::debug!("Players {}", day.board.get_players_len());
-        // day.board.print_board_with_players_pretty();
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Move 10 rounds, then find size of elf grid
         play(self, 10);
         let mut x_min = i32::MAX;
         let mut y_min = i32::MAX;
@@ -210,6 +221,7 @@ impl Puzzle for Day23 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find how many rounds it takes to stop moving
         let rounds = play(self, u32::MAX);
         Ok(rounds.to_string())
     }
@@ -217,7 +229,7 @@ impl Puzzle for Day23 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(20.to_string()),
-            false => None,
+            false => Some(1010.to_string()),
         }
     }
 }
