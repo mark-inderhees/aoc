@@ -44,8 +44,9 @@ where
     context: Option<Context>,
 }
 
-#[derive(Debug, EnumIter, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, EnumIter, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Direction {
+    #[default]
     Up,
     Down,
     Left,
