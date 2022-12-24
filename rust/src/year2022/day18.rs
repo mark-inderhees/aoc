@@ -1,8 +1,13 @@
+// 2022 Day 18
+// https://adventofcode.com/2022/day/18
+// --- Day 18: Boiling Boulders ---
+// Cubes in 3d space
+// Need to map paths in 3d!
+// TODO it might be nice to turn this into a 3d helper class
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -18,6 +23,7 @@ pub struct Day18 {
     size: usize,
 }
 
+/// For a given spot on the 3d board, can we get to the edge of cube or are we blocked?
 fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
     struct PathWork {
         x: usize,
@@ -29,6 +35,7 @@ fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
     let mut job_count = 0;
     let mut stack_max = 0;
 
+    // Optimize by only looking at a spot we've been once
     let mut been_here = vec![vec![vec![false; day.size]; day.size]; day.size];
 
     log::trace!("Can {x},{y},{z} escape?");
@@ -118,6 +125,7 @@ impl Puzzle for Day18 {
         let mut max = 0;
         let mut count = 0;
 
+        // Add in the lava to the 3d grid
         for line in input.lines() {
             let values: Vec<usize> = get_vals(line);
             let x = values[0];
@@ -140,6 +148,8 @@ impl Puzzle for Day18 {
     fn solve_part1(&mut self) -> Result<String> {
         let mut count = 0;
         let mut lava = 0;
+        // Count the exposed edges of lava
+        // Check every lava and count spots around it that are not lava
         for x in 0..self.size {
             for y in 0..self.size {
                 for z in 0..self.size {
@@ -197,6 +207,8 @@ impl Puzzle for Day18 {
     fn solve_part2(&mut self) -> Result<String> {
         let mut air_pockets = 0;
         log::debug!("Populating types");
+        // Find air pockets, these are non lava spots that cannot escape the grid
+        // Walk the whole grid and check unknown spots
         for x in 0..self.size {
             for y in 0..self.size {
                 for z in 0..self.size {
@@ -213,6 +225,7 @@ impl Puzzle for Day18 {
         }
         log::debug!("Done populating");
 
+        // Everything else unknown is therefore outside the lava
         for x in 0..self.size + 1 {
             for y in 0..self.size + 1 {
                 for z in 0..self.size + 1 {
@@ -225,6 +238,8 @@ impl Puzzle for Day18 {
 
         let mut count = 0;
         let mut lava = 0;
+        // Find how many edges of lava are exposed to outside air
+        // Search all lava cubes and count adjacent outside cubes
         for x in 0..self.size {
             for y in 0..self.size {
                 for z in 0..self.size {
