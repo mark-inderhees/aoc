@@ -160,6 +160,21 @@ where
         self.players.len() - 1
     }
 
+    /// Turn a specific board value into players
+    /// Convert the value on the board to a specific background
+    pub fn add_players_from_value(&mut self, player_value: T, background_value: T) {
+        for y in 0..self.height() {
+            for x in 0..self.width() {
+                let location = BoardPoint { x, y };
+                let value = self.get_at(location);
+                if value == player_value {
+                    self.add_player(location, player_value);
+                    self.set_at(location, background_value);
+                }
+            }
+        }
+    }
+
     pub fn set_player_visible(&mut self, id: PlayerId, visible: bool) {
         self.players[id].visible = visible;
     }
@@ -201,7 +216,7 @@ where
         self.context.as_ref().unwrap().clone()
     }
 
-    pub fn player_is_here(&self, location: BoardPoint) -> bool {
+    pub fn is_player_here(&self, location: BoardPoint) -> bool {
         for player in &self.players {
             if player.point == location {
                 return true;
@@ -306,7 +321,7 @@ where
         if self.walls.contains(&value) {
             return true;
         }
-        if self.players_are_walls && self.player_is_here(point) {
+        if self.players_are_walls && self.is_player_here(point) {
             return true;
         }
         false
@@ -392,7 +407,7 @@ where
         if self.walls.contains(&value) {
             return None;
         }
-        if self.players_are_walls && self.player_is_here(new_location.point) {
+        if self.players_are_walls && self.is_player_here(new_location.point) {
             return None;
         }
         if do_step {
@@ -451,6 +466,19 @@ where
         false
     }
 
+    pub fn is_any_player_nearby(&mut self, player: PlayerId) -> bool {
+        for player2 in &self.players {
+            if player2.player_id == player {
+                continue;
+            }
+            if self.is_nearby(player, player2.player_id) {
+                return true;
+            }
+        }
+
+        false
+    }
+
     #[allow(dead_code)]
     pub fn get_nearby_squares(&mut self, player: PlayerId) -> Vec<Direction> {
         let mut values = vec![];
@@ -458,6 +486,20 @@ where
         for direction in Direction::straight_iterator() {
             if let Some(_value) = self.step_player(player, direction) {
                 values.push(direction);
+            }
+            self.set_player_location(player, orig_point);
+        }
+
+        values
+    }
+
+    /// Get the value of nearby squares in all directions including diagonal
+    pub fn get_nearby_values(&mut self, player: PlayerId) -> Vec<T> {
+        let mut values = vec![];
+        let orig_point = self.get_player_location(player);
+        for direction in Direction::iter() {
+            if let Some(value) = self.step_player(player, direction) {
+                values.push(value);
             }
             self.set_player_location(player, orig_point);
         }
