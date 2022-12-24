@@ -706,6 +706,50 @@ impl Puzzle for Day22 {
                 .set_edge(EdgeConnection::new(3, Edge::Bottom, 4, Edge::Top, false));
             day.board3d
                 .set_edge(EdgeConnection::new(4, Edge::Right, 5, Edge::Left, false));
+        } else {
+            // Fold is like
+            // _01
+            // _2_
+            // 34_
+            // 5__
+            // 0 top -> 5 left
+            // 0 left -> 3 left (inverse)
+            // 1 top -> 5 bottom
+            // 1 right -> 4 right (inverse)
+            // 1 bottom -> 2 right
+            // 2 left -> 3 top
+            // 2 right -> 1 bottom
+            // 3 top -> 2 left
+            // 3 left -> 0 left (inverse)
+            // 4 right -> 1 right (inverse)
+            // 4 bottom -> 5 right
+            // 5 left -> 0 top
+            // 5 right -> 4 bottom
+            // 5 bottom -> 1 top
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Top, 5, Edge::Left, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Right, 1, Edge::Left, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Bottom, 2, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Left, 3, Edge::Left, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(1, Edge::Top, 5, Edge::Bottom, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(1, Edge::Right, 4, Edge::Right, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(1, Edge::Bottom, 2, Edge::Right, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(2, Edge::Bottom, 4, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(2, Edge::Left, 3, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(3, Edge::Right, 4, Edge::Left, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(3, Edge::Bottom, 5, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(4, Edge::Bottom, 5, Edge::Right, false));
         }
 
         if test {
