@@ -37,7 +37,7 @@ impl BoardConfig {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub enum Edge {
     Top = 0,
     Right,
@@ -64,6 +64,28 @@ pub struct EdgeConnection {
     board_edge1: BoardEdge,
     board_edge2: BoardEdge,
     inverse: bool,
+}
+
+impl EdgeConnection {
+    pub fn new(
+        id1: BoardId,
+        edge1: Edge,
+        id2: BoardId,
+        edge2: Edge,
+        inverse: bool,
+    ) -> EdgeConnection {
+        EdgeConnection {
+            board_edge1: BoardEdge {
+                id: id1,
+                edge: edge1,
+            },
+            board_edge2: BoardEdge {
+                id: id2,
+                edge: edge2,
+            },
+            inverse,
+        }
+    }
 }
 
 impl<T> Board3D<T>
@@ -127,7 +149,7 @@ where
         (player.board_id, location)
     }
 
-    pub fn set_edge_connection(&mut self, connection: EdgeConnection) {
+    pub fn set_edge(&mut self, connection: EdgeConnection) {
         self.configs[connection.board_edge1.id].connections
             [connection.board_edge1.edge.clone() as usize] = BoardEdgeConnection {
             board_edge: connection.board_edge2.clone(),
@@ -191,8 +213,11 @@ where
         if real_direction == Direction::Left && location.x == 0 {
             connection = self.configs[board_id].connections[Edge::Left as usize].clone();
         } else if real_direction == Direction::Right && location.x == self.width() - 1 {
+            connection = self.configs[board_id].connections[Edge::Right as usize].clone();
         } else if real_direction == Direction::Up && location.y == 0 {
+            connection = self.configs[board_id].connections[Edge::Top as usize].clone();
         } else if real_direction == Direction::Down && location.y == self.height() - 1 {
+            connection = self.configs[board_id].connections[Edge::Bottom as usize].clone();
         } else {
             moved_to_new_board = false;
         }
@@ -210,27 +235,28 @@ where
                     y: self.get_new_value(location.y, connection.inverse),
                 },
                 Edge::Top => BoardPoint {
-                    x: self.get_new_value(location.y, connection.inverse),
+                    x: self.get_new_value(location.x, connection.inverse),
                     y: 0,
                 },
                 Edge::Bottom => BoardPoint {
-                    x: self.get_new_value(location.y, connection.inverse),
+                    x: self.get_new_value(location.x, connection.inverse),
                     y: self.height() - 1,
                 },
-                _ => panic!("Unsupported edge"),
+                _ => panic!("Unsupported edge {new_board_edge:?}"),
             };
+
             if !self.boards[new_board_id].is_wall_here(new_location) {
                 log::debug!("Moving to new board {board_id} -> {new_board_id}");
                 self.boards[new_board_id].set_player_location(player_id, new_location);
+                self.boards[board_id].set_player_visible(player_id, false);
                 self.boards[new_board_id].set_player_visible(player_id, true);
-                self.boards[board_id].set_player_visible(player_id, true);
-                self.boards[new_board_id].set_player_visible(player_id, false);
                 self.players[player_id].direction_offset +=
                     self.get_direction_offset(real_direction, new_board_edge);
+                self.players[player_id].board_id = new_board_id;
 
                 return Some(self.boards[new_board_id].get_at(new_location));
             } else {
-                log::debug!("Cannot move to new board, there is a wall");
+                log::debug!("Cannot move to new board, there is a wall on {new_board_id} at {new_location:?}");
                 return None;
             }
         }

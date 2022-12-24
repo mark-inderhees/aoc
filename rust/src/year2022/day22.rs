@@ -30,7 +30,7 @@ enum Command {
 }
 
 #[derive(Debug, Clone)]
-enum Edge {
+enum Day22Edge {
     Horizontal(HorizontalEdge),
     Vertical(VerticalEdge),
 }
@@ -75,8 +75,8 @@ impl VerticalEdge {
 
 #[derive(Clone, Debug)]
 struct Day22BoardContext {
-    horizontal_edge: HashMap<HorizontalEdge, Edge>,
-    vertical_edge: HashMap<VerticalEdge, Edge>,
+    horizontal_edge: HashMap<HorizontalEdge, Day22Edge>,
+    vertical_edge: HashMap<VerticalEdge, Day22Edge>,
     wrapped: bool,
     new_direction: Direction,
 }
@@ -193,14 +193,14 @@ fn custom_wraparound(
                     .position(|x| x == point.x)
                     .unwrap();
                 match edge {
-                    Edge::Horizontal(edge_h) => {
+                    Day22Edge::Horizontal(edge_h) => {
                         new_point = BoardPoint {
                             x: edge_h.get_at(index),
                             y: edge_h.y,
                         };
                         context.new_direction = edge_h.direction;
                     }
-                    Edge::Vertical(edge_v) => {
+                    Day22Edge::Vertical(edge_v) => {
                         new_point = BoardPoint {
                             x: edge_v.x,
                             y: edge_v.get_at(index),
@@ -222,14 +222,14 @@ fn custom_wraparound(
                     .position(|y| y == point.y)
                     .unwrap();
                 match edge {
-                    Edge::Horizontal(edge_h) => {
+                    Day22Edge::Horizontal(edge_h) => {
                         new_point = BoardPoint {
                             x: edge_h.get_at(index),
                             y: edge_h.y,
                         };
                         context.new_direction = edge_h.direction;
                     }
-                    Edge::Vertical(edge_v) => {
+                    Day22Edge::Vertical(edge_v) => {
                         new_point = BoardPoint {
                             x: edge_v.x,
                             y: edge_v.get_at(index),
@@ -649,6 +649,49 @@ impl Puzzle for Day22 {
         // Each folding for input looks different, I'm hard coding how test and my real work here
         if test {
             // Fold is like
+            // __0_
+            // 123_
+            // __45
+
+            // 1 top -> 0 top, down (inverse)
+            // 1 left -> 5 bottom, up (inverse)
+            // 1 bottom -> 4 bottom, up (inverse)
+            // 2 top -> 0 left, right
+            // 2 bottom -> 4 left, right (inverse)
+            // 3 right -> 5 top, down (inverse)
+            // 4 left -> 2 bottom, up (inverse)
+            // 4 botom -> 1 bottom, up (inverse)
+            // 5 top -> 3 right, left (inverse)
+            // 5 right -> 0 right, left (inverse)
+            // 5 bottom -> 1 left, right (inverse)
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Top, 1, Edge::Top, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Right, 5, Edge::Right, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Bottom, 3, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(0, Edge::Left, 2, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(1, Edge::Right, 2, Edge::Left, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(1, Edge::Bottom, 4, Edge::Bottom, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(1, Edge::Left, 5, Edge::Bottom, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(2, Edge::Right, 3, Edge::Left, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(2, Edge::Bottom, 4, Edge::Left, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(3, Edge::Right, 5, Edge::Top, true));
+            day.board3d
+                .set_edge(EdgeConnection::new(3, Edge::Bottom, 4, Edge::Top, false));
+            day.board3d
+                .set_edge(EdgeConnection::new(4, Edge::Right, 5, Edge::Left, false));
+        }
+
+        if test {
+            // Fold is like
             // __1_
             // 234_
             // __56
@@ -661,7 +704,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Up,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side,
                     x_range: 0..side,
                     direction: Direction::Down,
@@ -676,7 +719,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Left,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side,
                     x_range: side..side * 2,
                     direction: Direction::Down,
@@ -691,7 +734,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Right,
                     inverse: false,
                 },
-                Edge::Vertical(VerticalEdge {
+                Day22Edge::Vertical(VerticalEdge {
                     x: side * 4 - 1,
                     y_range: side * 2..side * 3,
                     direction: Direction::Left,
@@ -706,7 +749,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Up,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: 0,
                     x_range: side * 2..side * 3,
                     direction: Direction::Down,
@@ -721,7 +764,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Left,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side * 3 - 1,
                     x_range: side * 3..side * 4,
                     direction: Direction::Up,
@@ -736,7 +779,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Down,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side * 3 - 1,
                     x_range: side * 2..side * 3,
                     direction: Direction::Up,
@@ -751,7 +794,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Up,
                     inverse: false,
                 },
-                Edge::Vertical(VerticalEdge {
+                Day22Edge::Vertical(VerticalEdge {
                     x: side * 2,
                     y_range: 0..side,
                     direction: Direction::Right,
@@ -766,7 +809,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Down,
                     inverse: false,
                 },
-                Edge::Vertical(VerticalEdge {
+                Day22Edge::Vertical(VerticalEdge {
                     x: side * 2,
                     y_range: side * 2..side * 3,
                     direction: Direction::Right,
@@ -781,7 +824,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Right,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side * 2,
                     x_range: side * 3..side * 4,
                     direction: Direction::Down,
@@ -796,7 +839,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Left,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side * 2 - 1,
                     x_range: side * 1..side * 2,
                     direction: Direction::Up,
@@ -811,7 +854,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Down,
                     inverse: false,
                 },
-                Edge::Horizontal(HorizontalEdge {
+                Day22Edge::Horizontal(HorizontalEdge {
                     y: side * 2 - 1,
                     x_range: 0..side,
                     direction: Direction::Up,
@@ -826,7 +869,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Up,
                     inverse: false,
                 },
-                Edge::Vertical(VerticalEdge {
+                Day22Edge::Vertical(VerticalEdge {
                     x: side * 3 - 1,
                     y_range: side..side * 2,
                     direction: Direction::Left,
@@ -841,7 +884,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Right,
                     inverse: false,
                 },
-                Edge::Vertical(VerticalEdge {
+                Day22Edge::Vertical(VerticalEdge {
                     x: side * 3 - 1,
                     y_range: 0..side,
                     direction: Direction::Left,
@@ -856,7 +899,7 @@ impl Puzzle for Day22 {
                     direction: Direction::Down,
                     inverse: false,
                 },
-                Edge::Vertical(VerticalEdge {
+                Day22Edge::Vertical(VerticalEdge {
                     x: 0,
                     y_range: side..side * 2,
                     direction: Direction::Right,
