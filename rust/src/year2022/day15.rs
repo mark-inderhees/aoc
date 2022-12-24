@@ -1,9 +1,17 @@
+// 2022 Day 15
+// https://adventofcode.com/2022/day/15
+// --- Day 15: Beacon Exclusion Zone ---
+// Draw circles using Manhattan distance
+// Part 1 just inspect one row and find known no-beacon squares
+// Part 2 need to search the whole map for unknown square, it's too big for brute
+// force. Optimization is when in a known area, jump to the edge of that known area.
+// The intented implementation was probably to look at radius+1 for each circle,
+// but that math is harder than just adding!
+
 use anyhow::Result;
 use std::cmp::*;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 pub struct Day15 {
@@ -92,6 +100,7 @@ impl Puzzle for Day15 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let mut pairs = vec![];
+        // For the given row, find which pairs cover this row
         for pair in &self.pairs {
             if sensor_covers_row(pair, self.target_row) {
                 pairs.push(pair);
@@ -121,6 +130,7 @@ impl Puzzle for Day15 {
         log::debug!("Max distance {max_dist}");
 
         let mut count = 0;
+        // Walk the length of this known row
         for x in min_x..=max_x {
             let here = UtilsPoint {
                 x,
@@ -131,9 +141,11 @@ impl Puzzle for Day15 {
             for pair in &self.pairs {
                 let dist = manhattan_distance(here, pair.sensor);
                 if pair.distance > dist {
+                    // Count if this area is known to not have a beacon
                     count += 1;
                     break;
                 } else if pair.distance == dist && pair.beacon.x != x {
+                    // If at edge of radius, only count if this is not a beacon
                     count += 1;
                     break;
                 }
@@ -153,15 +165,19 @@ impl Puzzle for Day15 {
     fn solve_part2(&mut self) -> Result<String> {
         let mut perf = 0;
         let mut y = 0;
+        // Walk the whole map
         while y <= self.max {
             let mut x = 0;
             while x <= self.max {
                 let mut keep_going = false;
                 let here = UtilsPoint { x, y };
+
+                // Check all known area to see if this spot is covered
                 for pair in self.pairs.iter() {
                     let dist = manhattan_distance(here, pair.sensor);
                     perf += 1;
                     if pair.distance >= dist {
+                        // This spot is covered, skip everything this sensor already covers
                         keep_going = true;
 
                         // Try to jump to the right most unknown spot for this sensor
@@ -172,7 +188,7 @@ impl Puzzle for Day15 {
                             break;
                         }
 
-                        // Skip to the start of the next line
+                        // Sensor goes beyond our search grid, skip to the start of the next line
                         x = 0;
                         y += 1;
                         break;
