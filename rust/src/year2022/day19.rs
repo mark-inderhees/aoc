@@ -1,8 +1,12 @@
+// 2022 Day 19
+// https://adventofcode.com/2022/day/19
+// --- Day 19: Not Enough Minerals ---
+// Follow rules to build things - Starcraft time!
+// Find the best job path given the rules and time
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 #[derive(Debug)]
