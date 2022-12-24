@@ -1,12 +1,14 @@
+// 2022 Day 17
+// https://adventofcode.com/2022/day/17
+// --- Day 17: Pyroclastic Flow ---
+// Tetris!
+
 use anyhow::Result;
 use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 use crate::utils::tetris::*;
-
-#[allow(unused_imports)]
-use crate::utils::utils::*;
 
 pub struct Day17 {
     commands: Vec<Direction>,
