@@ -1011,7 +1011,7 @@ impl Puzzle for Day22 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(6032.to_string()),
-            false => None,
+            false => Some(26558.to_string()),
         }
     }
 
@@ -1040,7 +1040,7 @@ impl Puzzle for Day22 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(5031.to_string()),
-            false => None,
+            false => Some(110400.to_string()),
         }
     }
 }
