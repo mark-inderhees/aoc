@@ -149,6 +149,22 @@ where
         (player.board_id, location)
     }
 
+    pub fn get_player_direction(&self, player_id: PlayerId, direction: Direction) -> Direction {
+        //
+        let directions = vec![
+            Direction::Up,
+            Direction::Right,
+            Direction::Down,
+            Direction::Left,
+        ];
+        let direction_offset = self.players[player_id].direction_offset;
+        let direction_index = directions.iter().position(|&x| x == direction).unwrap();
+        let new_index = (direction_index as i32 + direction_offset)
+            .rem_euclid(directions.len() as i32) as usize;
+        let real_direction = directions[new_index];
+        real_direction
+    }
+
     pub fn set_edge(&mut self, connection: EdgeConnection) {
         self.configs[connection.board_edge1.id].connections
             [connection.board_edge1.edge.clone() as usize] = BoardEdgeConnection {

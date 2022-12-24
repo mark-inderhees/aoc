@@ -20,6 +20,7 @@ pub struct Day22 {
     board3d: Board3D<char>,
     commands: Vec<Command>,
     context: Day22BoardContext,
+    board_offsets: Vec<BoardPoint>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -99,7 +100,9 @@ fn turn_me(current_direction: Direction, how_to_turn: Command) -> Direction {
         .position(|&x| x == current_direction)
         .unwrap();
     let new_index = (current_index as i32 + offset).rem_euclid(directions.len() as i32) as usize;
-    directions[new_index]
+    let new_direction = directions[new_index];
+    log::debug!("Now facing {:?}", new_direction);
+    new_direction
 }
 
 fn navigate(day: &mut Day22) -> Direction {
@@ -140,7 +143,7 @@ fn navigate(day: &mut Day22) -> Direction {
 fn navigate3d(day: &mut Day22) -> Direction {
     let mut direction = Direction::Right;
 
-    let mut line = String::new();
+    // let mut line = String::new();
     let player_id = 0;
     for command in &day.commands {
         match command {
@@ -151,14 +154,14 @@ fn navigate3d(day: &mut Day22) -> Direction {
                         break;
                     }
 
-                    day.board3d.print_board3d_with_players_pretty();
-                    let _ = std::io::stdin().read_line(&mut line).unwrap();
+                    // day.board3d.print_board3d_with_players_pretty();
+                    // let _ = std::io::stdin().read_line(&mut line).unwrap();
                 }
             }
             _ => direction = turn_me(direction, command.clone()),
         }
-        day.board3d.print_board3d_with_players_pretty();
-        let _ = std::io::stdin().read_line(&mut line).unwrap();
+        // day.board3d.print_board3d_with_players_pretty();
+        // let _ = std::io::stdin().read_line(&mut line).unwrap();
     }
 
     day.board3d.print_board3d_with_players_pretty();
@@ -561,6 +564,7 @@ impl Puzzle for Day22 {
                 wrapped: false,
                 new_direction: Direction::Down,
             },
+            board_offsets: vec![],
         };
 
         // Get the commands
@@ -580,9 +584,11 @@ impl Puzzle for Day22 {
             true => 4,
             false => 50,
         };
+        let height3d = width3d;
 
         // Add map lines to board
         let mut board_id_offset = 0;
+        let mut y_offset = 0;
         for (i, line) in lines.iter().enumerate() {
             let mut chars: Vec<char> = line.chars().collect();
             let need_more = width - chars.len();
@@ -595,19 +601,31 @@ impl Puzzle for Day22 {
             // Add lines to 3d board
             let lines3d: Vec<&[char]> = chars.chunks(width3d).collect();
             let mut board_id = 0;
+            let mut x_offset = 0;
             for line3d in lines3d {
                 if line3d.contains(&' ') {
+                    x_offset += width3d as i32;
                     continue;
                 }
                 day.board3d
                     .push_row(board_id + board_id_offset, line3d.to_vec());
+                if board_id + board_id_offset == day.board_offsets.len() {
+                    day.board_offsets.push(BoardPoint {
+                        x: x_offset,
+                        y: y_offset,
+                    });
+                }
                 board_id += 1;
+                x_offset += width3d as i32;
             }
 
             if (i + 1) % width3d == 0 {
                 board_id_offset += board_id;
+                y_offset += height3d as i32;
             }
         }
+
+        log::debug!("board offsets {:?}", day.board_offsets);
 
         // Add player at left most top row
         let mut start_x = 0;
@@ -956,10 +974,22 @@ impl Puzzle for Day22 {
     fn solve_part2(&mut self) -> Result<String> {
         self.board.set_wraparound_custom_mode(custom_wraparound);
         let direction = navigate3d(self);
-        panic!("todo");
-        let point = self.board.get_player_location(0);
-        log::debug!("Ended at {:?}", point);
-        let answer = (point.y + 1) * 1000 + (point.x + 1) * 4 + direction_value(direction);
+        let real_direction = self.board3d.get_player_direction(0, direction);
+        let (board_id, point) = self.board3d.get_player_location(0);
+        let real_point = BoardPoint {
+            x: point.x + self.board_offsets[board_id].x,
+            y: point.y + self.board_offsets[board_id].y,
+        };
+        log::debug!(
+            "Ended at {:?} on board {} ({:?} + {:?}). Direction {:?}",
+            real_point,
+            board_id,
+            point,
+            self.board_offsets[board_id],
+            real_direction,
+        );
+        let answer =
+            (real_point.y + 1) * 1000 + (real_point.x + 1) * 4 + direction_value(real_direction);
         Ok(answer.to_string())
     }
 
