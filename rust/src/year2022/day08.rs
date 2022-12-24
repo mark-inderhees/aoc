@@ -4,9 +4,9 @@ use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 
 pub struct Day08 {
-    board: Board<u32, BoardDefaultContext>,
-    visible: Board<char, BoardDefaultContext>,
-    score: Board<u32, BoardDefaultContext>,
+    board: Board<u32>,
+    visible: Board<char>,
+    score: Board<u32>,
 }
 
 impl Puzzle for Day08 {

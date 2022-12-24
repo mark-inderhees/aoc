@@ -5,7 +5,7 @@ use crate::utils::board::*;
 use crate::utils::utils::*;
 
 pub struct Day12 {
-    grid: Board<char, BoardDefaultContext>,
+    grid: Board<char>,
     start_player: PlayerId,
     end_player: PlayerId,
 }

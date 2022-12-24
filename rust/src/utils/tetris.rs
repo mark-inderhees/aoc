@@ -39,7 +39,7 @@ impl Shape {
     // Create a new shape and add it to the grid
     pub fn new(
         shape_type: Shapes,
-        grid: &mut Board<char, BoardDefaultContext>,
+        grid: &mut Board<char>,
         new_shape_air_gap: i32,
     ) -> Shape {
         let locations = Shape::get_shape_locations(shape_type);
@@ -141,7 +141,7 @@ impl Shape {
     pub fn move_shape(
         &mut self,
         direction: Direction,
-        grid: &mut Board<char, BoardDefaultContext>,
+        grid: &mut Board<char>,
     ) -> bool {
         // Find the order to move parts of the shape in so they do not collide with each other
         let indexes = match direction {
@@ -203,7 +203,7 @@ impl Shape {
 }
 
 pub struct Tetris {
-    grid: Board<char, BoardDefaultContext>,
+    grid: Board<char>,
     shapes: Vec<Shape>,
     width: i32,
     new_shape_air_gap: i32, // Rows of air between top of tower and new shape

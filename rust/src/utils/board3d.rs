@@ -8,7 +8,7 @@ pub struct Board3D<T>
 where
     T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
 {
-    boards: Vec<Board<T, BoardDefaultContext>>,
+    boards: Vec<Board<T>>,
     configs: Vec<BoardConfig>,
     players: Vec<Player3D>,
 }

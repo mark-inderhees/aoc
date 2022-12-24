@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::collections::VecDeque;
 
 pub struct Day23 {
-    board: Board<char, BoardDefaultContext>,
+    board: Board<char>,
 }
 
 fn play(day: &mut Day23, rounds: u32) -> u32 {

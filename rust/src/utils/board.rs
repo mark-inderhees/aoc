@@ -1,5 +1,6 @@
 use grid::*;
 use rusttype::Point;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter::zip;
 use strum::IntoEnumIterator;
@@ -7,7 +8,6 @@ use strum_macros::EnumIter;
 
 pub type BoardPoint = Point<i32>;
 pub type PlayerId = usize;
-pub type BoardDefaultContext = u32;
 pub const INVALID_PLAYER: usize = usize::MAX;
 
 #[derive(Debug, Clone, Copy)]
@@ -27,10 +27,9 @@ struct State {
     step_count: u32, // Most optimized step count so far at this square
 }
 
-pub struct Board<T, Context>
+pub struct Board<T>
 where
     T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
-    Context: Clone + Debug,
 {
     grid: Grid<T>,
     grid_state: Grid<State>,
@@ -39,9 +38,6 @@ where
     players_are_walls: bool,
     wraparound: Vec<T>,
     wraparound_mode: bool,
-    wraparound_custom_mode: bool,
-    wraparound_custom: fn(&mut Context, BoardPoint, Direction) -> BoardPoint,
-    context: Option<Context>,
 }
 
 #[derive(Debug, EnumIter, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -86,20 +82,11 @@ impl Direction {
     }
 }
 
-fn default_custom_wraparound<Context>(
-    _context: &mut Context,
-    _point: BoardPoint,
-    _direction: Direction,
-) -> BoardPoint {
-    panic!("Custom wraparound not implemented")
-}
-
-impl<T, Context> Board<T, Context>
+impl<T> Board<T>
 where
     T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
-    Context: Clone + Debug,
 {
-    pub fn new() -> Board<T, Context> {
+    pub fn new() -> Board<T> {
         Board {
             grid: grid![],
             grid_state: grid![],
@@ -108,9 +95,6 @@ where
             players_are_walls: false,
             wraparound: vec![],
             wraparound_mode: false,
-            wraparound_custom_mode: false,
-            wraparound_custom: default_custom_wraparound,
-            context: None,
         }
     }
 
@@ -199,22 +183,6 @@ where
 
     pub fn set_wraparound_mode(&mut self) {
         self.wraparound_mode = true;
-    }
-
-    pub fn set_wraparound_custom_mode(
-        &mut self,
-        wraparound_custom: fn(&mut Context, BoardPoint, Direction) -> BoardPoint,
-    ) {
-        self.wraparound_custom_mode = true;
-        self.wraparound_custom = wraparound_custom;
-    }
-
-    pub fn set_context(&mut self, context: &Context) {
-        self.context = Some(context.clone());
-    }
-
-    pub fn get_context(&mut self) -> Context {
-        self.context.as_ref().unwrap().clone()
     }
 
     pub fn is_player_here(&self, location: BoardPoint) -> bool {
@@ -328,91 +296,81 @@ where
         false
     }
 
+    /// From a given location, move one step in a certain direction to give a new location
+    pub fn get_new_location(&self, location: &BoardPoint, direction: Direction) -> BoardPoint {
+        let step_offsets = HashMap::from([
+            (Direction::Up, BoardPoint { x: 0, y: -1 }),
+            (Direction::Down, BoardPoint { x: 0, y: 1 }),
+            (Direction::Left, BoardPoint { x: -1, y: 0 }),
+            (Direction::Right, BoardPoint { x: 1, y: 0 }),
+            (Direction::UpLeft, BoardPoint { x: -1, y: -1 }),
+            (Direction::UpRight, BoardPoint { x: 1, y: -1 }),
+            (Direction::DownLeft, BoardPoint { x: -1, y: 1 }),
+            (Direction::DownRight, BoardPoint { x: 1, y: 1 }),
+        ]);
+        let offset = step_offsets[&direction];
+        let new_location = BoardPoint {
+            x: location.x + offset.x,
+            y: location.y + offset.y,
+        };
+
+        new_location
+    }
+
     fn step_player_optionally(
         &mut self,
         player: PlayerId,
         direction: Direction,
         do_step: bool,
     ) -> Option<T> {
-        let (step_x, step_y) = match direction {
-            Direction::Up => (0, -1),
-            Direction::Down => (0, 1),
-            Direction::Left => (-1, 0),
-            Direction::Right => (1, 0),
-            Direction::UpLeft => (-1, -1),
-            Direction::UpRight => (1, -1),
-            Direction::DownLeft => (-1, 1),
-            Direction::DownRight => (1, 1),
-        };
-
         let start_location = self.players[player].point;
-        let mut new_location = Player {
-            point: BoardPoint {
-                x: start_location.x + step_x,
-                y: start_location.y + step_y,
-            },
-            id: self.players[player].id,
-            player_id: self.players[player].player_id,
-            visible: self.players[player].visible,
-        };
+        let mut new_location = self.get_new_location(&start_location, direction);
 
         let x_max = self.width();
         let y_max = self.height();
         if self.wraparound_mode {
             // Wrap around when moving off grid
-            if new_location.point.x == -1
-                || new_location.point.y == -1
-                || new_location.point.x == x_max
-                || new_location.point.y == y_max
+            if new_location.x == -1
+                || new_location.y == -1
+                || new_location.x == x_max
+                || new_location.y == y_max
             {
-                if self.wraparound_custom_mode {
-                    new_location.point = (self.wraparound_custom)(
-                        &mut self.context.as_mut().unwrap(),
-                        start_location,
-                        direction,
-                    );
-                } else {
-                    match direction {
-                        Direction::Up => new_location.point.y = y_max - 1,
-                        Direction::Down => new_location.point.y = 0,
-                        Direction::Left => new_location.point.x = x_max - 1,
-                        Direction::Right => new_location.point.x = 0,
-                        _ => panic!("Unsupported wrap around direction"),
-                    }
+                match direction {
+                    Direction::Up => new_location.y = y_max - 1,
+                    Direction::Down => new_location.y = 0,
+                    Direction::Left => new_location.x = x_max - 1,
+                    Direction::Right => new_location.x = 0,
+                    _ => panic!("Unsupported wrap around direction"),
                 }
             }
         } else {
             // Fail this move if trying to move off grid
             match new_location {
-                _ if new_location.point.x == -1 => return None,
-                _ if new_location.point.y == -1 => return None,
-                _ if new_location.point.x == x_max => return None,
-                _ if new_location.point.y == y_max => return None,
+                _ if new_location.x == -1 => return None,
+                _ if new_location.y == -1 => return None,
+                _ if new_location.x == x_max => return None,
+                _ if new_location.y == y_max => return None,
                 _ => (),
             }
         }
 
-        let mut value = self.get_at(new_location.point);
+        let mut value = self.get_at(new_location);
         if self.wraparound.contains(&value) {
-            if self.wraparound_custom_mode {
-                new_location.point = (self.wraparound_custom)(
-                    &mut self.context.as_mut().unwrap(),
-                    start_location,
-                    direction,
-                );
-                value = self.get_at(new_location.point);
-            } else {
-                value = self.step_player_wraparound(&mut new_location.point, direction);
-            }
+            value = self.step_player_wraparound(&mut new_location, direction);
         }
         if self.walls.contains(&value) {
             return None;
         }
-        if self.players_are_walls && self.is_player_here(new_location.point) {
+        if self.players_are_walls && self.is_player_here(new_location) {
             return None;
         }
         if do_step {
-            self.players[player] = new_location;
+            self.players[player] = Player {
+                point: new_location,
+                id: self.players[player].id,
+                player_id: self.players[player].player_id,
+                visible: self.players[player].visible,
+            };
         }
         Some(value)
     }

@@ -1,21 +1,28 @@
+// 2022 Day 24
+// // https://adventofcode.com/2022/day/24
+// --- Day 24: Blizzard Basin ---
+// There's a blizzard! Used a game board with a depth first search.
+// Instead of using moves, need to place all blizzard pieces based on time.
+// Used my own grid to keep history, if we had been at a spot with LCM of time,
+// then bail early.
+
 use anyhow::Result;
 use grid::*;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::vec;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
-
 pub struct Day24 {
-    grid: Board<char, BoardDefaultContext>,
+    grid: Board<char>,
     blizzards: Vec<Blizzard>,
+
+    /// width of blizzard movable area
     width: i32,
+
+    /// height of blizzard movable area
     height: i32,
 }
 
@@ -26,6 +33,8 @@ struct Blizzard {
     direction: Direction,
 }
 
+
+/// Blizzards move based on current time, they have a predictable pattern
 fn set_blizzards_location(day: &mut Day24, time: i32) {
     let step_offsets = HashMap::from([
         (Direction::Up, BoardPoint { x: 0, y: -1 }),
@@ -43,21 +52,7 @@ fn set_blizzards_location(day: &mut Day24, time: i32) {
     }
 }
 
-fn offset_location(location: &BoardPoint, direction: Direction) -> BoardPoint {
-    let step_offsets = HashMap::from([
-        (Direction::Up, BoardPoint { x: 0, y: -1 }),
-        (Direction::Down, BoardPoint { x: 0, y: 1 }),
-        (Direction::Left, BoardPoint { x: -1, y: 0 }),
-        (Direction::Right, BoardPoint { x: 1, y: 0 }),
-    ]);
-    let offset = step_offsets[&direction];
-    let new_location = BoardPoint {
-        x: location.x + offset.x,
-        y: location.y + offset.y,
-    };
 
-    new_location
-}
 
 fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32 {
     struct Work {
@@ -134,7 +129,7 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
                 // path.push(dir_to_string[&direction].to_string());
                 jobs.push_back(Work {
                     time: job.time + 1,
-                    location: offset_location(&job.location, direction),
+                    location: day.grid.get_new_location(&job.location, direction),
                     // path,
                 });
                 log::trace!(
