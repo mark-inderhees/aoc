@@ -1,9 +1,16 @@
+// 2022 Day 16
+// https://adventofcode.com/2022/day/16
+// --- Day 16: Proboscidea Volcanium ---
+// Walk a maze and do work
+// In part 2, have two independent simultaneous wokers!
+// The optimization for part 2 is to just use partial results form part 1
+// and find the non overlapping paths that give a maximal score.
+// Or just let your code run overnight, hah!
+
 use anyhow::Result;
 use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 pub struct Day16 {
