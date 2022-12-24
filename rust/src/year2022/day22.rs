@@ -1,7 +1,6 @@
 use anyhow::Result;
 use core::panic;
 use std::cmp::Eq;
-use std::collections::HashMap;
 use std::ops::Range;
 use std::vec;
 
@@ -29,12 +28,6 @@ enum Command {
     TurnCounterClockwise, // L
 }
 
-#[derive(Debug, Clone)]
-enum Day22Edge {
-    Horizontal(HorizontalEdge),
-    Vertical(VerticalEdge),
-}
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 struct HorizontalEdge {
     y: i32,
@@ -49,28 +42,6 @@ struct VerticalEdge {
     y_range: Range<i32>,
     direction: Direction,
     inverse: bool,
-}
-
-impl HorizontalEdge {
-    pub fn get_at(&self, index: usize) -> i32 {
-        let vector: Vec<i32> = self.x_range.clone().collect();
-        let mut index2 = index;
-        if self.inverse {
-            index2 = vector.len() - 1 - index;
-        }
-        vector[index2]
-    }
-}
-
-impl VerticalEdge {
-    pub fn get_at(&self, index: usize) -> i32 {
-        let vector: Vec<i32> = self.y_range.clone().collect();
-        let mut index2 = index;
-        if self.inverse {
-            index2 = vector.len() - 1 - index;
-        }
-        vector[index2]
-    }
 }
 
 fn turn_me(current_direction: Direction, how_to_turn: Command) -> Direction {

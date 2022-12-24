@@ -82,6 +82,22 @@ impl Direction {
     }
 }
 
+impl ToString for Direction {
+    fn to_string(&self) -> String {
+        let dir_to_string = HashMap::from([
+            (Direction::Up, "U"),
+            (Direction::Down, "D"),
+            (Direction::Left, "L"),
+            (Direction::Right, "R"),
+            (Direction::UpLeft, "UL"),
+            (Direction::UpRight, "UR"),
+            (Direction::DownLeft, "DL"),
+            (Direction::DownRight, "DR"),
+        ]);
+        dir_to_string[self].to_string()
+    }
+}
+
 impl<T> Board<T>
 where
     T: Clone + Copy + Debug + PartialEq + std::fmt::Display,
@@ -453,6 +469,7 @@ where
     }
 
     /// Get the value of nearby squares in all directions including diagonal
+    #[allow(dead_code)]
     pub fn get_nearby_values(&mut self, player: PlayerId) -> Vec<T> {
         let mut values = vec![];
         let orig_point = self.get_player_location(player);

@@ -33,7 +33,6 @@ struct Blizzard {
     direction: Direction,
 }
 
-
 /// Blizzards move based on current time, they have a predictable pattern
 fn set_blizzards_location(day: &mut Day24, time: i32) {
     let step_offsets = HashMap::from([
@@ -52,22 +51,27 @@ fn set_blizzards_location(day: &mut Day24, time: i32) {
     }
 }
 
-
-
+/// Look for the best path through the blizzard. Uses depth first search.
+/// Some aggressive tree pruning based on magic best known time from previous runs.
+/// Also prune based on LCM of width+height. If we've been at a spot for the LCM,
+/// then we've already been at that spot in the map for that given state before
+/// and therefore it's a repeat so bail out.
 fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32 {
     struct Work {
         time: i32,
         location: BoardPoint,
-        // path: Vec<String>,
     }
+
+    // Add first job
     let mut jobs = VecDeque::new();
     jobs.push_back(Work {
         time,
         location: start,
-        // path: vec![],
     });
     let mut lowest_time = 1000; // kinda magic :)
 
+    // Track where we have been in the grid. If this state is a repeat based on
+    // LCM, then bail.
     let mut lowest_grid: Grid<Vec<i32>> = grid![];
     let row = vec![vec![]; day.grid.width() as usize];
     for _ in 0..day.grid.height() {
@@ -82,13 +86,7 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
     }
     log::info!("LCM is {lcm}");
 
-    let dir_to_string = HashMap::from([
-        (Direction::Up, "U"),
-        (Direction::Down, "D"),
-        (Direction::Left, "L"),
-        (Direction::Right, "R"),
-    ]);
-
+    // Start doing work
     while jobs.len() > 0 {
         let job = jobs.pop_front().unwrap();
 
@@ -96,8 +94,6 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
         if job.time >= lowest_time {
             continue;
         }
-
-        // log::debug!("Path is {} at {}", job.path.join(""), job.time);
 
         if job.location == end {
             log::info!("Found end in {} steps from", job.time);
@@ -125,12 +121,9 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
         for direction in Direction::straight_iterator() {
             if day.grid.can_step_player(0, direction) {
                 // Schedule this work
-                // let mut path = job.path.clone();
-                // path.push(dir_to_string[&direction].to_string());
                 jobs.push_back(Work {
                     time: job.time + 1,
                     location: day.grid.get_new_location(&job.location, direction),
-                    // path,
                 });
                 log::trace!(
                     "Moving {:?} from {:?} at {}",
@@ -151,12 +144,9 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
             }
         }
         if wait {
-            // let mut path = job.path.clone();
-            // path.push("W".to_string());
             jobs.push_back(Work {
                 time: job.time + 1,
                 location: job.location,
-                // path,
             });
             log::trace!("Waiting at {:?} at {}", job.location, job.time);
         }

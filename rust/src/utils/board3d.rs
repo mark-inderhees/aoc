@@ -14,7 +14,6 @@ where
 }
 
 struct Player3D {
-    id: PlayerId,
     board_id: BoardId,
     direction_offset: i32,
 }
@@ -129,7 +128,6 @@ where
 
         let player_id = self.players.len();
         self.players.push(Player3D {
-            id: player_id,
             board_id,
             direction_offset: 0,
         });
