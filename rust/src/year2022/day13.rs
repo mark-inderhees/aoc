@@ -1,9 +1,15 @@
+// 2022 Day 13
+// https://adventofcode.com/2022/day/13
+// --- Day 13: Distress Signal ---
+// Built lists of lists and compare based on special rules
+// The key is to treat the input as a job vector
+// Walk the lists in unison to do the compare
+// Some fancy rules result in mutating a list as the game goes along
+
 use anyhow::Result;
 use std::vec;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
