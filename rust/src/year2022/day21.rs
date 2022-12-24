@@ -8,8 +8,6 @@ use anyhow::Result;
 use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 pub struct Day21 {
