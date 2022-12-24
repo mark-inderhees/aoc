@@ -1,3 +1,10 @@
+// 2022 Day 11
+// https://adventofcode.com/2022/day/11
+// --- Day 11: Monkey in the Middle ---
+// A whole bunch of monkies toss stuff based on rules
+// Walk the rules!
+// Use the LCM to prevent overflows!
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -24,31 +31,36 @@ struct Monkey {
     if_false: u64,
 }
 
-fn get_u64(input: &str) -> u64 {
-    let parts: Vec<&str> = input.split(" ").collect();
-    parts[1].parse().unwrap()
-}
-
 fn answer(day: &mut Day11, max_rounds: u32, worry_reducer: u64) -> u64 {
     for monkey in &day.monkeys {
         log::debug!("{:#?}", monkey.test);
     }
-    let magic = day.monkeys.iter().fold(1, |a, m| a * m.test);
+    // These are primes, so LCM is simple mass multiply
+    let lcm = day.monkeys.iter().fold(1, |a, m| a * m.test);
+
     let mut temp_items: Vec<Vec<u64>> = vec![vec![]; day.monkeys.len()];
     let mut count: Vec<u64> = vec![0; day.monkeys.len()];
     let mut round = 0;
+
+    // Start doing work
     while round < max_rounds {
         for v in temp_items.iter_mut() {
             v.clear();
         }
 
+        // Go do work for each monkey
         for (m, monkey) in day.monkeys.iter_mut().enumerate() {
             log::debug!("Monkey {m}:");
+
+            // If any items have been given to this monkey during the round, then get them now
             monkey.items.extend(temp_items[m].iter());
             temp_items[m].clear();
+
+            // Do work on all of this monkeys items, removing them from the monkey when done
+            // This retain always returns false, so items are removed form this monkey
             monkey.items.retain(|&item| {
                 count[m] += 1;
-                let mut worry = item % magic;
+                let mut worry = item % lcm;
                 log::debug!("  Monkey inspects an item with a worry level of {worry}.");
                 match monkey.operation {
                     Operation::Multiply(x) => {
@@ -89,6 +101,7 @@ fn answer(day: &mut Day11, max_rounds: u32, worry_reducer: u64) -> u64 {
             });
         }
 
+        // Add items given to each monkey during the round
         for (i, items) in temp_items.iter().enumerate() {
             day.monkeys[i].items.extend(items);
         }
@@ -140,8 +153,8 @@ impl Puzzle for Day11 {
             let operation = &lines.next().unwrap()["  Operation: new = old ".len()..];
             m.operation = match operation {
                 x if x.starts_with("* old") => Operation::Square,
-                x if x.starts_with("*") => Operation::Multiply(get_u64(x)),
-                x if x.starts_with("+") => Operation::Add(get_u64(x)),
+                x if x.starts_with("*") => Operation::Multiply(get_val(x)),
+                x if x.starts_with("+") => Operation::Add(get_val(x)),
                 _ => panic!("Unexpected operation input"),
             };
 
@@ -164,6 +177,7 @@ impl Puzzle for Day11 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // 20 rounds
         let answer = answer(self, 20, 3);
         Ok(answer.to_string())
     }
@@ -176,7 +190,8 @@ impl Puzzle for Day11 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let answer = answer(self, 10000, 1);
+        // 10,000 rounds
+        let answer = answer(self, 10_000, 1);
         Ok(answer.to_string())
     }
 
