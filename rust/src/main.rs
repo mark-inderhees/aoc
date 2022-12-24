@@ -16,7 +16,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 23, // __BOOTSTRAP_DAY__
+        default_value_t = 24, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -225,6 +225,7 @@ fn main() -> Result<()> {
                 21 => run_day::<year2022::day21::Day21>(part, input, test)?,
                 22 => run_day::<year2022::day22::Day22>(part, input, test)?,
                 23 => run_day::<year2022::day23::Day23>(part, input, test)?,
+                24 => run_day::<year2022::day24::Day24>(part, input, test)?,
                 // __BOOTSTRAP_RUN__
                 _ => {
                     println!("Day {} not found, goodbye!", day);
