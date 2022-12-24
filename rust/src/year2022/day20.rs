@@ -1,8 +1,11 @@
+// 2022 Day 20
+// https://adventofcode.com/2022/day/20
+// --- Day 20: Grove Positioning System ---
+// Walk a list and do operations to encode/decode data
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
 pub struct Day20 {
