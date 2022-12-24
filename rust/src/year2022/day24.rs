@@ -59,7 +59,7 @@ fn offset_location(location: &BoardPoint, direction: Direction) -> BoardPoint {
     new_location
 }
 
-fn search(day: &mut Day24) -> i32 {
+fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32 {
     struct Work {
         time: i32,
         location: BoardPoint,
@@ -67,15 +67,12 @@ fn search(day: &mut Day24) -> i32 {
     }
     let mut jobs = VecDeque::new();
     jobs.push_back(Work {
-        time: 1,
-        location: BoardPoint { x: 1, y: 0 },
+        time,
+        location: start,
         // path: vec![],
     });
     let mut lowest_time = 1000; // kinda magic :)
-    let end = BoardPoint {
-        x: day.grid.width() - 2,
-        y: day.grid.height() - 1,
-    };
+
     let mut lowest_grid: Grid<Vec<i32>> = grid![];
     let row = vec![vec![]; day.grid.width() as usize];
     for _ in 0..day.grid.height() {
@@ -240,13 +237,18 @@ impl Puzzle for Day24 {
             }
         }
 
-        day.grid.print_board_with_players_pretty();
+        // day.grid.print_board_with_players_pretty();
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = search(self);
+        let start = BoardPoint { x: 1, y: 0 };
+        let end = BoardPoint {
+            x: self.grid.width() - 2,
+            y: self.grid.height() - 1,
+        };
+        let answer = search(self, 1, start, end);
         Ok(answer.to_string())
     }
 
@@ -258,13 +260,21 @@ impl Puzzle for Day24 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let start = BoardPoint { x: 1, y: 0 };
+        let end = BoardPoint {
+            x: self.grid.width() - 2,
+            y: self.grid.height() - 1,
+        };
+        let mut time = search(self, 1, start, end);
+        time = search(self, time, end, start);
+        time = search(self, time, start, end);
+        Ok(time.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(54.to_string()),
+            false => Some(713.to_string()),
         }
     }
 }
