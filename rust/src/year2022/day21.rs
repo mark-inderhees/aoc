@@ -1,3 +1,9 @@
+// 2022 Day 21
+// https://adventofcode.com/2022/day/21
+// --- Day 21: Monkey Math ---
+// Walk a whole bunch of math equations
+// In part 2, do algebra to solve math equations
+
 use anyhow::Result;
 use std::collections::HashMap;
 
