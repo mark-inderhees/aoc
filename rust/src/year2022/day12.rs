@@ -1,3 +1,9 @@
+// 2022 Day 12
+// https://adventofcode.com/2022/day/12
+// --- Day 12: Hill Climbing Algorithm ---
+// Walk a 2d board, but it is hilly. Can only climb up 1 step.
+// But can fall any number of steps. Find the best path.
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -28,6 +34,7 @@ impl Puzzle for Day12 {
 
         for (i, mut line) in input.lines().enumerate() {
             let line_orig = line.clone();
+            // Convert start and end into respective heights
             let line2 = &line.replace("S", "a");
             line = line2;
             let line3 = &line.replace("E", "z");
@@ -70,6 +77,7 @@ impl Puzzle for Day12 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // For all the height 0 points, find the best one
         let mut answers = vec![];
         for y in 0..self.grid.grid().rows() {
             for x in 0..self.grid.grid().cols() {
