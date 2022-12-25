@@ -3,11 +3,11 @@
 // --- Day 18: Boiling Boulders ---
 // Cubes in 3d space
 // Need to map paths in 3d!
-// TODO it might be nice to turn this into a 3d helper class
 
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
+use crate::utils::grid3d::*;
 use crate::utils::utils::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -19,8 +19,7 @@ enum ScanType {
 }
 
 pub struct Day18 {
-    box_3d: Vec<Vec<Vec<ScanType>>>,
-    size: usize,
+    grid: Grid3d<ScanType>,
 }
 
 /// For a given spot on the 3d board, can we get to the edge of cube or are we blocked?
@@ -36,7 +35,8 @@ fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
     let mut stack_max = 0;
 
     // Optimize by only looking at a spot we've been once
-    let mut been_here = vec![vec![vec![false; day.size]; day.size]; day.size];
+    let size = day.grid.get_size();
+    let mut been_here = vec![vec![vec![false; size]; size]; size];
 
     log::trace!("Can {x},{y},{z} escape?");
 
@@ -51,7 +51,7 @@ fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
         }
         been_here[job.x][job.y][job.z] = true;
 
-        let spot = day.box_3d[job.x][job.y][job.z];
+        let spot = day.grid.get_at(job.x, job.y, job.z);
         match spot {
             ScanType::Lava => {
                 log::trace!("Hit lava at {},{},{}", job.x, job.y, job.z);
@@ -71,9 +71,9 @@ fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
         if job.x == 0
             || job.y == 0
             || job.z == 0
-            || job.x == day.size - 1
-            || job.y == day.size - 1
-            || job.z == day.size - 1
+            || job.x == size - 1
+            || job.y == size - 1
+            || job.z == size - 1
         {
             log::trace!("Can escape, found edge");
             return true;
@@ -118,8 +118,7 @@ impl Puzzle for Day18 {
         #[allow(unused_mut)]
         let size = 30;
         let mut day = Day18 {
-            box_3d: vec![vec![vec![ScanType::Unknown; size]; size]; size],
-            size: 0,
+            grid: Grid3d::new(size, ScanType::Unknown),
         };
 
         let mut max = 0;
@@ -134,12 +133,12 @@ impl Puzzle for Day18 {
             max = std::cmp::max(max, x);
             max = std::cmp::max(max, y);
             max = std::cmp::max(max, z);
-            assert_eq!(day.box_3d[x][y][z], ScanType::Unknown);
-            day.box_3d[x][y][z] = ScanType::Lava;
+            assert_eq!(day.grid.get_at(x, y, z), ScanType::Unknown);
+            day.grid.set_at(x, y, z, ScanType::Lava);
             count += 1;
         }
 
-        day.size = max + 1;
+        day.grid.resize(max + 1);
         log::debug!("Max is {max}, count is {count}");
 
         Ok(day)
@@ -150,41 +149,43 @@ impl Puzzle for Day18 {
         let mut lava = 0;
         // Count the exposed edges of lava
         // Check every lava and count spots around it that are not lava
-        for x in 0..self.size {
-            for y in 0..self.size {
-                for z in 0..self.size {
-                    if self.box_3d[x][y][z] == ScanType::Lava {
+        let size = self.grid.get_size();
+        let size_i32 = size as i32;
+        for x in 0..size {
+            for y in 0..size {
+                for z in 0..size {
+                    if self.grid.get_at(x, y, z) == ScanType::Lava {
                         lava += 1;
                         for dx in [-1i32, 1] {
                             let x2 = (x as i32) + dx;
-                            if x2 < 0 {
+                            if x2 < 0 || x2 >= size_i32 {
                                 count += 1;
                                 continue;
                             }
                             let x3 = x2 as usize;
-                            if self.box_3d[x3][y][z] != ScanType::Lava {
+                            if self.grid.get_at(x3, y, z) != ScanType::Lava {
                                 count += 1;
                             }
                         }
                         for dy in [-1i32, 1] {
                             let y2 = (y as i32) + dy;
-                            if y2 < 0 {
+                            if y2 < 0 || y2 >= size_i32 {
                                 count += 1;
                                 continue;
                             }
                             let y3 = y2 as usize;
-                            if self.box_3d[x][y3][z] != ScanType::Lava {
+                            if self.grid.get_at(x, y3, z) != ScanType::Lava {
                                 count += 1;
                             }
                         }
                         for dz in [-1i32, 1] {
                             let z2 = (z as i32) + dz;
-                            if z2 < 0 {
+                            if z2 < 0 || z2 >= size_i32 {
                                 count += 1;
                                 continue;
                             }
                             let z3 = z2 as usize;
-                            if self.box_3d[x][y][z3] != ScanType::Lava {
+                            if self.grid.get_at(x, y, z3) != ScanType::Lava {
                                 count += 1;
                             }
                         }
@@ -209,14 +210,16 @@ impl Puzzle for Day18 {
         log::debug!("Populating types");
         // Find air pockets, these are non lava spots that cannot escape the grid
         // Walk the whole grid and check unknown spots
-        for x in 0..self.size {
-            for y in 0..self.size {
-                for z in 0..self.size {
-                    if self.box_3d[x][y][z] == ScanType::Unknown {
+        let size = self.grid.get_size();
+        let size_i32 = size as i32;
+        for x in 0..size {
+            for y in 0..size {
+                for z in 0..size {
+                    if self.grid.get_at(x, y, z) == ScanType::Unknown {
                         if can_escape(&self, x, y, z) {
-                            self.box_3d[x][y][z] = ScanType::Outside;
+                            self.grid.set_at(x, y, z, ScanType::Outside);
                         } else {
-                            self.box_3d[x][y][z] = ScanType::AirPocket;
+                            self.grid.set_at(x, y, z, ScanType::AirPocket);
                             air_pockets += 1;
                         }
                     }
@@ -226,11 +229,11 @@ impl Puzzle for Day18 {
         log::debug!("Done populating");
 
         // Everything else unknown is therefore outside the lava
-        for x in 0..self.size + 1 {
-            for y in 0..self.size + 1 {
-                for z in 0..self.size + 1 {
-                    if self.box_3d[x][y][z] == ScanType::Unknown {
-                        self.box_3d[x][y][z] = ScanType::Outside;
+        for x in 0..size {
+            for y in 0..size {
+                for z in 0..size {
+                    if self.grid.get_at(x, y, z) == ScanType::Unknown {
+                        self.grid.set_at(x, y, z, ScanType::Outside);
                     }
                 }
             }
@@ -240,41 +243,41 @@ impl Puzzle for Day18 {
         let mut lava = 0;
         // Find how many edges of lava are exposed to outside air
         // Search all lava cubes and count adjacent outside cubes
-        for x in 0..self.size {
-            for y in 0..self.size {
-                for z in 0..self.size {
-                    if self.box_3d[x][y][z] == ScanType::Lava {
+        for x in 0..size {
+            for y in 0..size {
+                for z in 0..size {
+                    if self.grid.get_at(x, y, z) == ScanType::Lava {
                         lava += 1;
                         for dx in [-1i32, 1] {
                             let x2 = (x as i32) + dx;
-                            if x2 < 0 {
+                            if x2 < 0 || x2 >= size_i32 {
                                 count += 1;
                                 continue;
                             }
                             let x3 = x2 as usize;
-                            if self.box_3d[x3][y][z] == ScanType::Outside {
+                            if self.grid.get_at(x3, y, z) == ScanType::Outside {
                                 count += 1;
                             }
                         }
                         for dy in [-1i32, 1] {
                             let y2 = (y as i32) + dy;
-                            if y2 < 0 {
+                            if y2 < 0 || y2 >= size_i32 {
                                 count += 1;
                                 continue;
                             }
                             let y3 = y2 as usize;
-                            if self.box_3d[x][y3][z] == ScanType::Outside {
+                            if self.grid.get_at(x, y3, z) == ScanType::Outside {
                                 count += 1;
                             }
                         }
                         for dz in [-1i32, 1] {
                             let z2 = (z as i32) + dz;
-                            if z2 < 0 {
+                            if z2 < 0 || z2 >= size_i32 {
                                 count += 1;
                                 continue;
                             }
                             let z3 = z2 as usize;
-                            if self.box_3d[x][y][z3] == ScanType::Outside {
+                            if self.grid.get_at(x, y, z3) == ScanType::Outside {
                                 count += 1;
                             }
                         }
