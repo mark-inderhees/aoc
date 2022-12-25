@@ -188,6 +188,7 @@ fn main() -> Result<()> {
     }
 
     println!("\n"); // Empty line
+    let start = Instant::now();
     for run in runs {
         let day = run.0;
         let year = run.1;
@@ -235,6 +236,12 @@ fn main() -> Result<()> {
             },
             _ => bail!("Year {} not found", year),
         }
+    }
+    if args.validate || args.comprehensive {
+        println!(
+            "Full run took {:.3} seconds",
+            start.elapsed().as_millis() as f64 / 1000f64
+        );
     }
 
     Ok(())
