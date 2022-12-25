@@ -23,6 +23,7 @@ impl Puzzle for Day10 {
             crt: Crt::new(40, 6),
         };
 
+        // Read in the program and run it immediately
         for line in input.lines() {
             let instruction = match line {
                 "noop" => Instruction::Noop,
@@ -33,6 +34,7 @@ impl Puzzle for Day10 {
                 }
             };
 
+            // Run this instruction and drive CRT
             let reg_x = day.cpu.get_reg_x();
             day.crt.print_sprite(reg_x as usize);
             let count = Cpu::get_cycle_count(&instruction);
@@ -47,6 +49,7 @@ impl Puzzle for Day10 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let mut count = 0;
+        // Sum reg_x at certain times in history
         for x in (19..220).step_by(40) {
             let state = self.cpu.state_history[x];
             log::debug!("{:#?}", state.reg_x);
@@ -64,6 +67,7 @@ impl Puzzle for Day10 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // What does the CRT say?
         let mut line = self.crt.to_string();
         for _ in 0..6 {
             let lines = line.split_at(40);
@@ -75,7 +79,9 @@ impl Puzzle for Day10 {
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
+            // Test input is gibberish
             true => Some("##..##..##..##..##..##..##..##..##..##..###...###...###...###...###...###...###.####....####....####....####....####....#####.....#####.....#####.....#####.....######......######......######......###########.......#######.......#######.....".to_string()),
+            // Real input is RFKZCPEF
             false => Some("###..####.#..#.####..##..###..####.####.#..#.#....#.#.....#.#..#.#..#.#....#....#..#.###..##.....#..#....#..#.###..###..###..#....#.#...#...#....###..#....#....#.#..#....#.#..#....#..#.#....#....#....#..#.#....#..#.####..##..#....####.#....".to_string()),
         }
     }
