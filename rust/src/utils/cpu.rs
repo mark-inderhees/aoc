@@ -1,3 +1,13 @@
+/// A CPU that supports certain instructions, has cycle time count, and registers.
+/// It can be expanded to support more instructions and registers.
+/// And the cycle times for instructions could be configurable at creation.
+pub struct Cpu {
+    /// What was CPU state at each time cycle.
+    pub state_history: Vec<State>,
+
+    state: State,
+}
+
 /// Instructions that the CPU supports.
 #[derive(Debug, Clone, Copy)]
 pub enum Instruction {
@@ -16,14 +26,6 @@ pub struct State {
 
     /// CPU has a single signed register.
     pub reg_x: i32,
-}
-
-/// A CPU that supports certain instructions, has cycle time count, and registers.
-pub struct Cpu {
-    /// What was CPU state at each time cycle.
-    pub state_history: Vec<State>,
-
-    state: State,
 }
 
 impl Cpu {
