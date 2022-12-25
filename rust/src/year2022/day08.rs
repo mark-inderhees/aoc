@@ -47,15 +47,19 @@ impl Puzzle for Day08 {
         // Walk all other trees in the grid, check if we can reach outside. If so, increment count.
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
+                // Move in each direction
                 for direction in Direction::straight_iterator() {
-                    // Start player here
                     self.board.set_location(BoardPoint { x, y });
                     let tree_height = self.board.get_current_value().clone();
+
+                    // Get all tree heights in this direction
                     let mut tree_heights = vec![];
                     while let Some(tree_height2) = self.board.step(direction) {
                         tree_heights.push(tree_height2.clone());
                     }
                     let tree_height_max = tree_heights.iter().max().unwrap().clone();
+
+                    // If our tree height is taller than outer trees, then this tree is visible from outside
                     let visible = tree_height > tree_height_max;
                     log::debug!("At {x},{y} going {direction:?}: {tree_height} vs {tree_height_max} = {visible}, {tree_heights:?}");
                     if visible {
@@ -83,17 +87,24 @@ impl Puzzle for Day08 {
 
     fn solve_part2(&mut self) -> Result<String> {
         // Find how many trees we can see from within the forest
+
+        // Search all non edge trees
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 let mut count_trees = vec![];
+                // Walk each direction
                 for direction in Direction::straight_iterator() {
+
                     count_trees.push(0);
                     self.board.set_location(BoardPoint { x, y });
                     let tree_height = self.board.get_current_value().clone();
+
+                    // Keep walking while this tree is shorter than our tree
                     while let Some(tree_height2) = self.board.step(direction) {
                         let s = count_trees.pop().unwrap().clone();
                         count_trees.push(s + 1);
                         if tree_height2 >= tree_height {
+                            // This tree is taller, we cannot see beyond, so stop
                             break;
                         }
                     }
