@@ -28,8 +28,8 @@ impl Puzzle for Day12 {
         #[allow(unused_mut)]
         let mut day = Day12 {
             grid: Board::new(),
-            start_player: INVALID_PLAYER,
-            end_player: INVALID_PLAYER,
+            start_player: 0,
+            end_player: 0,
         };
 
         for (i, mut line) in input.lines().enumerate() {
