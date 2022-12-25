@@ -1,3 +1,8 @@
+// 2022 Day 1
+// https://adventofcode.com/2022/day/1
+// --- Day 1: Calorie Counting ---
+// Do some simple sums of inputs
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -11,6 +16,7 @@ impl Puzzle for Day01 {
     fn from_input(input: &str) -> Result<Self> {
         let mut day = Day01 { elves: vec![] };
 
+        // Inputs are simple numbers split by whitespace for each elf
         for elf in input.split("\n\n") {
             let calories: u32 = elf.lines().map(|calorie| get_val::<u32>(calorie)).sum();
             day.elves.push(calories);
@@ -20,6 +26,7 @@ impl Puzzle for Day01 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find elf with most calories
         Ok(self.elves.iter().max().expect("Max error").to_string())
     }
 
@@ -31,6 +38,7 @@ impl Puzzle for Day01 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find sum of 3 elves with most calories
         self.elves.sort();
         self.elves.reverse();
         Ok(self.elves[0..3].iter().sum::<u32>().to_string())
