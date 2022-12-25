@@ -1,3 +1,8 @@
+// 2022 Day 10
+// https://adventofcode.com/2022/day/10
+// --- Day 10: Cathode-Ray Tube ---
+// Build a CRT screen display, driven by a CPU
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;

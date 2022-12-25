@@ -1,3 +1,5 @@
+/// A CRT screen display. It draws a pixel if the
+
 use grid::*;
 
 pub struct Crt {
