@@ -1,3 +1,9 @@
+// 2022 Day 8
+// https://adventofcode.com/2022/day/8
+// --- Day 8: Treetop Tree House ---
+// Count how far you can see until a tree blocks view.
+// Uses a grid and moves straight based on height of trees.
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -29,18 +35,20 @@ impl Puzzle for Day08 {
 
         day.board.add_player(BoardPoint { x: 0, y: 0 }, 0);
 
-        log::debug!("Input Grid:");
-        // day.board.print_board_with_players_pretty();
-
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
         // Find how many trees are visible with respect to viewing from the outside of the board
+
+        // Can see all of the trees at the edge
         let mut visible_trees = self.board.width() * 2 + self.board.height() * 2 - 4;
+
+        // Walk all other trees in the grid, check if we can reach outside. If so, increment count.
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 for direction in Direction::straight_iterator() {
+                    // Start player here
                     self.board.set_location(BoardPoint { x, y });
                     let tree_height = self.board.get_current_value().clone();
                     let mut tree_heights = vec![];
