@@ -1,3 +1,9 @@
+// 2022 Day 2
+// https://adventofcode.com/2022/day/2
+// --- Day 2: Rock Paper Scissors ---
+// Play lots of rock paper scissors games.
+// Need to get reults. And also determine what I should play to get a specific result.
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -74,10 +80,12 @@ impl Puzzle for Day02 {
             let value1 = line.chars().next().unwrap();
             let value2 = line.chars().last().unwrap();
 
+            // For part 1, get result from two players
             let them_type = get_input_their_type(&value1);
             let my_type = get_input_my_type(&value2);
             day.matches.push((them_type, my_type));
 
+            // For part 2, get my type from one player and desired result
             let them_type2 = get_input_their_type(&value1);
             let result = get_input_result(&value2);
             let my_type2 = get_type_from_result(&them_type2, &result);
@@ -88,6 +96,7 @@ impl Puzzle for Day02 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Sum scores
         let sum = sum_matches(&self.matches);
         Ok(sum.to_string())
     }
@@ -100,6 +109,7 @@ impl Puzzle for Day02 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Sum scores
         let sum = sum_matches(&self.matches2);
         Ok(sum.to_string())
     }
