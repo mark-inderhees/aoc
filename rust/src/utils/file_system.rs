@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-/// A file system, contains directories and files. As a pwd that changes with commands.
+/// A file system, contains directories and files. Has a pwd that changes with commands.
 pub struct FileSystem {
     directories: HashMap<PathBuf, Directory>,
     files: HashMap<PathBuf, File>,
@@ -15,7 +15,7 @@ pub struct File {
 }
 
 /// A directory, has a name and can hold other directories or files.
-/// The size is the sum of all files under this directory.
+/// The size is the sum of all files under this directory tree.
 pub struct Directory {
     pub name: String,
     pub size: u32,
