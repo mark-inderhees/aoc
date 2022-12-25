@@ -1,31 +1,33 @@
-/// A CPU that supports certain instructions, has cycle time count, and registers
-
+/// Instructions that the CPU supports.
 #[derive(Debug, Clone, Copy)]
 pub enum Instruction {
-    /// Add an i32 to register X, takes 2 cycles
+    /// Add an i32 to register X, takes 2 cycles.
     Addx(i32),
 
-    /// Do nothing, takes 1 cycle
+    /// Do nothing, takes 1 cycle.
     Noop,
 }
 
+/// State of the CPU at a given time.
 #[derive(Debug, Clone, Copy)]
 pub struct State {
-    /// Time is how many cycles since the start of the program
+    /// Time is how many cycles since the start of the program.
     time: u32,
 
-    /// CPU has a single signed register
+    /// CPU has a single signed register.
     pub reg_x: i32,
 }
 
+/// A CPU that supports certain instructions, has cycle time count, and registers.
 pub struct Cpu {
-    /// What was CPU state at each time cycle
+    /// What was CPU state at each time cycle.
     pub state_history: Vec<State>,
 
     state: State,
 }
 
 impl Cpu {
+    /// Create a new CPU. Time and regs are init to 1.
     pub fn new() -> Cpu {
         Cpu {
             state_history: Vec::new(),
@@ -35,6 +37,7 @@ impl Cpu {
         }
     }
 
+    /// How many cycles an instruction takes.
     pub fn get_cycle_count(instruction: &Instruction) -> u32 {
         match instruction {
             Instruction::Addx(_) => 2,
@@ -42,15 +45,18 @@ impl Cpu {
         }
     }
 
+    /// Increate time by one and save state to history.
     fn step(&mut self) {
         self.state_history.push(self.state);
         self.state.time += 1;
     }
 
+    /// Get the value of Reg X.
     pub fn get_reg_x(&self) -> i32 {
         self.state.reg_x
     }
 
+    /// Run an instruction.
     pub fn run_instruction(&mut self, instruction: &Instruction) {
         log::debug!(
             "Start cycle {:03}: begin executing {:?}",
