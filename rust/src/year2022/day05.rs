@@ -8,7 +8,8 @@ use std::collections::VecDeque;
 
 use anyhow::Result;
 
-use crate::{puzzle::Puzzle, utils::utils::get_vals};
+use crate::puzzle::Puzzle;
+use crate::utils::utils::get_vals;
 
 pub struct Day05 {
     stacks: Vec<VecDeque<char>>,
