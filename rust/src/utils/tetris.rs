@@ -3,6 +3,27 @@ use strum_macros::EnumIter;
 
 use crate::utils::board::*;
 
+/// A game of tetris. It is played on a grid with a couple of shape types.
+/// Moves are down, left, right. Rotation is not supported.
+/// A collison will prevent shape from moving.
+/// The board grows infinitely tall.
+/// Shapes start a configurable number of spaces above the highest current shape.
+/// Shapes start 2 spaces from the left.
+pub struct Tetris {
+    /// The game board.
+    grid: Board<char>,
+
+    /// The shapes currently on the grid.
+    shapes: Vec<Shape>,
+
+    /// The width of the board.
+    width: i32,
+
+    /// Rows of air between top of tower and new shape
+    new_shape_air_gap: i32,
+}
+
+/// The supported Tetris shape types.
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
 pub enum Shapes {
     // ####
@@ -29,19 +50,86 @@ pub enum Shapes {
     Square,
 }
 
-// A shape consists of a couple of players on the grid
+/// A unique ID for a shape on the board.
+pub type ShapeId = usize;
+
+impl Tetris {
+    /// Create a new tetris board with width 7 and air cap for new shapes 3.
+    pub fn new() -> Tetris {
+        let mut me = Tetris {
+            grid: Board::new(),
+            shapes: vec![],
+            width: 7,
+            new_shape_air_gap: 3,
+        };
+        me.grid.push_row(vec!['.'; me.width as usize]);
+        me.grid.set_players_as_walls();
+        me
+    }
+
+    /// Print what the game looks like.
+    #[allow(dead_code)]
+    pub fn print(&mut self) {
+        self.grid.print_board_with_players_pretty();
+        println!("");
+    }
+
+    /// Add a new shape to the board at the default start location.
+    pub fn add_shape(&mut self, shape_type: Shapes) -> ShapeId {
+        let shape = Shape::new(shape_type, &mut self.grid, self.new_shape_air_gap);
+        self.shapes.push(shape);
+        self.shapes.len() - 1
+    }
+
+    /// Move the shape, return true if moved or false if it could not move.
+    pub fn move_shape(&mut self, id: ShapeId, direction: Direction) -> bool {
+        self.shapes[id].move_shape(direction, &mut self.grid)
+    }
+
+    /// Get how tall the shape tower is.
+    pub fn get_stack_height(&self) -> u32 {
+        let min_player_y = self.grid.get_player_minimum_height();
+        let stack_height = (self.grid.height() - min_player_y) as u32;
+        stack_height
+    }
+
+    /// Does the top most line have a full row of blocks.
+    #[allow(dead_code)]
+    pub fn is_top_line_full(&self) -> bool {
+        let min_player_y = self.grid.get_player_minimum_height();
+        for x in 0..self.width {
+            let value = self.grid.get_at(BoardPoint { x, y: min_player_y });
+            if value != '#' {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Output a string version of the specified rows.
+    pub fn get_rows_as_string(&self, rows: u32) -> String {
+        let min_player_y = self.grid.get_player_minimum_height();
+        let mut output = String::new();
+        for x in 0..self.width {
+            for y in min_player_y..min_player_y + rows as i32 {
+                output.push(self.grid.get_at_with_player(BoardPoint { x, y }));
+            }
+        }
+        output
+    }
+}
+
+/// A shape consists of a couple of players on the grid.
 struct Shape {
     shape_type: Shapes,
     players: Vec<PlayerId>,
 }
 
+/// A private helper struct to manage shape logic. Create and move shapes.
 impl Shape {
-    // Create a new shape and add it to the grid
-    pub fn new(
-        shape_type: Shapes,
-        grid: &mut Board<char>,
-        new_shape_air_gap: i32,
-    ) -> Shape {
+    /// Create a new shape and add it to the grid
+    fn new(shape_type: Shapes, grid: &mut Board<char>, new_shape_air_gap: i32) -> Shape {
         let locations = Shape::get_shape_locations(shape_type);
         let rows_for_shape = match shape_type {
             Shapes::Flat => 1,
@@ -96,9 +184,9 @@ impl Shape {
         }
     }
 
-    // Return a vector of location points for a new shape
-    // The top left of the shape area will be at 0,0
-    // The locations are from left->right, top->bottom
+    /// Return a vector of location points for a new shape
+    /// The top left of the shape area will be at 0,0
+    /// The locations are from left->right, top->bottom
     fn get_shape_locations(shape_type: Shapes) -> Vec<BoardPoint> {
         match shape_type {
             Shapes::Flat => vec![
@@ -136,13 +224,9 @@ impl Shape {
         }
     }
 
-    // Move the shape the desired direction, returning true if the move was successfull
-    // On failure to move, none of the shape was actually moved
-    pub fn move_shape(
-        &mut self,
-        direction: Direction,
-        grid: &mut Board<char>,
-    ) -> bool {
+    /// Move the shape the desired direction, returning true if the move was successfull
+    /// On failure to move, none of the shape was actually moved
+    fn move_shape(&mut self, direction: Direction, grid: &mut Board<char>) -> bool {
         // Find the order to move parts of the shape in so they do not collide with each other
         let indexes = match direction {
             Direction::Left => self.move_left_indexes(),
@@ -173,6 +257,7 @@ impl Shape {
         true
     }
 
+    /// Move left helper
     fn move_left_indexes(&mut self) -> Vec<usize> {
         let indexes: Vec<usize> = match self.shape_type {
             Shapes::Flat => vec![0, 1, 2, 3],
@@ -184,12 +269,14 @@ impl Shape {
         indexes
     }
 
+    /// Move right helper (the reverse of move left)
     fn move_right_indexes(&mut self) -> Vec<usize> {
         let mut indexes = self.move_left_indexes();
         indexes.reverse();
         indexes
     }
 
+    /// Move down helper
     fn move_down_indexes(&mut self) -> Vec<usize> {
         let indexes: Vec<usize> = match self.shape_type {
             Shapes::Flat => vec![0, 1, 2, 3],
@@ -199,77 +286,5 @@ impl Shape {
             Shapes::Square => vec![3, 2, 1, 0],
         };
         indexes
-    }
-}
-
-pub struct Tetris {
-    grid: Board<char>,
-    shapes: Vec<Shape>,
-    width: i32,
-    new_shape_air_gap: i32, // Rows of air between top of tower and new shape
-}
-
-pub type ShapeId = usize;
-
-impl Tetris {
-    pub fn new() -> Tetris {
-        let mut me = Tetris {
-            grid: Board::new(),
-            shapes: vec![],
-            width: 7,
-            new_shape_air_gap: 3,
-        };
-        me.grid.push_row(vec!['.'; me.width as usize]);
-        me.grid.set_players_as_walls();
-        me
-    }
-
-    #[allow(dead_code)]
-    pub fn print(&mut self) {
-        self.grid.print_board_with_players_pretty();
-        println!("");
-    }
-
-    pub fn add_shape(&mut self, shape_type: Shapes) -> ShapeId {
-        let shape = Shape::new(shape_type, &mut self.grid, self.new_shape_air_gap);
-        self.shapes.push(shape);
-        self.shapes.len() - 1
-    }
-
-    pub fn move_shape(&mut self, id: ShapeId, direction: Direction) -> bool {
-        self.shapes[id].move_shape(direction, &mut self.grid)
-    }
-
-    // Get how tall the shape tower is
-    pub fn get_stack_height(&self) -> u32 {
-        let min_player_y = self.grid.get_player_minimum_height();
-        let stack_height = (self.grid.height() - min_player_y) as u32;
-        stack_height
-    }
-
-    // Does the top most line have a full row of blocks
-    #[allow(dead_code)]
-    pub fn is_top_line_full(&self) -> bool {
-        let min_player_y = self.grid.get_player_minimum_height();
-        for x in 0..self.width {
-            let value = self.grid.get_at(BoardPoint { x, y: min_player_y });
-            if value != '#' {
-                return false;
-            }
-        }
-
-        true
-    }
-
-    // Output a string version of the specified rows
-    pub fn get_rows_as_string(&self, rows: u32) -> String {
-        let min_player_y = self.grid.get_player_minimum_height();
-        let mut output = String::new();
-        for x in 0..self.width {
-            for y in min_player_y..min_player_y + rows as i32 {
-                output.push(self.grid.get_at_with_player(BoardPoint { x, y }));
-            }
-        }
-        output
     }
 }
