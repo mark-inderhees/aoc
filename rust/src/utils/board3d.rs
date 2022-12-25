@@ -181,28 +181,28 @@ where
     fn get_direction_offset(&self, direction: Direction, new_edge: Edge) -> i32 {
         let new_edge_index = new_edge as i32;
 
-        // Get requested index.
-        // This order is intentionally different than Edge:: as it should be offset by index 2.
-        // As when moving in one direction, we are actually going to the opposite edge type.
-        // That is moving down goes to the top edge of the next map.
+        // Get expected index, it is the opposite the direction. For example,
+        // when moving down we come to the top edge of the new board.
+        let expected_edge = Direction::opposite_direction(direction);
         let directions = vec![
-            Direction::Down,  // aka Top
-            Direction::Left,  // aka Right
-            Direction::Up,    // aka Bottom
-            Direction::Right, // aka Left
+            // This order must match order in Edge::
+            Direction::Up,
+            Direction::Right,
+            Direction::Down,
+            Direction::Left,
         ];
-        let direction_index = directions.iter().position(|&x| x == direction).unwrap() as i32;
+        let expected_index = directions.iter().position(|&x| x == expected_edge).unwrap() as i32;
 
         // Direction and edge type match, no offset needed
-        if new_edge_index == direction_index {
+        if new_edge_index == expected_index {
             return 0;
         }
 
         // Ensure positive offsets only. Will make mod easier.
-        if new_edge_index > direction_index {
-            return new_edge_index - direction_index;
+        if new_edge_index > expected_index {
+            return new_edge_index - expected_index;
         } else {
-            return directions.len() as i32 + new_edge_index - direction_index;
+            return directions.len() as i32 + new_edge_index - expected_index;
         }
     }
 
