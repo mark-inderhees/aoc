@@ -1,3 +1,8 @@
+// 2022 Day 07
+// https://adventofcode.com/2022/day/7
+// --- Day 7: No Space Left On Device ---
+// Build a file system! Need to navigate the system to build it up. Then get sizes.
+
 use anyhow::Result;
 use std::path::PathBuf;
 
@@ -32,6 +37,7 @@ impl Puzzle for Day07 {
             file_system: FileSystem::new(),
         };
 
+        // Input is the output from walking around a file system
         for line in input.lines() {
             if line.starts_with("$") {
                 // Command
@@ -42,11 +48,13 @@ impl Puzzle for Day07 {
                     CommandType::Ls => (),
                 }
             } else if line.starts_with("dir") {
-                // Listing a directory
+                // Listing a directory, like
+                // dir <dirname>
                 let name = line.split(" ").last().unwrap();
                 day.file_system.add_directory(name);
             } else {
-                // Listing a file
+                // Listing a file, like
+                // <size> <filename>
                 let mut line2 = line.split(" ");
                 let size = line2.next().unwrap().parse::<u32>()?;
                 let name = line2.last().unwrap();
@@ -59,8 +67,10 @@ impl Puzzle for Day07 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let mut sum = 0;
+        // Find directories less than 100kb
+        // Sum their sizes
         for directory in self.file_system.iter_directories() {
-            if directory.size <= 100000 {
+            if directory.size <= 100_000 {
                 sum += directory.size
             }
         }
@@ -75,12 +85,15 @@ impl Puzzle for Day07 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let available = 70000000 - self.file_system.get_size(&PathBuf::from("/"));
-        let needed = 30000000 - available;
+        // Find smallest folder to delete to free needed space
+        let available = 70_000_000 - self.file_system.get_size(&PathBuf::from("/"));
+        let needed = 30_000_000 - available;
         let mut directories = self
             .file_system
             .iter_directories()
             .collect::<Vec<&Directory>>();
+
+        // Sort smallest to largest, first find is our answer
         directories.sort_by(|a, b| a.size.cmp(&b.size));
         let mut value = 0;
         for directory in directories {

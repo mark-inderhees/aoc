@@ -1,10 +1,21 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
+/// A file system, contains directories and files. As a pwd that changes with commands.
+pub struct FileSystem {
+    directories: HashMap<PathBuf, Directory>,
+    files: HashMap<PathBuf, File>,
+    pwd: PathBuf,
+}
+
+/// A simple file, it has a name and size.
 pub struct File {
     pub name: String,
     pub size: u32,
 }
 
+/// A directory, has a name and can hold other directories or files.
+/// The size is the sum of all files under this directory.
 pub struct Directory {
     pub name: String,
     pub size: u32,
@@ -12,13 +23,8 @@ pub struct Directory {
     files: Vec<File>,
 }
 
-pub struct FileSystem {
-    directories: HashMap<PathBuf, Directory>,
-    files: HashMap<PathBuf, File>,
-    pwd: PathBuf,
-}
-
 impl FileSystem {
+    /// Create a new file system with one root folder.
     pub fn new() -> FileSystem {
         FileSystem {
             // Init a single directory at root
@@ -37,18 +43,22 @@ impl FileSystem {
         }
     }
 
+    /// cd to /
     pub fn change_directory_to_root(&mut self) {
         self.pwd = PathBuf::from("/");
     }
 
+    /// cd to <name>. This appends to pwd.
     pub fn change_directory(&mut self, name: &str) {
         self.pwd.push(name);
     }
 
+    /// cd ..
     pub fn change_directory_parent(&mut self) {
         self.pwd.pop();
     }
 
+    /// Add a file to the tree. This increases the directory size of all parents.
     pub fn add_file(&mut self, name: &str, size: u32) {
         // Add file in the list of files for this directory
         let directory = self.directories.get_mut(&self.pwd).unwrap();
@@ -72,6 +82,7 @@ impl FileSystem {
         }
     }
 
+    /// Add a new directory into the file system.
     pub fn add_directory(&mut self, name: &str) {
         // Add directory name in the list of directories for this directory
         self.directories
@@ -92,10 +103,12 @@ impl FileSystem {
         );
     }
 
+    /// Iterate over all directories in the system.
     pub fn iter_directories(&self) -> std::collections::hash_map::Values<'_, PathBuf, Directory> {
         self.directories.values()
     }
 
+    /// Get the size of the current directory.
     pub fn get_size(&self, path: &PathBuf) -> u32 {
         self.directories[path].size
     }
