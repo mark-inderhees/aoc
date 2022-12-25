@@ -1,9 +1,10 @@
 use rusttype::Point;
 use std::str::FromStr;
 
+/// A simple way to import and use Point type.
 pub type UtilsPoint = Point<i32>;
 
-/// Tests if this character is in the string
+/// Tests if this character is in the string.
 pub fn char_in_string(c: &char, s: &String) -> bool {
     if s.chars().any(|x| x == *c) {
         return true;
@@ -11,7 +12,7 @@ pub fn char_in_string(c: &char, s: &String) -> bool {
     false
 }
 
-/// Gets all values in a string
+/// Gets all values in a string.
 pub fn get_vals<T>(s: &str) -> Vec<T>
 where
     T: FromStr,
@@ -36,7 +37,7 @@ where
     values
 }
 
-/// Get a single value, the first value found in the line
+/// Get a single value, the first value found in the line.
 pub fn get_val<T>(s: &str) -> T
 where
     T: FromStr,
@@ -46,13 +47,14 @@ where
     values[0]
 }
 
-/// Get the taxi cab distance between two points
+/// Get the taxi cab distance between two points.
 pub fn manhattan_distance(p1: UtilsPoint, p2: UtilsPoint) -> i32 {
     let x = (p1.x - p2.x).abs();
     let y = (p1.y - p2.y).abs();
     x + y
 }
 
+/// An enum of math operators.
 #[derive(Default, Debug, Clone, Copy)]
 pub enum Operator {
     #[default]
@@ -62,8 +64,8 @@ pub enum Operator {
     Divide,
 }
 
-// Do some simple math, returns the value of result, for example:
-// result = value_left ? value_right
+/// Do some simple math, returns the value of result, for example:
+/// result = value_left ? value_right
 pub fn do_math(operator: Operator, value_left: i128, value_right: i128) -> i128 {
     match operator {
         Operator::Add => value_left + value_right,
@@ -73,9 +75,9 @@ pub fn do_math(operator: Operator, value_left: i128, value_right: i128) -> i128 
     }
 }
 
-// Solve a math equation, returns the value of x, for example:
-// result = x ? value
-// result = value ? x
+/// Solve a math equation, returns the value of x, for example:
+/// result = x ? value
+/// result = value ? x
 pub fn solve_math(operator: Operator, result: i128, value: i128, solve_for_left: bool) -> i128 {
     match operator {
         Operator::Add => result - value,
