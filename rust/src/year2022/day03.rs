@@ -1,3 +1,8 @@
+// 2022 Day 3
+// https://adventofcode.com/2022/day/3
+// --- Day 3: Rucksack Reorganization ---
+// Find the duplicate char in a string
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -8,10 +13,11 @@ pub struct Day03 {
     groups: Vec<(String, String, String)>,
 }
 
+/// Get value of a-Z chars
 fn get_char_value(c: &char) -> u32 {
     let value = match c {
         'a'..='z' => (*c as u32) - 96,
-        _ => (*c as u32) - 64 + 26,
+        _ => (*c as u32) - 64 + 26, // Uppercase are worth more than lower case
     };
     value
 }
@@ -26,6 +32,7 @@ impl Puzzle for Day03 {
         };
 
         for line in input.lines() {
+            // Each input rucksack is split in two
             let len = line.len() / 2;
             let compartment1 = &line[..len];
             let compartment2 = &line[len..];
@@ -33,6 +40,7 @@ impl Puzzle for Day03 {
                 .push((compartment1.to_string(), compartment2.to_string()));
         }
 
+        // Or the lines are groups of 3
         let mut lines = input.lines();
         while let (Some(a), Some(b), Some(c)) = (lines.next(), lines.next(), lines.next()) {
             day.groups
@@ -44,6 +52,7 @@ impl Puzzle for Day03 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let mut score = 0;
+        // Find the char in both compartments of rucksack. Get the score. Sum the scores.
         for (a, b) in self.rucksacks.iter() {
             for c in a.chars() {
                 if char_in_string(&c, b) {
@@ -65,6 +74,8 @@ impl Puzzle for Day03 {
 
     fn solve_part2(&mut self) -> Result<String> {
         let mut score = 0;
+        // Find the char in each of the group of 3.
+        // Get the char value and sume the values.
         for (a, b, c) in self.groups.iter() {
             for chr in a.chars() {
                 if char_in_string(&chr, b) && char_in_string(&chr, c){
