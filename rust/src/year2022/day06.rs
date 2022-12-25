@@ -1,3 +1,8 @@
+// 2022 Day 6
+// https://adventofcode.com/2022/day/6
+// --- Day 6: Tuning Trouble ---
+// Scan data for packet types. They key is to use rusts window iterator.
+
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
@@ -6,6 +11,7 @@ pub struct Day06 {
     code: String,
 }
 
+/// Is every char in this string unique?
 fn all_unique(chars: &[char]) -> bool {
     for char in chars {
         let count = chars.iter().filter(|x| *x==char).count();
@@ -27,6 +33,7 @@ impl Puzzle for Day06 {
 
     fn solve_part1(&mut self) -> Result<String> {
         let chars = self.code.chars().collect::<Vec<char>>();
+        // Find first window of 4 chars that is unique
         let mut index = 4;
         for window in chars.windows(4) {
             if all_unique(window) {
@@ -46,6 +53,7 @@ impl Puzzle for Day06 {
 
     fn solve_part2(&mut self) -> Result<String> {
         let chars = self.code.chars().collect::<Vec<char>>();
+        // Find first window of 14 chars that is unique
         let mut index = 14;
         for window in chars.windows(14) {
             if all_unique(window) {
