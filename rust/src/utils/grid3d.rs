@@ -5,6 +5,7 @@ pub struct Grid3d<T> {
     size: usize,
 }
 
+#[derive(Debug, Clone)]
 pub struct Point3d {
     pub x: usize,
     pub y: usize,
