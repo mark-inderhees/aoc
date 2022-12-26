@@ -16,46 +16,63 @@ pub struct Day20 {
     linked_list: LinkedList<i64>,
 }
 
-fn decode(values: &Vec<i64>, iterations: usize, magic: i64) -> Vec<i64> {
-    // First, multiply by the magic
-    let decrypt: Vec<i64> = values.iter().map(|r| *r as i64 * magic).collect();
-
-    // Enumerate to keep the original index so numbers are uniquely searchable
-    let mut decoded: Vec<(usize, &i64)> = decrypt.iter().enumerate().collect();
-
-    // Run the requested iterations
-    for _ in 0..iterations {
-        // Loop over every value once
-        for (original_index, value) in decrypt.iter().enumerate() {
-            // Find where this value is in the currently list and remove it
-            let current_index = decoded
-                .iter()
-                .position(|r| r == &(original_index, value))
-                .unwrap();
-            decoded.remove(current_index);
-
-            // Use non negative remainder magic to find new index
-            let mut new_index = value + current_index as i64;
-            new_index = new_index.rem_euclid(decoded.len() as i64);
-            if new_index == 0 {
-                // Edge case, zero is actually end of list
-                new_index = decoded.len() as i64;
-            }
-            decoded.insert(new_index as usize, (original_index, value));
-            log::debug!("{decoded:?}");
-        }
+fn scramble(day: &mut Day20, iterations: usize, decryption_key: i64) {
+    for i in 0..day.linked_list.values.len() {
+        let current = day.linked_list.values[i].clone();
+        let value = current.borrow().value;
+        current.borrow_mut().value = value * decryption_key;
     }
 
-    decoded.iter().map(|r| *r.1).collect::<Vec<i64>>()
+    for _ in 0..iterations {
+        for i in 0..day.linked_list.values.len() {
+            let current = day.linked_list.values[i].clone();
+            let current_weak = Rc::downgrade(&current);
+
+            let value = current.borrow().value;
+            let len = day.linked_list.len() as i64 - 1; // -1 as pop makes list 1 smaller
+            let mut shift = value % len;
+            if shift == 0 {
+                continue;
+            }
+            shift -= 1;
+
+            log::debug!("Moving {value}");
+
+            day.linked_list.set_current(&current_weak);
+            day.linked_list.pop();
+            for _ in 0..shift.abs() {
+                if shift > 0 {
+                    day.linked_list.move_next();
+                } else {
+                    day.linked_list.move_prev();
+                }
+            }
+
+            day.linked_list.insert(&current_weak);
+            day.linked_list.print();
+        }
+    }
 }
 
-fn get_answer(decoded: &Vec<i64>) -> i64 {
-    let zero = decoded.iter().position(|&r| r == 0).unwrap();
-    let len = decoded.len();
-    let one = decoded[(zero + 1000) % len];
-    let two = decoded[(zero + 2000) % len];
-    let three = decoded[(zero + 3000) % len];
-    one + two + three
+fn get_sum(day: &mut Day20) -> i64 {
+    loop {
+        if day.linked_list.get_current_value() == 0 {
+            break;
+        }
+        day.linked_list.move_next();
+    }
+
+    let mut answers = vec![];
+    for _ in 0..3 {
+        for _ in 0..1000 % day.linked_list.len() {
+            day.linked_list.move_next();
+        }
+        answers.push(day.linked_list.get_current_value());
+    }
+    log::debug!("{:?}", answers);
+    let answer: i64 = answers.iter().sum();
+
+    answer
 }
 
 impl Puzzle for Day20 {
@@ -77,61 +94,8 @@ impl Puzzle for Day20 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let decoded = decode(&self.values, 1, 1);
-
-        for i in 0..self.linked_list.values.len() {
-            let current = self.linked_list.values[i].clone();
-            let current_weak = Rc::downgrade(&current);
-
-            let shift_orig = current.borrow().value;
-            let len = self.linked_list.len() as i64 - 1;
-            let mut shift = shift_orig % len;
-            shift = shift + len;
-            shift = shift % len;
-            if shift == 0 {
-                continue;
-            }
-            let mut shift_positive = shift.abs();
-
-            if shift_orig < 0 {
-                // shift_positive -= 1;
-            }
-            if shift_positive == 0 {
-                continue;
-            }
-
-            log::debug!("Moving {shift_orig}");
-
-            self.linked_list.set_current(&current_weak);
-            self.linked_list.pop();
-            for _ in 1..shift_positive {
-                if shift > 0 {
-                    self.linked_list.move_next();
-                } else {
-                    self.linked_list.move_prev();
-                }
-            }
-
-            self.linked_list.insert(&current_weak);
-            self.linked_list.print();
-        }
-
-        loop {
-            if self.linked_list.get_current_value() == 0 {
-                break;
-            }
-            self.linked_list.move_next();
-        }
-
-        let mut answers = vec![];
-        for _ in 0..3 {
-            for _ in 0..1000 % self.linked_list.len() {
-                self.linked_list.move_next();
-            }
-            answers.push(self.linked_list.get_current_value());
-        }
-        log::debug!("{:?}", answers);
-        let answer: i64 = answers.iter().sum();
+        scramble(self, 1, 1);
+        let answer = get_sum(self);
 
         Ok(answer.to_string())
     }
@@ -144,9 +108,10 @@ impl Puzzle for Day20 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let decoded = decode(&self.values, 10, 811589153);
+        scramble(self, 10, 811589153);
+        let answer = get_sum(self);
 
-        Ok(get_answer(&decoded).to_string())
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {

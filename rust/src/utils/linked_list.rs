@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -67,6 +66,7 @@ where
         self.current = node.clone();
     }
 
+    #[allow(dead_code)]
     pub fn get_current(&self) -> Weak<RefCell<Node<T>>> {
         self.current.clone()
     }
