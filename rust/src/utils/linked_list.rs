@@ -81,7 +81,7 @@ where
 
     /// Get the current node.
     #[allow(dead_code)]
-    pub fn get_current(&self) -> Weak<RefCell<Node<T>>> {
+    pub fn current_node(&self) -> Weak<RefCell<Node<T>>> {
         self.current.clone()
     }
 
@@ -91,7 +91,7 @@ where
     }
 
     /// Get the value stored in the current node.
-    pub fn get_current_value(&self) -> T {
+    pub fn current_value(&self) -> T {
         self.current
             .upgrade()
             .unwrap()

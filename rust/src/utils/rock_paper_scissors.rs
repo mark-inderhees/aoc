@@ -13,7 +13,7 @@ pub enum ResultType {
 }
 
 /// Given what two players have in rock paper scissors, give the result
-pub fn get_result(me: &ItemType, them: &ItemType) -> ResultType {
+pub fn determine_result(me: &ItemType, them: &ItemType) -> ResultType {
     match (me, them) {
         (ItemType::Rock, ItemType::Rock) => ResultType::Tie,
         (ItemType::Rock, ItemType::Paper) => ResultType::Loss,
@@ -28,7 +28,7 @@ pub fn get_result(me: &ItemType, them: &ItemType) -> ResultType {
 }
 
 /// Given what one player has and a result in rock paper scissors, give what the other player must have
-pub fn get_type_from_result(player1: &ItemType, result: &ResultType) -> ItemType {
+pub fn determine_type_from_result(player1: &ItemType, result: &ResultType) -> ItemType {
     match (player1, result) {
         (ItemType::Rock, ResultType::Loss) => ItemType::Scissors,
         (ItemType::Rock, ResultType::Tie) => ItemType::Rock,

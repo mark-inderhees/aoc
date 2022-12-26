@@ -22,7 +22,7 @@ fn scramble(day: &mut Day20, iterations: usize, decryption_key: i64) {
     // Scale each node by the decription key
     day.linked_list.move_to_head();
     for _ in 0..day.linked_list.len() {
-        let value = day.linked_list.get_current_value() * decryption_key;
+        let value = day.linked_list.current_value() * decryption_key;
         day.linked_list.set_current_value(&value);
         day.linked_list.move_next();
     }
@@ -73,10 +73,10 @@ fn scramble(day: &mut Day20, iterations: usize, decryption_key: i64) {
 
 /// Get the sum of the values 1000, 2000, and 3000 nodes beyond the location of
 /// the node with value zero.
-fn get_sum(day: &mut Day20) -> i64 {
+fn find_answer(day: &mut Day20) -> i64 {
     // Find the node with value zero
     loop {
-        if day.linked_list.get_current_value() == 0 {
+        if day.linked_list.current_value() == 0 {
             break;
         }
         day.linked_list.move_next();
@@ -88,7 +88,7 @@ fn get_sum(day: &mut Day20) -> i64 {
         for _ in 0..1000 % day.linked_list.len() {
             day.linked_list.move_next();
         }
-        answers.push(day.linked_list.get_current_value());
+        answers.push(day.linked_list.current_value());
     }
     log::debug!("{:?}", answers);
 
@@ -119,7 +119,7 @@ impl Puzzle for Day20 {
     fn solve_part1(&mut self) -> Result<String> {
         // Run one scramble with scaler of 1
         scramble(self, 1, 1);
-        let answer = get_sum(self);
+        let answer = find_answer(self);
 
         Ok(answer.to_string())
     }
@@ -134,7 +134,7 @@ impl Puzzle for Day20 {
     fn solve_part2(&mut self) -> Result<String> {
         // Run 10 scrambles with a big scaler
         scramble(self, 10, 811589153);
-        let answer = get_sum(self);
+        let answer = find_answer(self);
 
         Ok(answer.to_string())
     }
