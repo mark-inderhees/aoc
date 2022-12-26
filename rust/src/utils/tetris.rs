@@ -88,7 +88,7 @@ impl Tetris {
 
     /// Get how tall the shape tower is.
     pub fn stack_height(&self) -> u32 {
-        let min_player_y = self.grid.get_player_minimum_height();
+        let min_player_y = self.grid.player_minimum_height();
         let stack_height = (self.grid.height() - min_player_y) as u32;
         stack_height
     }
@@ -96,7 +96,7 @@ impl Tetris {
     /// Does the top most line have a full row of blocks.
     #[allow(dead_code)]
     pub fn is_top_line_full(&self) -> bool {
-        let min_player_y = self.grid.get_player_minimum_height();
+        let min_player_y = self.grid.player_minimum_height();
         for x in 0..self.width {
             let value = self.grid.value_at(BoardPoint { x, y: min_player_y });
             if value != '#' {
@@ -109,7 +109,7 @@ impl Tetris {
 
     /// Output a string version of the specified rows.
     pub fn rows_as_string(&self, rows: u32) -> String {
-        let min_player_y = self.grid.get_player_minimum_height();
+        let min_player_y = self.grid.player_minimum_height();
         let mut output = String::new();
         for x in 0..self.width {
             for y in min_player_y..min_player_y + rows as i32 {
@@ -143,7 +143,7 @@ impl Shape {
         // rows this shape needs, and configurable rows between new block and
         // current highest block
         let min_player_y = if grid.height() > 1 {
-            grid.get_player_minimum_height()
+            grid.player_minimum_height()
         } else {
             // Special case for first shape where there are no other shapes
             1

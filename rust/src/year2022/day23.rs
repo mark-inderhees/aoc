@@ -62,7 +62,7 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
     for round in 0..rounds {
         log::debug!("Start of round {round}");
         let mut elves = vec![];
-        for elf_id in 0..day.board.get_players_len() {
+        for elf_id in 0..day.board.players_len() {
             // Check if elf has no one next to them, then that elf DOES NOTHING
             if day.board.is_any_player_nearby(elf_id) {
                 elves.push(elf_id);
@@ -73,7 +73,7 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
         // If no thoughts are good, then do nothing
         let mut elf_proposals = vec![];
         for elf_id in elves {
-            let elf_location = day.board.get_player_location(elf_id);
+            let elf_location = day.board.player_location(elf_id);
             for (i, proposal) in proposals.iter().enumerate() {
                 let mut good = true;
                 for direction in proposal {
@@ -187,7 +187,7 @@ impl Puzzle for Day23 {
         }
 
         day.board.add_players_from_value('#', '.');
-        log::debug!("Players {}", day.board.get_players_len());
+        log::debug!("Players {}", day.board.players_len());
 
         Ok(day)
     }
@@ -199,8 +199,8 @@ impl Puzzle for Day23 {
         let mut y_min = i32::MAX;
         let mut x_max = 0;
         let mut y_max = 0;
-        for player in 0..self.board.get_players_len() {
-            let location = self.board.get_player_location(player);
+        for player in 0..self.board.players_len() {
+            let location = self.board.player_location(player);
             x_min = std::cmp::min(x_min, location.x);
             y_min = std::cmp::min(y_min, location.y);
             x_max = std::cmp::max(x_max, location.x);
@@ -209,7 +209,7 @@ impl Puzzle for Day23 {
 
         let width = x_max - x_min + 1;
         let height = y_max - y_min + 1;
-        let spots = width * height - self.board.get_players_len() as i32;
+        let spots = width * height - self.board.players_len() as i32;
         Ok(spots.to_string())
     }
 

@@ -110,9 +110,9 @@ where
     }
 
     /// Get which board the player is on and the location on that board.
-    pub fn get_player_location(&self, player_id: PlayerId) -> (BoardId, BoardPoint) {
+    pub fn player_location(&self, player_id: PlayerId) -> (BoardId, BoardPoint) {
         let player = &self.players[player_id];
-        let location = self.boards[player.board_id].get_player_location(player_id);
+        let location = self.boards[player.board_id].player_location(player_id);
         (player.board_id, location)
     }
 
@@ -208,7 +208,7 @@ where
 
     /// Move the player on the 3d board. If they move off one board move the player to the correct new board.
     pub fn step_player(&mut self, player_id: PlayerId, direction: Direction) -> Option<T> {
-        let (board_id, location) = self.get_player_location(player_id);
+        let (board_id, location) = self.player_location(player_id);
 
         // Use requested direction with current board direction offset to find real direction
         let real_direction = self.get_player_direction(player_id, direction);

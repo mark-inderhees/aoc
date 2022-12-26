@@ -50,7 +50,7 @@ impl Puzzle for Day08 {
                 // Move in each direction
                 for direction in Direction::straight_iterator() {
                     self.board.set_location(BoardPoint { x, y });
-                    let tree_height = self.board.get_current_value().clone();
+                    let tree_height = self.board.current_value().clone();
 
                     // Get all tree heights in this direction
                     let mut tree_heights = vec![];
@@ -97,7 +97,7 @@ impl Puzzle for Day08 {
 
                     count_trees.push(0);
                     self.board.set_location(BoardPoint { x, y });
-                    let tree_height = self.board.get_current_value().clone();
+                    let tree_height = self.board.current_value().clone();
 
                     // Keep walking while this tree is shorter than our tree
                     while let Some(tree_height2) = self.board.step(direction) {

@@ -37,13 +37,13 @@ fn drop_sand(day: &mut Day14) -> u32 {
             }
             if !okay {
                 // Player can no longer move
-                day.grid.set_at(day.grid.get_player_location(id), 'o');
+                day.grid.set_at(day.grid.player_location(id), 'o');
                 break;
             }
         }
         if !okay {
             // Check if player fell off
-            let location = day.grid.get_player_location(id);
+            let location = day.grid.player_location(id);
             if location.x == 0
                 || location.x == day.grid.width() - 1
                 || location.y == day.grid.height() - 1

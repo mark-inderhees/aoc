@@ -135,8 +135,8 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
 
         // We could also do nothing if no blizzard here
         let mut wait = true;
-        for blizzard_id in 1..day.grid.get_players_len() {
-            let blizzard_location = day.grid.get_player_location(blizzard_id);
+        for blizzard_id in 1..day.grid.players_len() {
+            let blizzard_location = day.grid.player_location(blizzard_id);
             if blizzard_location == job.location {
                 wait = false;
                 break;

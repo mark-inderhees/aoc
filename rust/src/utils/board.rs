@@ -188,7 +188,7 @@ where
 
     /// How many players there are.
     #[allow(dead_code)]
-    pub fn get_players_len(&self) -> usize {
+    pub fn players_len(&self) -> usize {
         self.players.len()
     }
 
@@ -283,25 +283,25 @@ where
     }
 
     /// Get the location of a player.
-    pub fn get_player_location(&self, player: PlayerId) -> BoardPoint {
+    pub fn player_location(&self, player: PlayerId) -> BoardPoint {
         self.players[player].point
     }
 
     /// Get the grid value where player 0 is.
-    pub fn get_current_value(&self) -> T {
+    pub fn current_value(&self) -> T {
         let player = 0;
-        self.get_player_value(player)
+        self.player_value(player)
     }
 
     /// Get the grid value where this player is.
-    pub fn get_player_value(&self, player: PlayerId) -> T {
+    pub fn player_value(&self, player: PlayerId) -> T {
         let x: usize = self.players[player].point.x as usize;
         let y: usize = self.players[player].point.y as usize;
         self.grid[y][x]
     }
 
     // Search all players, finding the smallest y value.
-    pub fn get_player_minimum_height(&self) -> i32 {
+    pub fn player_minimum_height(&self) -> i32 {
         let mut min_player_y = self.height() - 1;
         for player in &self.players {
             min_player_y = std::cmp::min(min_player_y, player.point.y);
@@ -484,7 +484,7 @@ where
     #[allow(dead_code)]
     pub fn get_directions_player_can_move(&mut self, player: PlayerId) -> Vec<Direction> {
         let mut values = vec![];
-        let orig_point = self.get_player_location(player);
+        let orig_point = self.player_location(player);
         for direction in Direction::straight_iterator() {
             if let Some(_value) = self.step_player(player, direction) {
                 values.push(direction);
@@ -497,9 +497,9 @@ where
 
     /// Get the value of nearby squares in all directions including diagonal
     #[allow(dead_code)]
-    pub fn get_nearby_values(&mut self, player: PlayerId) -> Vec<T> {
+    pub fn nearby_values(&mut self, player: PlayerId) -> Vec<T> {
         let mut values = vec![];
-        let orig_point = self.get_player_location(player);
+        let orig_point = self.player_location(player);
         for direction in Direction::iter() {
             if let Some(value) = self.step_player(player, direction) {
                 values.push(value);
@@ -567,7 +567,7 @@ where
             .players
             .iter()
             .enumerate()
-            .map(|(i, _)| self.get_player_value(i).clone())
+            .map(|(i, _)| self.player_value(i).clone())
             .collect();
         for player in self.players.clone().iter().rev() {
             if player.visible {
@@ -605,12 +605,12 @@ where
 
         // Start at the current location
         jobs.push_front(PathWork {
-            location: self.get_player_location(from_player),
+            location: self.player_location(from_player),
             count: 0,
         });
 
         let mut shortest_path = u32::MAX; // Best answer so far
-        let taget = self.get_player_location(taget_player);
+        let taget = self.player_location(taget_player);
 
         while jobs.len() > 0 {
             let job = jobs.pop_front().unwrap();
@@ -633,11 +633,11 @@ where
             for direction in Direction::straight_iterator() {
                 // Force current location
                 self.set_player_location(from_player, job.location);
-                let my_char = self.get_player_value(from_player);
+                let my_char = self.player_value(from_player);
 
                 // Try this move
                 if let Some(near_char) = self.step_player(from_player, direction) {
-                    let new_location = self.get_player_location(from_player);
+                    let new_location = self.player_location(from_player);
 
                     // See if we are allowed to move here
                     if valid_move(my_char, near_char) {

@@ -63,7 +63,7 @@ fn move_it(day: &mut Day09, player_count: usize) -> u32 {
                     // Need to move player 2
                     let way_to_go = day.board.where_to_move(player, prev_player);
                     day.board.step_player(player, way_to_go);
-                    let p2_loc = day.board.get_player_location(player);
+                    let p2_loc = day.board.player_location(player);
 
                     // If this is the tail and it moved, mark this as a new location visited
                     if player == player_count - 1 {
