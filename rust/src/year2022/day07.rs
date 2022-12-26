@@ -86,7 +86,7 @@ impl Puzzle for Day07 {
 
     fn solve_part2(&mut self) -> Result<String> {
         // Find smallest folder to delete to free needed space
-        let available = 70_000_000 - self.file_system.get_size(&PathBuf::from("/"));
+        let available = 70_000_000 - self.file_system.current_directory_size(&PathBuf::from("/"));
         let needed = 30_000_000 - available;
         let mut directories = self
             .file_system

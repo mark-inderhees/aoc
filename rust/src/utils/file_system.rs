@@ -109,7 +109,7 @@ impl FileSystem {
     }
 
     /// Get the size of the current directory.
-    pub fn get_size(&self, path: &PathBuf) -> u32 {
+    pub fn current_directory_size(&self, path: &PathBuf) -> u32 {
         self.directories[path].size
     }
 }
