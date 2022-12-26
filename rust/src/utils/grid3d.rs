@@ -5,6 +5,12 @@ pub struct Grid3d<T> {
     size: usize,
 }
 
+pub struct Point3d {
+    pub x: usize,
+    pub y: usize,
+    pub z: usize,
+}
+
 impl<T> Grid3d<T>
 where
     T: Clone,
@@ -18,13 +24,13 @@ where
     }
 
     /// Set the value at this location.
-    pub fn set_at(&mut self, x: usize, y: usize, z: usize, value: T) {
-        self.grid[x][y][z] = value;
+    pub fn set_at(&mut self, point: &Point3d, value: T) {
+        self.grid[point.x][point.y][point.z] = value;
     }
 
     /// Get the value at this location.
-    pub fn get_at(&self, x: usize, y: usize, z: usize) -> T {
-        self.grid[x][y][z].clone()
+    pub fn get_at(&self, point: &Point3d) -> T {
+        self.grid[point.x][point.y][point.z].clone()
     }
 
     /// Get the size of the cube, this is single x, y or z length.
@@ -52,5 +58,40 @@ where
         }
 
         self.size = size;
+    }
+
+    /// Return a list of all nearby values. This only includes straight moves,
+    /// not diagonal.
+    pub fn get_nearby_values(&self, point: &Point3d) -> Vec<T> {
+        let mut values = vec![];
+
+        let size_signed = self.size as isize;
+        let x = point.x as isize;
+        let y = point.y as isize;
+        let z = point.z as isize;
+        let x_range = [-1, 1, 0, 0, 0, 0];
+        let y_range = [0, 0, -1, 1, 0, 0];
+        let z_range = [0, 0, 0, 0, -1, 1];
+        for ((dx, dy), dz) in x_range.iter().zip(y_range.iter()).zip(z_range.iter()) {
+            let x = x + dx;
+            let y = y + dy;
+            let z = z + dz;
+            if x < 0 || x >= size_signed {
+                continue;
+            }
+            if y < 0 || y >= size_signed {
+                continue;
+            }
+            if z < 0 || z >= size_signed {
+                continue;
+            }
+            values.push(self.get_at(&Point3d {
+                x: x as usize,
+                y: y as usize,
+                z: z as usize,
+            }));
+        }
+
+        values
     }
 }

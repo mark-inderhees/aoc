@@ -51,7 +51,11 @@ fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
         }
         been_here[job.x][job.y][job.z] = true;
 
-        let spot = day.grid.get_at(job.x, job.y, job.z);
+        let spot = day.grid.get_at(&Point3d {
+            x: job.x,
+            y: job.y,
+            z: job.z,
+        });
         match spot {
             ScanType::Lava => {
                 log::trace!("Hit lava at {},{},{}", job.x, job.y, job.z);
@@ -79,18 +83,18 @@ fn can_escape(day: &Day18, x: usize, y: usize, z: usize) -> bool {
             return true;
         }
 
-        struct Point3d {
+        struct Point3di32 {
             x: i32,
             y: i32,
             z: i32,
         }
         let offsets = vec![
-            Point3d { x: 1, y: 0, z: 0 },
-            Point3d { x: -1, y: 0, z: 0 },
-            Point3d { x: 0, y: 1, z: 0 },
-            Point3d { x: 0, y: -1, z: 0 },
-            Point3d { x: 0, y: 0, z: 1 },
-            Point3d { x: 0, y: 0, z: -1 },
+            Point3di32 { x: 1, y: 0, z: 0 },
+            Point3di32 { x: -1, y: 0, z: 0 },
+            Point3di32 { x: 0, y: 1, z: 0 },
+            Point3di32 { x: 0, y: -1, z: 0 },
+            Point3di32 { x: 0, y: 0, z: 1 },
+            Point3di32 { x: 0, y: 0, z: -1 },
         ];
 
         for offset in offsets {
@@ -133,8 +137,9 @@ impl Puzzle for Day18 {
             max = std::cmp::max(max, x);
             max = std::cmp::max(max, y);
             max = std::cmp::max(max, z);
-            assert_eq!(day.grid.get_at(x, y, z), ScanType::Unknown);
-            day.grid.set_at(x, y, z, ScanType::Lava);
+            let point = Point3d { x, y, z };
+            assert_eq!(day.grid.get_at(&point), ScanType::Unknown);
+            day.grid.set_at(&point, ScanType::Lava);
             count += 1;
         }
 
@@ -150,45 +155,19 @@ impl Puzzle for Day18 {
         // Count the exposed edges of lava
         // Check every lava and count spots around it that are not lava
         let size = self.grid.get_size();
-        let size_i32 = size as i32;
         for x in 0..size {
             for y in 0..size {
                 for z in 0..size {
-                    if self.grid.get_at(x, y, z) == ScanType::Lava {
+                    let point = Point3d { x, y, z };
+                    if self.grid.get_at(&point) == ScanType::Lava {
                         lava += 1;
-                        for dx in [-1i32, 1] {
-                            let x2 = (x as i32) + dx;
-                            if x2 < 0 || x2 >= size_i32 {
-                                count += 1;
-                                continue;
-                            }
-                            let x3 = x2 as usize;
-                            if self.grid.get_at(x3, y, z) != ScanType::Lava {
+                        let values = self.grid.get_nearby_values(&point);
+                        for value in values.iter() {
+                            if *value != ScanType::Lava {
                                 count += 1;
                             }
                         }
-                        for dy in [-1i32, 1] {
-                            let y2 = (y as i32) + dy;
-                            if y2 < 0 || y2 >= size_i32 {
-                                count += 1;
-                                continue;
-                            }
-                            let y3 = y2 as usize;
-                            if self.grid.get_at(x, y3, z) != ScanType::Lava {
-                                count += 1;
-                            }
-                        }
-                        for dz in [-1i32, 1] {
-                            let z2 = (z as i32) + dz;
-                            if z2 < 0 || z2 >= size_i32 {
-                                count += 1;
-                                continue;
-                            }
-                            let z3 = z2 as usize;
-                            if self.grid.get_at(x, y, z3) != ScanType::Lava {
-                                count += 1;
-                            }
-                        }
+                        count += 6 - values.len();
                     }
                 }
             }
@@ -215,11 +194,12 @@ impl Puzzle for Day18 {
         for x in 0..size {
             for y in 0..size {
                 for z in 0..size {
-                    if self.grid.get_at(x, y, z) == ScanType::Unknown {
+                    let point = Point3d { x, y, z };
+                    if self.grid.get_at(&point) == ScanType::Unknown {
                         if can_escape(&self, x, y, z) {
-                            self.grid.set_at(x, y, z, ScanType::Outside);
+                            self.grid.set_at(&point, ScanType::Outside);
                         } else {
-                            self.grid.set_at(x, y, z, ScanType::AirPocket);
+                            self.grid.set_at(&point, ScanType::AirPocket);
                             air_pockets += 1;
                         }
                     }
@@ -232,8 +212,9 @@ impl Puzzle for Day18 {
         for x in 0..size {
             for y in 0..size {
                 for z in 0..size {
-                    if self.grid.get_at(x, y, z) == ScanType::Unknown {
-                        self.grid.set_at(x, y, z, ScanType::Outside);
+                    let point = Point3d { x, y, z };
+                    if self.grid.get_at(&point) == ScanType::Unknown {
+                        self.grid.set_at(&point, ScanType::Outside);
                     }
                 }
             }
@@ -246,7 +227,8 @@ impl Puzzle for Day18 {
         for x in 0..size {
             for y in 0..size {
                 for z in 0..size {
-                    if self.grid.get_at(x, y, z) == ScanType::Lava {
+                    let mut point = Point3d { x, y, z };
+                    if self.grid.get_at(&point) == ScanType::Lava {
                         lava += 1;
                         for dx in [-1i32, 1] {
                             let x2 = (x as i32) + dx;
@@ -255,7 +237,8 @@ impl Puzzle for Day18 {
                                 continue;
                             }
                             let x3 = x2 as usize;
-                            if self.grid.get_at(x3, y, z) == ScanType::Outside {
+                            point = Point3d { x: x3, y, z };
+                            if self.grid.get_at(&point) == ScanType::Outside {
                                 count += 1;
                             }
                         }
@@ -266,7 +249,8 @@ impl Puzzle for Day18 {
                                 continue;
                             }
                             let y3 = y2 as usize;
-                            if self.grid.get_at(x, y3, z) == ScanType::Outside {
+                            point = Point3d { x, y: y3, z };
+                            if self.grid.get_at(&point) == ScanType::Outside {
                                 count += 1;
                             }
                         }
@@ -277,7 +261,8 @@ impl Puzzle for Day18 {
                                 continue;
                             }
                             let z3 = z2 as usize;
-                            if self.grid.get_at(x, y, z3) == ScanType::Outside {
+                            point = Point3d { x, y, z: z3 };
+                            if self.grid.get_at(&point) == ScanType::Outside {
                                 count += 1;
                             }
                         }
