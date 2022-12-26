@@ -274,7 +274,7 @@ where
                     self.get_direction_offset(real_direction, new_board_edge);
 
                 // Return the value of the grid at this location
-                return Some(self.boards[new_board_id].get_at(new_location));
+                return Some(self.boards[new_board_id].value_at(new_location));
             } else {
                 // Cannot move to new board, stay on current board
                 log::debug!("Cannot move to new board, there is a wall on {new_board_id} at {new_location:?}");

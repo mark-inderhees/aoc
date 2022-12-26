@@ -98,7 +98,7 @@ impl Tetris {
     pub fn is_top_line_full(&self) -> bool {
         let min_player_y = self.grid.get_player_minimum_height();
         for x in 0..self.width {
-            let value = self.grid.get_at(BoardPoint { x, y: min_player_y });
+            let value = self.grid.value_at(BoardPoint { x, y: min_player_y });
             if value != '#' {
                 return false;
             }
@@ -113,7 +113,7 @@ impl Tetris {
         let mut output = String::new();
         for x in 0..self.width {
             for y in min_player_y..min_player_y + rows as i32 {
-                output.push(self.grid.get_at_with_player(BoardPoint { x, y }));
+                output.push(self.grid.value_at_with_player(BoardPoint { x, y }));
             }
         }
         output

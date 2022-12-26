@@ -172,7 +172,7 @@ where
         for y in 0..self.height() {
             for x in 0..self.width() {
                 let location = BoardPoint { x, y };
-                let value = self.get_at(location);
+                let value = self.value_at(location);
                 if value == player_value {
                     self.add_player(location, player_value);
                     self.set_at(location, background_value);
@@ -256,15 +256,15 @@ where
     /// Get the grid value at this location.
     /// This does not include players.
     #[allow(dead_code)]
-    pub fn get_at(&self, point: BoardPoint) -> T {
+    pub fn value_at(&self, point: BoardPoint) -> T {
         let x_: usize = point.x as usize;
         let y_: usize = point.y as usize;
         self.grid[y_][x_]
     }
 
     /// Get the grid value at this location. Or if a player is here, give the player value.
-    pub fn get_at_with_player(&self, point: BoardPoint) -> T {
-        let mut value = self.get_at(point);
+    pub fn value_at_with_player(&self, point: BoardPoint) -> T {
+        let mut value = self.value_at(point);
         if let Some(player_id) = self.which_player_is_here(point) {
             value = self.players[player_id].id;
         }
@@ -329,7 +329,7 @@ where
 
     /// Is there a wall at this location?
     pub fn is_wall_here(&self, point: BoardPoint) -> bool {
-        let value = self.get_at(point);
+        let value = self.value_at(point);
         if self.walls.contains(&value) {
             return true;
         }
@@ -396,7 +396,7 @@ where
             }
         }
 
-        let mut value = self.get_at(new_location);
+        let mut value = self.value_at(new_location);
 
         if self.wraparound.contains(&value) {
             // Special wrap around square

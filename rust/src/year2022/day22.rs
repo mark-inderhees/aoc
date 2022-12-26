@@ -179,7 +179,7 @@ impl Puzzle for Day22 {
         // Add player at left most top row
         let mut start_x = 0;
         for x in 0..width as i32 {
-            if day.board.get_at(BoardPoint { x, y: 0 }) == '.' {
+            if day.board.value_at(BoardPoint { x, y: 0 }) == '.' {
                 start_x = x;
                 break;
             }
