@@ -87,7 +87,7 @@ impl Tetris {
     }
 
     /// Get how tall the shape tower is.
-    pub fn get_stack_height(&self) -> u32 {
+    pub fn stack_height(&self) -> u32 {
         let min_player_y = self.grid.get_player_minimum_height();
         let stack_height = (self.grid.height() - min_player_y) as u32;
         stack_height
@@ -108,7 +108,7 @@ impl Tetris {
     }
 
     /// Output a string version of the specified rows.
-    pub fn get_rows_as_string(&self, rows: u32) -> String {
+    pub fn rows_as_string(&self, rows: u32) -> String {
         let min_player_y = self.grid.get_player_minimum_height();
         let mut output = String::new();
         for x in 0..self.width {
@@ -130,7 +130,7 @@ struct Shape {
 impl Shape {
     /// Create a new shape and add it to the grid
     fn new(shape_type: Shapes, grid: &mut Board<char>, new_shape_air_gap: i32) -> Shape {
-        let locations = Shape::get_shape_locations(shape_type);
+        let locations = Shape::shape_locations(shape_type);
         let rows_for_shape = match shape_type {
             Shapes::Flat => 1,
             Shapes::Plus => 3,
@@ -187,7 +187,7 @@ impl Shape {
     /// Return a vector of location points for a new shape
     /// The top left of the shape area will be at 0,0
     /// The locations are from left->right, top->bottom
-    fn get_shape_locations(shape_type: Shapes) -> Vec<BoardPoint> {
+    fn shape_locations(shape_type: Shapes) -> Vec<BoardPoint> {
         match shape_type {
             Shapes::Flat => vec![
                 BoardPoint { x: 0, y: 0 },

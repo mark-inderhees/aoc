@@ -56,15 +56,15 @@ fn play_game(day: &mut Day17) -> RepeatDetection {
             shape_count,
             shape_index,
             command_index,
-            height: day.tetris.get_stack_height(),
+            height: day.tetris.stack_height(),
         };
         day.round_info.push(round_info);
 
         // Repeat detection, find where the grid starts to repeat
         if repeat.shape_count2 == 0 {
-            let current_height = day.tetris.get_stack_height();
+            let current_height = day.tetris.stack_height();
             if current_height > 100 {
-                let key = day.tetris.get_rows_as_string(100);
+                let key = day.tetris.rows_as_string(100);
                 if round_map.contains_key(&key) {
                     log::debug!("Match at {round_info:?}. Orig was {:?}", round_map[&key]);
                     repeat.shape_count1 = round_map[&key].shape_count;
@@ -124,7 +124,7 @@ impl Puzzle for Day17 {
 
     fn solve_part1(&mut self) -> Result<String> {
         play_game(self);
-        Ok(self.tetris.get_stack_height().to_string())
+        Ok(self.tetris.stack_height().to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
