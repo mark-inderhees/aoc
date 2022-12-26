@@ -118,7 +118,7 @@ where
 
     /// Get the current direction of the player given the input of the last client direction command.
     /// Converts from client commands into actually board direction.
-    pub fn get_player_direction(&self, player_id: PlayerId, direction: Direction) -> Direction {
+    pub fn player_direction(&self, player_id: PlayerId, direction: Direction) -> Direction {
         // Lookup the requested direction index
         let directions = vec![
             Direction::Up,
@@ -153,7 +153,7 @@ where
     }
 
     /// Helper function when moving between boards. Convert value from one board to another.
-    fn get_new_value(&self, value: i32, inverse: bool) -> i32 {
+    fn convert_location_value(&self, value: i32, inverse: bool) -> i32 {
         assert_eq!(self.width(), self.height()); // This logic assumes cube only
         match inverse {
             false => value,
@@ -178,7 +178,7 @@ where
     ///     Right,
     ///     Bottom,
     ///     Left,       <--- ends up here like we need it
-    fn get_direction_offset(&self, direction: Direction, new_edge: Edge) -> i32 {
+    fn determine_direction_offset(&self, direction: Direction, new_edge: Edge) -> i32 {
         let new_edge_index = new_edge as i32;
 
         // Get expected index, it is the opposite the direction. For example,
@@ -211,7 +211,7 @@ where
         let (board_id, location) = self.player_location(player_id);
 
         // Use requested direction with current board direction offset to find real direction
-        let real_direction = self.get_player_direction(player_id, direction);
+        let real_direction = self.player_direction(player_id, direction);
 
         // Test for moving off board condition
         let mut moved_to_new_board = true;
@@ -244,18 +244,18 @@ where
             let new_location = match new_board_edge {
                 Edge::Left => BoardPoint {
                     x: 0,
-                    y: self.get_new_value(value, connection.inverse),
+                    y: self.convert_location_value(value, connection.inverse),
                 },
                 Edge::Right => BoardPoint {
                     x: self.width() - 1,
-                    y: self.get_new_value(value, connection.inverse),
+                    y: self.convert_location_value(value, connection.inverse),
                 },
                 Edge::Top => BoardPoint {
-                    x: self.get_new_value(value, connection.inverse),
+                    x: self.convert_location_value(value, connection.inverse),
                     y: 0,
                 },
                 Edge::Bottom => BoardPoint {
-                    x: self.get_new_value(value, connection.inverse),
+                    x: self.convert_location_value(value, connection.inverse),
                     y: self.height() - 1,
                 },
                 _ => panic!("Unsupported edge {new_board_edge:?}"),
@@ -271,7 +271,7 @@ where
 
                 // Update direction compenstation for moving between boards
                 self.players[player_id].direction_offset +=
-                    self.get_direction_offset(real_direction, new_board_edge);
+                    self.determine_direction_offset(real_direction, new_board_edge);
 
                 // Return the value of the grid at this location
                 return Some(self.boards[new_board_id].value_at(new_location));

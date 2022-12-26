@@ -324,7 +324,7 @@ impl Puzzle for Day22 {
     fn solve_part2(&mut self) -> Result<String> {
         let direction = navigate3d(self);
         // Need to convert from 2d based direction to 3d based direction
-        let real_direction = self.board3d.get_player_direction(0, direction);
+        let real_direction = self.board3d.player_direction(0, direction);
         let (board_id, point) = self.board3d.player_location(0);
         // Also need to convert from 3d point to 2d point
         let real_point = BoardPoint {

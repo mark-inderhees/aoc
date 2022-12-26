@@ -340,7 +340,11 @@ where
     }
 
     /// From a given location, move one step in a certain direction to give a new location
-    pub fn get_new_location(&self, location: &BoardPoint, direction: Direction) -> BoardPoint {
+    pub fn new_location_from_direction(
+        &self,
+        location: &BoardPoint,
+        direction: Direction,
+    ) -> BoardPoint {
         let step_offsets = HashMap::from([
             (Direction::Up, BoardPoint { x: 0, y: -1 }),
             (Direction::Down, BoardPoint { x: 0, y: 1 }),
@@ -370,7 +374,7 @@ where
         do_step: bool,
     ) -> Option<T> {
         let start_location = self.players[player].point;
-        let mut new_location = self.get_new_location(&start_location, direction);
+        let mut new_location = self.new_location_from_direction(&start_location, direction);
 
         let x_max = self.width();
         let y_max = self.height();
@@ -482,7 +486,7 @@ where
     /// Get all of the directions this player can move. A list of valid
     /// directions is returned. Only straight steps are checked.
     #[allow(dead_code)]
-    pub fn get_directions_player_can_move(&mut self, player: PlayerId) -> Vec<Direction> {
+    pub fn directions_player_can_move(&mut self, player: PlayerId) -> Vec<Direction> {
         let mut values = vec![];
         let orig_point = self.player_location(player);
         for direction in Direction::straight_iterator() {

@@ -122,7 +122,7 @@ fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32
                 // Schedule this work
                 jobs.push_back(Work {
                     time: job.time + 1,
-                    location: day.grid.get_new_location(&job.location, direction),
+                    location: day.grid.new_location_from_direction(&job.location, direction),
                 });
                 log::trace!(
                     "Moving {:?} from {:?} at {}",
