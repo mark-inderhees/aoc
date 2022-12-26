@@ -35,9 +35,9 @@ impl Puzzle for Day10 {
             };
 
             // Run this instruction and drive CRT
-            let reg_x = day.cpu.get_reg_x();
+            let reg_x = day.cpu.reg_x();
             day.crt.print_sprite(reg_x as usize);
-            let count = Cpu::get_cycle_count(&instruction);
+            let count = Cpu::cycle_count(&instruction);
             for _ in 0..count {
                 day.crt.step(reg_x);
             }

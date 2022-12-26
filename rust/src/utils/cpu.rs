@@ -40,7 +40,7 @@ impl Cpu {
     }
 
     /// How many cycles an instruction takes.
-    pub fn get_cycle_count(instruction: &Instruction) -> u32 {
+    pub fn cycle_count(instruction: &Instruction) -> u32 {
         match instruction {
             Instruction::Addx(_) => 2,
             Instruction::Noop => 1,
@@ -54,7 +54,7 @@ impl Cpu {
     }
 
     /// Get the value of Reg X.
-    pub fn get_reg_x(&self) -> i32 {
+    pub fn reg_x(&self) -> i32 {
         self.state.reg_x
     }
 
@@ -67,7 +67,7 @@ impl Cpu {
         );
 
         // Step processor state
-        let count = Cpu::get_cycle_count(&instruction);
+        let count = Cpu::cycle_count(&instruction);
         for _ in 0..count {
             log::debug!(
                 "CPU: {} {} {:?}",
