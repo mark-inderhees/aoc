@@ -30,12 +30,12 @@ where
     }
 
     /// Get the value at this location.
-    pub fn get_at(&self, point: &Point3d) -> T {
+    pub fn value_at(&self, point: &Point3d) -> T {
         self.grid[point.x][point.y][point.z].clone()
     }
 
     /// Get the size of the cube, this is single x, y or z length.
-    pub fn get_size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.size
     }
 
@@ -63,7 +63,7 @@ where
 
     /// Return a list of all nearby values. This only includes straight moves,
     /// not diagonal.
-    pub fn get_nearby_values(&self, point: &Point3d) -> Vec<T> {
+    pub fn nearby_values(&self, point: &Point3d) -> Vec<T> {
         let mut values = vec![];
 
         let size_signed = self.size as isize;
@@ -86,7 +86,7 @@ where
             if z < 0 || z >= size_signed {
                 continue;
             }
-            values.push(self.get_at(&Point3d {
+            values.push(self.value_at(&Point3d {
                 x: x as usize,
                 y: y as usize,
                 z: z as usize,

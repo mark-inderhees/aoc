@@ -30,7 +30,7 @@ fn can_escape(day: &Day18, point: &Point3d) -> bool {
     let mut stack_max = 0;
 
     // Optimize by only looking at a spot we've been once
-    let size = day.grid.get_size();
+    let size = day.grid.size();
     let mut been_here = Grid3d::new(size, false);
 
     log::trace!("Can {:?} escape?", point);
@@ -40,13 +40,13 @@ fn can_escape(day: &Day18, point: &Point3d) -> bool {
         stack_max = std::cmp::max(stack_max, jobs.len());
         let job_point = jobs.pop().unwrap();
 
-        if been_here.get_at(&job_point) {
+        if been_here.value_at(&job_point) {
             log::trace!("Been at {:?}", job_point);
             continue;
         }
         been_here.set_at(&job_point, true);
 
-        let spot = day.grid.get_at(&job_point);
+        let spot = day.grid.value_at(&job_point);
         match spot {
             ScanType::Lava => {
                 log::trace!("Hit lava at {:?}", job_point);
@@ -122,7 +122,7 @@ impl Puzzle for Day18 {
             max = std::cmp::max(max, y);
             max = std::cmp::max(max, z);
             let point = Point3d { x, y, z };
-            assert_eq!(day.grid.get_at(&point), ScanType::Unknown);
+            assert_eq!(day.grid.value_at(&point), ScanType::Unknown);
             day.grid.set_at(&point, ScanType::Lava);
             count += 1;
         }
@@ -138,17 +138,17 @@ impl Puzzle for Day18 {
         let mut lava = 0;
         // Count the exposed edges of lava
         // Check every lava and count spots around it that are not lava
-        let size = self.grid.get_size();
+        let size = self.grid.size();
         for x in 0..size {
             for y in 0..size {
                 for z in 0..size {
                     let point = Point3d { x, y, z };
-                    if self.grid.get_at(&point) == ScanType::Lava {
+                    if self.grid.value_at(&point) == ScanType::Lava {
                         // This spot is lava
                         lava += 1;
 
                         // See if nearby values are not lava
-                        let values = self.grid.get_nearby_values(&point);
+                        let values = self.grid.nearby_values(&point);
                         for value in values.iter() {
                             if *value != ScanType::Lava {
                                 count += 1;
@@ -178,12 +178,12 @@ impl Puzzle for Day18 {
         log::debug!("Populating types");
         // Find air pockets, these are non lava spots that cannot escape the grid
         // Walk the whole grid and check unknown spots
-        let size = self.grid.get_size();
+        let size = self.grid.size();
         for x in 0..size {
             for y in 0..size {
                 for z in 0..size {
                     let point = Point3d { x, y, z };
-                    if self.grid.get_at(&point) == ScanType::Unknown {
+                    if self.grid.value_at(&point) == ScanType::Unknown {
                         if can_escape(&self, &point) {
                             self.grid.set_at(&point, ScanType::Outside);
                         } else {
@@ -204,12 +204,12 @@ impl Puzzle for Day18 {
             for y in 0..size {
                 for z in 0..size {
                     let point = Point3d { x, y, z };
-                    if self.grid.get_at(&point) == ScanType::Lava {
+                    if self.grid.value_at(&point) == ScanType::Lava {
                         // This is lava
                         lava += 1;
 
                         // Find everything nearby that is "outside" type
-                        let values = self.grid.get_nearby_values(&point);
+                        let values = self.grid.nearby_values(&point);
                         for value in values.iter() {
                             if *value == ScanType::Outside {
                                 count += 1;
