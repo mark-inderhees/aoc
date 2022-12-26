@@ -118,8 +118,9 @@ fn play_game(
     }
 }
 
-fn get_list(s: &String) -> &str {
-    // Dexpect first char to be "["
+/// Given a string, return the slice for the full list: "[..[..]..]"
+fn find_list(s: &String) -> &str {
+    // Expect first char to be "["
     let mut chars = s.chars();
     assert!('[' == chars.next().unwrap());
 
@@ -144,7 +145,7 @@ fn process_line(line: &String, datas: &mut Vec<PacketData>) {
     for (i, c) in line.chars().enumerate() {
         if c == '[' {
             let split = line.split_at(i).1.to_string();
-            let list = get_list(&split);
+            let list = find_list(&split);
             log::trace!("[{depth}] {list} - list start");
             datas.push(PacketData::ListStart);
             depth += 1;

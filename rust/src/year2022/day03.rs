@@ -14,7 +14,7 @@ pub struct Day03 {
 }
 
 /// Get value of a-Z chars
-fn get_char_value(c: &char) -> u32 {
+fn find_char_score(c: &char) -> u32 {
     let value = match c {
         'a'..='z' => (*c as u32) - 96,
         _ => (*c as u32) - 64 + 26, // Uppercase are worth more than lower case
@@ -56,7 +56,7 @@ impl Puzzle for Day03 {
         for (a, b) in self.rucksacks.iter() {
             for c in a.chars() {
                 if char_in_string(&c, b) {
-                    score += get_char_value(&c);
+                    score += find_char_score(&c);
                     break;
                 }
             }
@@ -79,7 +79,7 @@ impl Puzzle for Day03 {
         for (a, b, c) in self.groups.iter() {
             for chr in a.chars() {
                 if char_in_string(&chr, b) && char_in_string(&chr, c){
-                    score += get_char_value(&chr);
+                    score += find_char_score(&chr);
                     break;
                 }
             }

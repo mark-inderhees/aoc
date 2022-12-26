@@ -20,7 +20,7 @@ enum CommandType {
     Ls,
 }
 
-fn get_command_type(line: &str) -> CommandType {
+fn determine_command_type(line: &str) -> CommandType {
     match line {
         "$ cd /" => CommandType::CdRoot,
         "$ cd .." => CommandType::CdBack,
@@ -41,7 +41,7 @@ impl Puzzle for Day07 {
         for line in input.lines() {
             if line.starts_with("$") {
                 // Command
-                match get_command_type(line) {
+                match determine_command_type(line) {
                     CommandType::CdRoot => day.file_system.change_directory_to_root(),
                     CommandType::CdDir(name) => day.file_system.change_directory(&name),
                     CommandType::CdBack => day.file_system.change_directory_parent(),

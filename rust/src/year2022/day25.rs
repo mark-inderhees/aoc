@@ -26,7 +26,7 @@ struct Snafu {
     decimal: i64,
 }
 
-fn get_snafu_value(char: &char) -> i64 {
+fn determine_snafu_value(char: &char) -> i64 {
     match char {
         '2' => 2,
         '1' => 1,
@@ -43,7 +43,7 @@ fn snafu_to_decimal(snafu: &Vec<char>) -> i64 {
     let mut list2 = snafu.clone();
     list2.reverse();
     for char in list2 {
-        let value = get_snafu_value(&char);
+        let value = determine_snafu_value(&char);
         decimal += 5i64.pow(pow) * value;
         pow += 1;
     }
