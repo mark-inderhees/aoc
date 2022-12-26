@@ -102,9 +102,13 @@ where
     }
 
     /// Set the value of the current node.
-    #[allow(dead_code)]
     pub fn set_current_value(&self, value: &T) {
         self.current.upgrade().unwrap().deref().borrow_mut().value = value.clone();
+    }
+
+    /// Se the current pointer as the head pointer
+    pub fn move_to_head(&mut self) {
+        self.current = self.head.clone();
     }
 
     /// Move the current to the next node.
