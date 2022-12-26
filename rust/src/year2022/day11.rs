@@ -143,7 +143,7 @@ impl Puzzle for Day11 {
             let mut lines = monkey.lines();
             _ = lines.next(); // Drop "Monkey 0:"
             let mut m = Monkey {
-                items: get_vals::<u64>(lines.next().unwrap()),
+                items: find_vals::<u64>(lines.next().unwrap()),
                 operation: Operation::Unknown,
                 test: 0,
                 if_true: 0,
@@ -153,8 +153,8 @@ impl Puzzle for Day11 {
             let operation = &lines.next().unwrap()["  Operation: new = old ".len()..];
             m.operation = match operation {
                 x if x.starts_with("* old") => Operation::Square,
-                x if x.starts_with("*") => Operation::Multiply(get_val(x)),
-                x if x.starts_with("+") => Operation::Add(get_val(x)),
+                x if x.starts_with("*") => Operation::Multiply(find_val(x)),
+                x if x.starts_with("+") => Operation::Add(find_val(x)),
                 _ => panic!("Unexpected operation input"),
             };
 

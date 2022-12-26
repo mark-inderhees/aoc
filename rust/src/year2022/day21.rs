@@ -230,7 +230,7 @@ impl Puzzle for Day21 {
             } else if str.contains("/") {
                 monkey.operator = Operator::Divide;
             } else {
-                monkey.value = Some(get_val(&str));
+                monkey.value = Some(find_val(&str));
                 day.monkeys.insert(monkey.id.clone(), monkey);
                 continue;
             }

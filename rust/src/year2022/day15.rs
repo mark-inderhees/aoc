@@ -56,7 +56,7 @@ impl Puzzle for Day15 {
         log::debug!("Part 2 max {}", day.max);
 
         for line in input.lines() {
-            let vals: Vec<i32> = get_vals(line);
+            let vals: Vec<i32> = find_vals(line);
             let sensor = UtilsPoint {
                 x: vals[0],
                 y: vals[1],

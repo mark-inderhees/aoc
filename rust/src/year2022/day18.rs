@@ -114,7 +114,7 @@ impl Puzzle for Day18 {
 
         // Add in the lava to the 3d grid
         for line in input.lines() {
-            let values: Vec<usize> = get_vals(line);
+            let values: Vec<usize> = find_vals(line);
             let x = values[0];
             let y = values[1];
             let z = values[2];

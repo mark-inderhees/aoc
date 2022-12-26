@@ -198,7 +198,7 @@ impl Puzzle for Day22 {
         log::trace!("Turns {commands_turn:?}");
         assert_eq!(commands_move.len() - 1, commands_turn.len()); // One more move than turn
         for (i, m) in commands_move.iter().enumerate() {
-            day.commands.push(Command::Move(get_val(m)));
+            day.commands.push(Command::Move(find_val(m)));
             if i >= commands_turn.len() {
                 break;
             }

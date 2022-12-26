@@ -7,7 +7,7 @@ use anyhow::Result;
 use std::ops::RangeInclusive;
 
 use crate::puzzle::Puzzle;
-use crate::utils::utils::get_vals;
+use crate::utils::utils::*;
 
 pub struct Day04 {
     groups: Vec<(RangeInclusive<u32>, RangeInclusive<u32>)>,
@@ -23,7 +23,7 @@ impl Puzzle for Day04 {
             // Get two ranges from input like
             // 5-7,7-9
             let line2 = line.replace("-", " "); // Remove '-' which could be a negative number
-            let values = get_vals(&line2);
+            let values = find_vals(&line2);
             day.groups.push((values[0]..=values[1], values[2]..=values[3]));
         }
 

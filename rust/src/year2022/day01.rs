@@ -18,7 +18,7 @@ impl Puzzle for Day01 {
 
         // Inputs are simple numbers split by whitespace for each elf
         for elf in input.split("\n\n") {
-            let calories: u32 = elf.lines().map(|calorie| get_val::<u32>(calorie)).sum();
+            let calories: u32 = elf.lines().map(|calorie| find_val::<u32>(calorie)).sum();
             day.elves.push(calories);
         }
 

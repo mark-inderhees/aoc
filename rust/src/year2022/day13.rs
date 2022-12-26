@@ -159,7 +159,7 @@ fn process_line(line: &String, datas: &mut Vec<PacketData>) {
             // get single value
             let split = line.split_at(i).1.to_string().replace("]", "");
             if split.len() > 0 {
-                let value: u32 = get_val(&split);
+                let value: u32 = find_val(&split);
                 datas.push(PacketData::Integer(value));
                 log::trace!("[{depth}] {value}");
             }

@@ -96,7 +96,7 @@ impl Puzzle for Day14 {
             let mut started = false;
             let mut first = BoardPoint { x: 0, y: 0 };
             for point_str in line.split("->") {
-                let values: Vec<i32> = get_vals(point_str);
+                let values: Vec<i32> = find_vals(point_str);
                 let second = BoardPoint {
                     x: values[0],
                     y: values[1],

@@ -13,7 +13,7 @@ pub fn char_in_string(c: &char, s: &String) -> bool {
 }
 
 /// Gets all values in a string.
-pub fn get_vals<T>(s: &str) -> Vec<T>
+pub fn find_vals<T>(s: &str) -> Vec<T>
 where
     T: FromStr,
 {
@@ -38,12 +38,12 @@ where
 }
 
 /// Get a single value, the first value found in the line.
-pub fn get_val<T>(s: &str) -> T
+pub fn find_val<T>(s: &str) -> T
 where
     T: FromStr,
     T: Copy,
 {
-    let values = get_vals(s);
+    let values = find_vals(s);
     values[0]
 }
 

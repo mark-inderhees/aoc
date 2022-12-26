@@ -154,7 +154,7 @@ impl Puzzle for Day16 {
         };
 
         for line in input.lines() {
-            let rate = get_val(line);
+            let rate = find_val(line);
             let line2 = line.replace(",", "");
             let split: Vec<&str> = line2.split(" ").collect();
             let id = split[1].to_string();

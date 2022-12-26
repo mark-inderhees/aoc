@@ -9,7 +9,7 @@ use std::collections::VecDeque;
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-use crate::utils::utils::get_vals;
+use crate::utils::utils::*;
 
 pub struct Day05 {
     stacks: Vec<VecDeque<char>>,
@@ -55,7 +55,7 @@ impl Puzzle for Day05 {
         // Moves look like
         // move 1 from 2 to 1
         for line in moves.lines() {
-            let m = get_vals(line);
+            let m = find_vals(line);
             day.moves.push(Move {
                 count: m[0],
                 source_index: m[1] - 1,

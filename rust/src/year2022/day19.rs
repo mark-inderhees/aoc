@@ -223,15 +223,15 @@ impl Puzzle for Day19 {
             let robots_data = data[1];
             let robots: Vec<&str> = robots_data.split(".").collect();
 
-            let ore_robot_cost_ore: u32 = get_val(robots[0]);
+            let ore_robot_cost_ore: u32 = find_val(robots[0]);
 
-            let clay_robot_cost_ore: u32 = get_val(robots[1]);
+            let clay_robot_cost_ore: u32 = find_val(robots[1]);
 
-            let obsidian_robot_costs: Vec<u32> = get_vals(robots[2]);
+            let obsidian_robot_costs: Vec<u32> = find_vals(robots[2]);
             let obsidian_robot_cost_ore = obsidian_robot_costs[0];
             let obsidian_robot_cost_clay = obsidian_robot_costs[1];
 
-            let geode_robot_costs: Vec<u32> = get_vals(robots[3]);
+            let geode_robot_costs: Vec<u32> = find_vals(robots[3]);
             let geode_robot_cost_ore = geode_robot_costs[0];
             let geode_robot_cost_obsidian = geode_robot_costs[1];
 

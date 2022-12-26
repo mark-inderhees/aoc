@@ -108,7 +108,7 @@ impl Puzzle for Day20 {
 
         let mut values = vec![];
         for (i, line) in input.lines().enumerate() {
-            values.push(get_val(line));
+            values.push(find_val(line));
         }
 
         day.linked_list = LinkedList::new(&values);
