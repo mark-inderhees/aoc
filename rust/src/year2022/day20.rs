@@ -4,12 +4,16 @@
 // Walk a list and do operations to encode/decode data
 
 use anyhow::Result;
+use std::rc::Rc;
 
 use crate::puzzle::Puzzle;
+use crate::utils::linked_list::*;
 use crate::utils::utils::*;
 
+#[derive(Default)]
 pub struct Day20 {
     values: Vec<i64>,
+    linked_list: LinkedList<i64>,
 }
 
 fn decode(values: &Vec<i64>, iterations: usize, magic: i64) -> Vec<i64> {
@@ -58,11 +62,16 @@ impl Puzzle for Day20 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = Day20 { values: vec![] };
+        let mut day = Day20 {
+            values: vec![],
+            ..Default::default()
+        };
 
         for (i, line) in input.lines().enumerate() {
             day.values.push(get_val(line));
         }
+
+        day.linked_list = LinkedList::new(&day.values);
 
         Ok(day)
     }
@@ -70,7 +79,61 @@ impl Puzzle for Day20 {
     fn solve_part1(&mut self) -> Result<String> {
         let decoded = decode(&self.values, 1, 1);
 
-        Ok(get_answer(&decoded).to_string())
+        for i in 0..self.linked_list.values.len() {
+            let current = self.linked_list.values[i].clone();
+            let current_weak = Rc::downgrade(&current);
+
+            let shift_orig = current.borrow().value;
+            let len = self.linked_list.len() as i64 - 1;
+            let mut shift = shift_orig % len;
+            shift = shift + len;
+            shift = shift % len;
+            if shift == 0 {
+                continue;
+            }
+            let mut shift_positive = shift.abs();
+
+            if shift_orig < 0 {
+                // shift_positive -= 1;
+            }
+            if shift_positive == 0 {
+                continue;
+            }
+
+            log::debug!("Moving {shift_orig}");
+
+            self.linked_list.set_current(&current_weak);
+            self.linked_list.pop();
+            for _ in 1..shift_positive {
+                if shift > 0 {
+                    self.linked_list.move_next();
+                } else {
+                    self.linked_list.move_prev();
+                }
+            }
+
+            self.linked_list.insert(&current_weak);
+            self.linked_list.print();
+        }
+
+        loop {
+            if self.linked_list.get_current_value() == 0 {
+                break;
+            }
+            self.linked_list.move_next();
+        }
+
+        let mut answers = vec![];
+        for _ in 0..3 {
+            for _ in 0..1000 % self.linked_list.len() {
+                self.linked_list.move_next();
+            }
+            answers.push(self.linked_list.get_current_value());
+        }
+        log::debug!("{:?}", answers);
+        let answer: i64 = answers.iter().sum();
+
+        Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
