@@ -28,7 +28,6 @@ fn drop_sand(day: &mut Day14) -> u32 {
     // Loop until a sand falls off or grid is full
     loop {
         let id = day.grid.add_player(next_location, 'o');
-        next_location = origin; // Reset origin for next run
 
         // Loop until sand cannot move
         loop {
@@ -62,6 +61,11 @@ fn drop_sand(day: &mut Day14) -> u32 {
             || (location.x == origin.x && location.y == origin.y)
         {
             break;
+        }
+
+        if location == next_location {
+            // Did not move from cached origin, need to go back to real origin
+            next_location = origin;
         }
 
         count += 1;
