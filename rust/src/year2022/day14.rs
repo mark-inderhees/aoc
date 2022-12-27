@@ -21,37 +21,49 @@ fn drop_sand(day: &mut Day14) -> u32 {
         x: 500 - day.offset.x,
         y: 0,
     };
+    let mut next_location = origin;
     let directions = vec![Direction::Down, Direction::DownLeft, Direction::DownRight];
     let mut count = 0;
 
+    // Loop until a sand falls off or grid is full
     loop {
-        let id = day.grid.add_player(origin, 'o');
-        let mut okay;
+        let id = day.grid.add_player(next_location, 'o');
+        next_location = origin; // Reset origin for next run
+
+        // Loop until sand cannot move
         loop {
-            okay = false;
+            let mut sand_moved = false;
             for direction in directions.iter() {
                 if day.grid.step_player(id, *direction).is_some() {
-                    okay = true;
+                    sand_moved = true;
+
+                    if *direction == Direction::Down {
+                        // Cache this as a new origin
+                        next_location = day.grid.player_location(id);
+                        next_location.y -= 1;
+                    }
+
                     break;
                 }
             }
-            if !okay {
-                // Player can no longer move
+
+            if !sand_moved {
+                // Player can no longer move, set grid value so collison detection is faster
                 day.grid.set_at(day.grid.player_location(id), 'o');
                 break;
             }
         }
-        if !okay {
-            // Check if player fell off
-            let location = day.grid.player_location(id);
-            if location.x == 0
-                || location.x == day.grid.width() - 1
-                || location.y == day.grid.height() - 1
-                || (location.x == origin.x && location.y == origin.y)
-            {
-                break;
-            }
+
+        // Check if player fell off or grid is full
+        let location = day.grid.player_location(id);
+        if location.x == 0
+            || location.x == day.grid.width() - 1
+            || location.y == day.grid.height() - 1
+            || (location.x == origin.x && location.y == origin.y)
+        {
+            break;
         }
+
         count += 1;
     }
 
