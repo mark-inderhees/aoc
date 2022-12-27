@@ -18,18 +18,14 @@ pub struct Day23 {
 // There are a whole bunch of specific rules on how the game works.
 // Just need to read the details and follow correctly. No optimizations.
 fn play(day: &mut Day23, rounds: u32) -> u32 {
+    #[derive(Default)]
     struct ElfMove {
         location: BoardPoint,
         elf_id: PlayerId,
         direction: Direction,
     }
-    // Check if elf has no one next to them, then that elf DOES NOTHING
 
-    // Propose one of these thoughts:
-    // Look N, NE, or NW, move N
-    // Look S, SE, or SW, move S
-    // Look W, NW, or SW, move W
-    // Look E, NE, or SE, move E
+    // Move proposal choices with rotating priority
     let mut proposals = VecDeque::from(vec![
         vec![Direction::Up, Direction::UpRight, Direction::UpLeft],
         vec![Direction::Down, Direction::DownRight, Direction::DownLeft],
@@ -43,10 +39,7 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
         Direction::Right,
     ]);
 
-    // If no conflict, then move. If conflict, then neither moves!
-    // Then rotate the order of the proposed preferences
-    // Repeate 10x (for part 1)
-
+    // Lookup for how steps work
     let step_offsets = HashMap::from([
         (Direction::Up, BoardPoint { x: 0, y: -1 }),
         (Direction::Down, BoardPoint { x: 0, y: 1 }),
@@ -71,10 +64,12 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
 
         // Propose one of the thoughts, if the thought is good then add the thought to the list
         // If no thoughts are good, then do nothing
-        let mut elf_proposals = vec![];
+        // Save to hashmap to detect collisions
+        let mut elf_proposals: HashMap<BoardPoint, Vec<ElfMove>> = HashMap::new();
         for elf_id in elves {
             let elf_location = day.board.player_location(elf_id);
             for (i, proposal) in proposals.iter().enumerate() {
+                // Check if proposal is good
                 let mut good = true;
                 for direction in proposal {
                     let offset = step_offsets[direction];
@@ -96,38 +91,40 @@ fn play(day: &mut Day23, rounds: u32) -> u32 {
                         x: elf_location.x + good_offset.x,
                         y: elf_location.y + good_offset.y,
                     };
-                    elf_proposals.push(ElfMove {
+                    let good_move = ElfMove {
                         location: good_location,
                         elf_id,
                         direction: good_direction,
-                    });
+                    };
+                    if elf_proposals.contains_key(&good_location) {
+                        // Conflict! None of these elves are going to move, so just use dummy data.
+                        let dummy_move = ElfMove {
+                            ..Default::default()
+                        };
+                        elf_proposals.insert(good_location, vec![good_move, dummy_move]);
+                    } else {
+                        elf_proposals.insert(good_location, vec![good_move]);
+                    }
                     log::debug!("Elf {} proposes moving {:?}", elf_id, good_direction);
                     break;
                 }
             }
         }
 
-        // Filter out duplicate moves, use a hash map to find collisions
-        let mut elf_move_map: HashMap<BoardPoint, PlayerId> = HashMap::new();
-        let mut moves_to_skip = vec![];
-        for proposal in &elf_proposals {
-            if elf_move_map.contains_key(&proposal.location) {
-                moves_to_skip.push(proposal.location);
-            }
-            elf_move_map.insert(proposal.location, proposal.elf_id);
-        }
-        let moves_to_do: Vec<&ElfMove> = elf_proposals
-            .iter()
-            .filter(|v| !moves_to_skip.contains(&v.location))
-            .collect();
-
         // If no conflict, then move. If conflict, then neither moves!
-        for work in &moves_to_do {
+        let mut elves_moved = false;
+        for (_, proposal_list) in elf_proposals.iter() {
+            if proposal_list.len() > 1 {
+                // Multiple elves want to move, let neither
+                continue;
+            }
+            elves_moved = true;
+            let work = &proposal_list[0];
             day.board.set_player_location(work.elf_id, work.location);
             log::debug!("Elf {} moved {:?}", work.elf_id, work.direction);
         }
 
-        if moves_to_do.len() == 0 {
+        if !elves_moved {
             log::debug!("All done on round {round}");
             return round + 1;
         }
