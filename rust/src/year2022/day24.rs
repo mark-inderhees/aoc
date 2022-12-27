@@ -1,15 +1,12 @@
 // 2022 Day 24
 // https://adventofcode.com/2022/day/24
 // --- Day 24: Blizzard Basin ---
-// There's a blizzard! Used a game board with a depth first search.
+// There's a blizzard! Used a game board and find shortest path.
 // Instead of using moves, need to place all blizzard pieces based on time.
-// Used my own grid to keep history, if we had been at a spot with LCM of time,
-// then bail early.
+// Instead of a search, just track all possible locations based on time.
 
 use anyhow::Result;
-use grid::*;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 use std::vec;
 
 use crate::puzzle::Puzzle;
@@ -51,107 +48,55 @@ fn set_blizzards_location(day: &mut Day24, time: i32) {
     }
 }
 
-/// Look for the best path through the blizzard. Uses depth first search.
-/// Some aggressive tree pruning based on magic best known time from previous runs.
-/// Also prune based on LCM of width+height. If we've been at a spot for the LCM,
-/// then we've already been at that spot in the map for that given state before
-/// and therefore it's a repeat so bail out.
-fn search(day: &mut Day24, time: i32, start: BoardPoint, end: BoardPoint) -> i32 {
-    struct Work {
-        time: i32,
-        location: BoardPoint,
-    }
+/// Look for the best path through the blizzard. Iterate through each time
+/// instance and track all possible locations for that time instance. Until end
+/// is found.
+fn search(day: &mut Day24, time_input: i32, start: BoardPoint, end: BoardPoint) -> i32 {
+    let mut time = time_input;
+    let mut previous_locations = vec![start];
 
-    // Add first job
-    let mut jobs = VecDeque::new();
-    jobs.push_back(Work {
-        time,
-        location: start,
-    });
-    let mut lowest_time = 750; // kinda magic :)
-
-    // Track where we have been in the grid. If this state is a repeat based on
-    // LCM, then bail.
-    let mut lowest_grid: Grid<Vec<i32>> = grid![];
-    let row = vec![vec![]; day.grid.width() as usize];
-    for _ in 0..day.grid.height() {
-        lowest_grid.push_row(row.clone());
-    }
-    let mut lcm = day.width;
-    loop {
-        if lcm % day.height == 0 {
-            break;
-        }
-        lcm += day.width;
-    }
-    log::info!("LCM is {lcm}");
-
-    // Start doing work
-    while jobs.len() > 0 {
-        let job = jobs.pop_front().unwrap();
-
-        // Bail if this is a bad path
-        if job.time >= lowest_time {
-            continue;
-        }
-
-        // Check if we are done
-        if job.location == end {
-            log::info!("Found end in {} steps from", job.time);
-            lowest_time = job.time;
-            continue;
-        }
-
-        // Bail if we have already been here at this state before
-        let counts = &mut lowest_grid[job.location.y as usize][job.location.x as usize];
-        let my_time = job.time % lcm;
-        if counts.contains(&my_time) {
-            continue;
-        }
-        counts.push(my_time);
-
+    // Keep looping until end is found
+    while !previous_locations.contains(&end) {
         // Move the blizzards
-        set_blizzards_location(day, job.time);
+        set_blizzards_location(day, time);
 
-        // Set our location
-        day.grid.set_player_location(0, job.location);
+        // Based on all previous locations, find all possible new locations
+        let mut new_locations = vec![];
+        for location in previous_locations.iter() {
+            // Set our location
+            day.grid.set_player_location(0, *location);
 
-        // Figure out where we can move and do it
-        for direction in Direction::straight_iterator() {
-            if day.grid.can_step_player(0, direction) {
-                // Schedule this work
-                jobs.push_back(Work {
-                    time: job.time + 1,
-                    location: day.grid.new_location_from_direction(&job.location, direction),
-                });
-                log::trace!(
-                    "Moving {:?} from {:?} at {}",
-                    direction,
-                    job.location,
-                    job.time
-                );
+            // Figure out where we can move and add it to the list
+            for direction in Direction::straight_iterator() {
+                if day.grid.can_step_player(0, direction) {
+                    new_locations.push(day.grid.new_location_from_direction(location, direction));
+                }
             }
+
+            // We could also do nothing if no blizzard here
+            let mut wait = true;
+            for blizzard_id in 1..day.grid.players_len() {
+                let blizzard_location = day.grid.player_location(blizzard_id);
+                if blizzard_location == *location {
+                    wait = false;
+                    break;
+                }
+            }
+            if wait {
+                new_locations.push(*location);
+            }
+
+            // Remove duplicates
+            new_locations.sort();
+            new_locations.dedup();
         }
 
-        // We could also do nothing if no blizzard here
-        let mut wait = true;
-        for blizzard_id in 1..day.grid.players_len() {
-            let blizzard_location = day.grid.player_location(blizzard_id);
-            if blizzard_location == job.location {
-                wait = false;
-                break;
-            }
-        }
-        if wait {
-            jobs.push_back(Work {
-                time: job.time + 1,
-                location: job.location,
-            });
-            log::trace!("Waiting at {:?} at {}", job.location, job.time);
-        }
+        log::debug!("Round {time} done");
+        previous_locations = new_locations;
+        time += 1;
     }
 
-    lowest_time - 1
+    time - 1
 }
 
 impl Puzzle for Day24 {
