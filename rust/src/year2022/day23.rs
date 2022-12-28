@@ -157,11 +157,10 @@ impl Puzzle for Day23 {
 
         let test = width < 20;
 
-        // Add some extra rows. This is not actually needed as we do not step players
-        // But is useful for printing the debug game board to screen
+        // Add some extra rows as players spread out
         let num_extra = match test {
             true => 15,
-            false => 50,
+            false => 100,
         };
         let full_line = vec!['.'; num_extra * 2 + width];
         for _ in 0..num_extra {

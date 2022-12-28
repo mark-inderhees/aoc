@@ -127,7 +127,8 @@ where
         // Push in empty state for this row
         let empty = vec![
             State {
-                step_count: u32::MAX
+                step_count: u32::MAX,
+                players_here: HashMap::new(),
             };
             len
         ];
@@ -146,7 +147,8 @@ where
         // Push in empty state for this row
         let empty = vec![
             State {
-                step_count: u32::MAX
+                step_count: u32::MAX,
+                players_here: HashMap::new(),
             };
             len
         ];
@@ -156,13 +158,20 @@ where
     /// Add in a new player to the board.
     pub fn add_player(&mut self, point: BoardPoint, id: T) -> PlayerId {
         assert!(point.x < self.width() && point.y < self.height());
+        let player_id = self.players.len();
         self.players.push(Player {
             point,
             id,
-            player_id: self.players.len(),
+            player_id,
             visible: true,
         });
-        self.players.len() - 1
+
+        // Update state
+        let x_: usize = point.x as usize;
+        let y_: usize = point.y as usize;
+        self.grid_state[y_][x_].players_here.insert(player_id, true);
+
+        player_id
     }
 
     /// Turn a specific board value into players.
@@ -202,6 +211,13 @@ where
         self.players_are_walls = true;
     }
 
+    /// Get the grid state at this location.
+    fn state(&self, location: BoardPoint) -> State {
+        let x_: usize = location.x as usize;
+        let y_: usize = location.y as usize;
+        self.grid_state[y_][x_].clone()
+    }
+
     /// Wrap around mode will move to the other end of the col or row when this
     /// type is encountered.
     pub fn add_wraparound(&mut self, wraparound: T) {
@@ -216,21 +232,16 @@ where
 
     /// Is there a player at this location?
     pub fn is_player_here(&self, location: BoardPoint) -> bool {
-        for player in &self.players {
-            if player.point == location {
-                return true;
-            }
-        }
-
-        false
+        let state = self.state(location);
+        state.players_here.len() > 0
     }
 
     /// Return the first player found at this location.
     pub fn which_player_is_here(&self, location: BoardPoint) -> Option<PlayerId> {
-        for player in &self.players {
-            if player.point == location {
-                return Some(player.player_id);
-            }
+        let state = self.state(location);
+        if state.players_here.len() > 0 {
+            let player_id = state.players_here.keys().collect::<Vec<&PlayerId>>()[0];
+            return Some(*player_id);
         }
 
         None
@@ -273,6 +284,17 @@ where
 
     /// Set the location for a player.
     pub fn set_player_location(&mut self, player: PlayerId, point: BoardPoint) {
+        // Update grid state
+        let old_point = self.players[player].point;
+        let old_x: usize = old_point.x as usize;
+        let old_y: usize = old_point.y as usize;
+        self.grid_state[old_y][old_x].players_here.remove(&player);
+        let new_x: usize = point.x as usize;
+        let new_y: usize = point.y as usize;
+        self.grid_state[new_y][new_x]
+            .players_here
+            .insert(player, true);
+
         self.players[player].point = point;
     }
 
@@ -346,6 +368,17 @@ where
         new_location
     }
 
+    fn is_valid_location(&self, location: &BoardPoint) -> bool {
+        if location.x < 0
+            || location.y < 0
+            || location.x >= self.width()
+            || location.y >= self.height()
+        {
+            return false;
+        }
+        true
+    }
+
     /// Move a player one step in a direction. Or check if it's possible to do the move.
     /// If possible, returns the grid value at the new location. If requested, player is actually moved.
     /// If not possible, returns None. Happens when walls are hit or moving off grid.
@@ -358,21 +391,14 @@ where
         let start_location = self.players[player].point;
         let mut new_location = self.new_location_from_direction(&start_location, direction);
 
-        let x_max = self.width();
-        let y_max = self.height();
-
         // Check for moving off grid case
-        if new_location.x == -1
-            || new_location.y == -1
-            || new_location.x == x_max
-            || new_location.y == y_max
-        {
+        if !self.is_valid_location(&new_location) {
             if self.wraparound_mode {
                 // Wrap around to other side
                 match direction {
-                    Direction::Up => new_location.y = y_max - 1,
+                    Direction::Up => new_location.y = self.height() - 1,
                     Direction::Down => new_location.y = 0,
-                    Direction::Left => new_location.x = x_max - 1,
+                    Direction::Left => new_location.x = self.width() - 1,
                     Direction::Right => new_location.x = 0,
                     _ => panic!("Unsupported wrap around direction"),
                 }
@@ -399,12 +425,7 @@ where
 
         if do_step {
             // Actually move the player
-            self.players[player] = Player {
-                point: new_location,
-                id: self.players[player].id,
-                player_id: self.players[player].player_id,
-                visible: self.players[player].visible,
-            };
+            self.set_player_location(player, new_location);
         }
 
         Some(value)
@@ -453,13 +474,20 @@ where
 
     /// Is any player nearby this player? Diagonals are searched.
     pub fn is_any_player_nearby(&mut self, player: PlayerId) -> bool {
-        for player2 in &self.players {
-            if player2.player_id == player {
-                continue;
+        let my_location = self.players[player].point;
+        for direction in Direction::iter() {
+            let test_location = self.new_location_from_direction(&my_location, direction);
+            if self.is_valid_location(&test_location) {
+                if self.is_player_here(test_location) {
+                    return true;
+                }
             }
-            if self.is_nearby(player, player2.player_id) {
-                return true;
-            }
+        }
+
+        // Also test this location
+        let state = self.state(my_location);
+        if state.players_here.len() > 1 {
+            return true;
         }
 
         false
@@ -684,14 +712,19 @@ where
     /// How the player looks when the board is printed
     id: T,
 
+    #[allow(dead_code)]
     player_id: PlayerId,
+
     visible: bool,
 }
 
 /// Internal only.
 /// State about this current square in the gird
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct State {
     /// Most optimized step count so far at this square
     step_count: u32,
+
+    /// Which players are in this square, hashmap used for each remove, value is nothing
+    players_here: HashMap<PlayerId, bool>,
 }
