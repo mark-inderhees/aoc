@@ -54,13 +54,14 @@ fn turn_me(current_direction: Direction, how_to_turn: Command) -> Direction {
 // Move through the 2d board. When you get to an edge, you zap back to the other side.
 fn navigate(day: &mut Day22) -> Direction {
     let mut direction = Direction::Right;
+    let player_id = 0; // Only one player
 
     for command in &day.commands {
         match command {
             Command::Move(distance) => {
                 log::debug!("Move {distance}");
                 for _ in 0..*distance {
-                    if day.board.step(direction).is_none() {
+                    if day.board.step_player(player_id, direction).is_none() {
                         break;
                     }
                 }

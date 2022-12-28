@@ -54,7 +54,7 @@ fn move_it(day: &mut Day09, player_count: usize) -> u32 {
         log::debug!("== {direction:#?} {step_count} ==");
         // Run the direction command the requested number of times
         for _ in 0..*step_count {
-            day.board.step(*direction);
+            day.board.step_player(0, *direction); // Step first player
 
             // Move the tail players to follow the previous player based on that players location
             for player in 1..player_count {

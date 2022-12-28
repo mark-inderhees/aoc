@@ -271,12 +271,6 @@ where
         value
     }
 
-    /// Set the location for player 0.
-    pub fn set_location(&mut self, point: BoardPoint) {
-        let player = 0;
-        self.set_player_location(player, point);
-    }
-
     /// Set the location for a player.
     pub fn set_player_location(&mut self, player: PlayerId, point: BoardPoint) {
         self.players[player].point = point;
@@ -285,12 +279,6 @@ where
     /// Get the location of a player.
     pub fn player_location(&self, player: PlayerId) -> BoardPoint {
         self.players[player].point
-    }
-
-    /// Get the grid value where player 0 is.
-    pub fn current_value(&self) -> T {
-        let player = 0;
-        self.player_value(player)
     }
 
     /// Get the grid value where this player is.
@@ -307,12 +295,6 @@ where
             min_player_y = std::cmp::min(min_player_y, player.point.y);
         }
         min_player_y
-    }
-
-    /// Step player 0 in this direction.
-    pub fn step(&mut self, direction: Direction) -> Option<T> {
-        let player = 0;
-        self.step_player(player, direction)
     }
 
     /// Step a player in this direction.

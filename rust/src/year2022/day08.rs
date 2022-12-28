@@ -43,18 +43,20 @@ impl Puzzle for Day08 {
 
         // Can see all of the trees at the edge
         let mut visible_trees = self.board.width() * 2 + self.board.height() * 2 - 4;
+        let player_id = 0; // Only one player
 
         // Walk all other trees in the grid, check if we can reach outside. If so, increment count.
         for y in 1..(self.board.height() - 1) {
             for x in 1..(self.board.width() - 1) {
                 // Move in each direction
                 for direction in Direction::straight_iterator() {
-                    self.board.set_location(BoardPoint { x, y });
-                    let tree_height = self.board.current_value().clone();
+                    self.board
+                        .set_player_location(player_id, BoardPoint { x, y });
+                    let tree_height = self.board.player_value(player_id).clone();
 
                     // Get all tree heights in this direction
                     let mut tree_heights = vec![];
-                    while let Some(tree_height2) = self.board.step(direction) {
+                    while let Some(tree_height2) = self.board.step_player(player_id, direction) {
                         tree_heights.push(tree_height2.clone());
                     }
                     let tree_height_max = tree_heights.iter().max().unwrap().clone();
@@ -87,6 +89,7 @@ impl Puzzle for Day08 {
 
     fn solve_part2(&mut self) -> Result<String> {
         // Find how many trees we can see from within the forest
+        let player_id = 0; // Only one player
 
         // Search all non edge trees
         for y in 1..(self.board.height() - 1) {
@@ -94,13 +97,13 @@ impl Puzzle for Day08 {
                 let mut count_trees = vec![];
                 // Walk each direction
                 for direction in Direction::straight_iterator() {
-
                     count_trees.push(0);
-                    self.board.set_location(BoardPoint { x, y });
-                    let tree_height = self.board.current_value().clone();
+                    self.board
+                        .set_player_location(player_id, BoardPoint { x, y });
+                    let tree_height = self.board.player_value(player_id).clone();
 
                     // Keep walking while this tree is shorter than our tree
-                    while let Some(tree_height2) = self.board.step(direction) {
+                    while let Some(tree_height2) = self.board.step_player(player_id, direction) {
                         let s = count_trees.pop().unwrap().clone();
                         count_trees.push(s + 1);
                         if tree_height2 >= tree_height {
