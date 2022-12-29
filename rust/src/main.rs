@@ -2,11 +2,13 @@ use anyhow::{bail, Result};
 use clap::Parser;
 use puzzle::Puzzle;
 use regex::Regex;
+use std::collections::VecDeque;
 use std::fs;
 use std::time::Instant;
 
 mod puzzle;
 mod utils;
+mod year2015;
 mod year2022;
 
 /// Runner for Advent of Code
@@ -16,7 +18,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 25, // __BOOTSTRAP_DAY__
+        default_value_t = 1, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -29,7 +31,7 @@ struct Args {
     part: u32,
 
     /// Which year to run for
-    #[arg(long, short, default_value_t = 2022)]
+    #[arg(long, short, default_value_t = 2015)]
     year: u32,
 
     /// Run test data instead of input
@@ -116,9 +118,19 @@ fn bootstrap(day: u32, year: u32) -> Result<()> {
 
     // Change DayXX to a real number like Day01
     let day_rs = &dest[0];
-    let contents = fs::read_to_string(day_rs)?;
-    let new_contents = contents.replace("DayXX", &format!("Day{day:02}"));
-    fs::write(day_rs, new_contents)?;
+    let mut contents = fs::read_to_string(day_rs)?;
+    contents = contents.replace("DayXX", &format!("Day{day:02}"));
+
+    // Fix header in dayXX.rs
+    let url = format!("// https://adventofcode.com/{year}/day/{day}");
+    let header = format!("// {year} Day {day}");
+    let mut lines: VecDeque<&str> = contents.lines().collect();
+    lines.pop_front();
+    lines.pop_front();
+    lines.push_front(&url);
+    lines.push_front(&header);
+    let lines: Vec<&str> = lines.into();
+    fs::write(day_rs, lines.join("\n"))?;
 
     // Reset values in main.rs
     let main_rs = "src/main.rs";
@@ -194,7 +206,7 @@ fn main() -> Result<()> {
         let year = run.1;
         let part = run.2;
         let test = run.3;
-        println!("Running day={} part={} test={} ...", day, part, test);
+        println!("Running {year} day={day} part={part} test={test} ...");
         let input_type = match test {
             true => "test",
             false => "input",
@@ -202,6 +214,14 @@ fn main() -> Result<()> {
         let input = format!("input/{year}/day{day:02}.{input_type}");
 
         match year {
+            2015 => match day {
+                1 => run_day::<year2015::day01::Day01>(part, input, test)?,
+                // __BOOTSTRAP_RUN__
+                _ => {
+                    println!("Day {} not found, goodbye!", day);
+                    break;
+                }
+            },
             2022 => match day {
                 1 => run_day::<year2022::day01::Day01>(part, input, test)?,
                 2 => run_day::<year2022::day02::Day02>(part, input, test)?,
@@ -228,7 +248,6 @@ fn main() -> Result<()> {
                 23 => run_day::<year2022::day23::Day23>(part, input, test)?,
                 24 => run_day::<year2022::day24::Day24>(part, input, test)?,
                 25 => run_day::<year2022::day25::Day25>(part, input, test)?,
-                // __BOOTSTRAP_RUN__
                 _ => {
                     println!("Day {} not found, goodbye!", day);
                     break;

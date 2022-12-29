@@ -1,5 +1,5 @@
-// 20XX Day X
-// https://adventofcode.com/20XX/day/X
+// 2015 Day 1
+// https://adventofcode.com/2015/day/1
 
 use anyhow::Result;
 
@@ -11,13 +11,13 @@ use crate::utils::utils::*;
 #[allow(unused_imports)]
 use std::collections::VecDeque;
 
-pub struct DayXX {}
+pub struct Day01 {}
 
-impl Puzzle for DayXX {
+impl Puzzle for Day01 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = DayXX {};
+        let mut day = Day01 {};
 
         Ok(day)
     }
