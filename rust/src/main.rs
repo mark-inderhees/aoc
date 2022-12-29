@@ -52,6 +52,10 @@ struct Args {
     #[arg(long, short)]
     comprehensive: bool,
 
+    /// Validate all parts and input for all days and years
+    #[arg(long, short)]
+    exhaustive: bool,
+
     /// Bootstrap a new day
     #[arg(long, short, value_name = "DAY")]
     bootstrap: Option<u32>,
@@ -173,7 +177,7 @@ fn main() -> Result<()> {
         None => (),
     };
 
-    let years = vec![args.year];
+    let mut years = vec![args.year];
     let mut days = vec![args.day];
     let mut parts = vec![args.part];
     let mut tests = vec![args.test];
@@ -184,6 +188,11 @@ fn main() -> Result<()> {
         days = (1..=25).collect();
         parts = (1..=2).collect();
         tests = vec![true, false];
+    } else if args.exhaustive {
+        days = (1..=25).collect();
+        parts = (1..=2).collect();
+        tests = vec![true, false];
+        years = vec![2015, 2022];
     }
 
     let mut runs = vec![];
@@ -201,11 +210,17 @@ fn main() -> Result<()> {
 
     println!("\n"); // Empty line
     let start = Instant::now();
+    let mut year_filter = vec![];
     for run in runs {
         let day = run.0;
         let year = run.1;
         let part = run.2;
         let test = run.3;
+
+        if year_filter.contains(&year){
+            continue;
+        }
+
         println!("Running {year} day={day} part={part} test={test} ...");
         let input_type = match test {
             true => "test",
@@ -218,8 +233,8 @@ fn main() -> Result<()> {
                 1 => run_day::<year2015::day01::Day01>(part, input, test)?,
                 // __BOOTSTRAP_RUN__
                 _ => {
-                    println!("Day {} not found, goodbye!", day);
-                    break;
+                    println!("Day {} not found, goodbye!\n", day);
+                    year_filter.push(year);
                 }
             },
             2022 => match day {
@@ -249,14 +264,14 @@ fn main() -> Result<()> {
                 24 => run_day::<year2022::day24::Day24>(part, input, test)?,
                 25 => run_day::<year2022::day25::Day25>(part, input, test)?,
                 _ => {
-                    println!("Day {} not found, goodbye!", day);
-                    break;
+                    println!("Day {} not found, goodbye!\n", day);
+                    year_filter.push(year);
                 }
             },
             _ => bail!("Year {} not found", year),
         }
     }
-    if args.validate || args.comprehensive {
+    if args.validate || args.comprehensive || args.exhaustive {
         println!(
             "Full run took {:.3} seconds",
             start.elapsed().as_millis() as f64 / 1000f64
