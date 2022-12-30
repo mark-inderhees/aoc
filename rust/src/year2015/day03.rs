@@ -1,6 +1,7 @@
 // 2015 Day 3
 // https://adventofcode.com/2015/day/3
 // --- Day 3: Perfectly Spherical Houses in a Vacuum ---
+// Count how many houses santa visits from wacky instructions
 
 use anyhow::Result;
 use std::collections::HashMap;
@@ -20,6 +21,18 @@ pub struct Day03 {
     locations: HashMap<BoardPoint, u32>,
 }
 
+fn visit_a_house(day: &mut Day03, player_id: PlayerId, direction: Direction) {
+    let _ = day.board.step_player(player_id, direction).unwrap();
+
+    let location = day.board.player_location(player_id);
+    let count = day.locations.get(&location);
+    let count = match count {
+        Some(x) => *x,
+        None => 0,
+    };
+    day.locations.insert(location, count + 1);
+}
+
 impl Puzzle for Day03 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -30,6 +43,7 @@ impl Puzzle for Day03 {
             locations: HashMap::new(),
         };
 
+        // Santa moves on a grid, up down left or right
         let line = input.trim();
         for char in line.chars() {
             let direction = match char {
@@ -42,6 +56,7 @@ impl Puzzle for Day03 {
             day.commands.push(direction);
         }
 
+        // Grid needs to be really big
         let width = 1000;
         let height = 1000;
         let row = vec![0; width];
@@ -53,6 +68,7 @@ impl Puzzle for Day03 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // How many unique houses does santa visit?
         let player_id = self.board.add_player(
             BoardPoint {
                 x: (self.board.width() / 2) as i32,
@@ -61,18 +77,11 @@ impl Puzzle for Day03 {
             0,
         );
 
+        // Use a hash map to track unique houses
         self.locations
             .insert(self.board.player_location(player_id), 1);
-        for direction in self.commands.iter() {
-            let _ = self.board.step_player(player_id, *direction).unwrap();
-
-            let location = self.board.player_location(player_id);
-            let count = self.locations.get(&location);
-            let count = match count {
-                Some(x) => *x,
-                None => 0,
-            };
-            self.locations.insert(location, count + 1);
+        for direction in self.commands.clone().iter() {
+            visit_a_house(self, player_id, *direction);
         }
         let houses = self.locations.len();
         Ok(houses.to_string())
@@ -81,11 +90,13 @@ impl Puzzle for Day03 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(4.to_string()),
-            false => None,
+            false => Some(2572.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // How many unique houses do santa and robot santa visit?
+        // They start at the same spot and alternate commands
         let santa = self.board.add_player(
             BoardPoint {
                 x: (self.board.width() / 2) as i32,
@@ -101,29 +112,15 @@ impl Puzzle for Day03 {
             0,
         );
 
+        // Both give a present at the start
         self.locations.insert(self.board.player_location(santa), 2);
-        for direction in self.commands.iter().step_by(2) {
-            let _ = self.board.step_player(santa, *direction).unwrap();
 
-            let location = self.board.player_location(santa);
-            let count = self.locations.get(&location);
-            let count = match count {
-                Some(x) => *x,
-                None => 0,
-            };
-            self.locations.insert(location, count + 1);
+        for direction in self.commands.clone().iter().step_by(2) {
+            visit_a_house(self, santa, *direction);
         }
 
-        for direction in self.commands.iter().skip(1).step_by(2) {
-            let _ = self.board.step_player(robot, *direction).unwrap();
-
-            let location = self.board.player_location(robot);
-            let count = self.locations.get(&location);
-            let count = match count {
-                Some(x) => *x,
-                None => 0,
-            };
-            self.locations.insert(location, count + 1);
+        for direction in self.commands.clone().iter().skip(1).step_by(2) {
+            visit_a_house(self, robot, *direction);
         }
 
         let houses = self.locations.len();
@@ -133,7 +130,7 @@ impl Puzzle for Day03 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(3.to_string()),
-            false => None,
+            false => Some(2631.to_string()),
         }
     }
 }
