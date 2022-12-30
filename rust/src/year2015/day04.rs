@@ -51,13 +51,24 @@ impl Puzzle for Day04 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut answer = 0;
+        loop {
+            let md5_input = format!("{}{}", self.input, answer);
+            let digest = md5::compute(md5_input);
+            let hash = format!("{:x}", digest);
+            log::debug!("hash {hash}");
+            if hash.starts_with("000000") {
+                break;
+            }
+            answer +=1;
+        }
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(5714438.to_string()),
+            false => Some(1038736.to_string()),
         }
     }
 }
