@@ -21,9 +21,12 @@ pub struct Day03 {
     locations: HashMap<BoardPoint, u32>,
 }
 
+/// Santa (or robot santa) visit a house. Grid and location state are updated.
 fn visit_a_house(day: &mut Day03, player_id: PlayerId, direction: Direction) {
+    // Move santa, ensure the move actually happened with unwrap
     let _ = day.board.step_player(player_id, direction).unwrap();
 
+    // Update location state, incrementing how many presents have been sent to this house
     let location = day.board.player_location(player_id);
     let count = day.locations.get(&location);
     let count = match count {
