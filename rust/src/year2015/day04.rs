@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use md5;
+use std::io::Write;
 
 use crate::puzzle::Puzzle;
 
@@ -34,11 +35,10 @@ impl Puzzle for Day04 {
             let md5_input = format!("{}{}", self.input, answer);
             let digest = md5::compute(md5_input);
             let hash = format!("{:x}", digest);
-            log::debug!("hash {hash}");
             if hash.starts_with("00000") {
                 break;
             }
-            answer +=1;
+            answer += 1;
         }
         Ok(answer.to_string())
     }
@@ -51,18 +51,32 @@ impl Puzzle for Day04 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let mut answer = 0;
+        // Find what number needs to be appended to input to give hash starting with six zeros
+        let mut number = 0;
+
+        // Allocation hash input once
+        let mut hash_input = Vec::new();
+
+        // Only write question input into hash once
+        write!(hash_input, "{}", self.input)?;
+        let len = hash_input.len();
+
+        // Brute force, increment number and keep trying
         loop {
-            let md5_input = format!("{}{}", self.input, answer);
-            let digest = md5::compute(md5_input);
-            let hash = format!("{:x}", digest);
-            log::debug!("hash {hash}");
-            if hash.starts_with("000000") {
+            // Append number to hash input
+            write!(hash_input, "{}", number)?;
+
+            // Comput hash and check for 6 zeros
+            let digest = md5::compute(hash_input.clone());
+            if digest.0[0] == 0 && digest.0[1] == 0 && digest.0[2] == 0 {
                 break;
             }
-            answer +=1;
+
+            // Try again, drop the number we appended and increment
+            hash_input.truncate(len);
+            number += 1;
         }
-        Ok(answer.to_string())
+        Ok(number.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
