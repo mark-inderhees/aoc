@@ -58,6 +58,46 @@ fn is_string_nice(string: &str) -> bool {
     true
 }
 
+fn is_string_nice_part2(string: &str) -> bool {
+    // Contains double pairs, like xy in xyxy, but no overlap like aaa
+    let mut has_double_pair = false;
+    for (i, char) in string.chars().enumerate() {
+        if i < string.chars().count() - 2 {
+            let char2 = string.chars().nth(i + 1).unwrap();
+            let substring = string.split_at(i + 2).1;
+            let pair = format!("{char}{char2}");
+            if substring.contains(&pair) {
+                log::info!("{string} has double pair {pair}, second half {substring}");
+                has_double_pair = true;
+                break;
+            }
+        }
+    }
+    if !has_double_pair {
+        log::debug!("{string} does not have a double pair");
+        return false;
+    }
+
+    // Hash repeat with one letter between, like efe in abcdefeghi
+    let mut has_repeat = false;
+    for (i, char) in string.chars().enumerate() {
+        if i < string.chars().count() - 2 {
+            if char == string.chars().nth(i + 2).unwrap() {
+                log::info!("{string} has repeat {char}");
+                has_repeat = true;
+                break;
+            }
+        }
+    }
+    if !has_repeat {
+        log::debug!("{string} does not have a repeat letter");
+        return false;
+    }
+
+    log::info!("{string} is nice");
+    true
+}
+
 impl Puzzle for Day05 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -84,17 +124,23 @@ impl Puzzle for Day05 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(2.to_string()),
-            false => None,
+            false => Some(255.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut nice_count = 0;
+        for string in &self.strings {
+            if is_string_nice_part2(string) {
+                nice_count += 1;
+            }
+        }
+        Ok(nice_count.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(2.to_string()),
             false => None,
         }
     }
