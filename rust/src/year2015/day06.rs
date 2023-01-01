@@ -16,6 +16,7 @@ use std::collections::VecDeque;
 pub struct Day06 {
     instructions: Vec<Instruction>,
     grid: HashMap<UtilsPoint, bool>,
+    grid_brightness: HashMap<UtilsPoint, u32>,
 }
 
 enum Command {
@@ -37,6 +38,7 @@ impl Puzzle for Day06 {
         let mut day = Day06 {
             instructions: vec![],
             grid: HashMap::new(),
+            grid_brightness: HashMap::new(),
         };
 
         for line in input.lines() {
@@ -77,6 +79,14 @@ impl Puzzle for Day06 {
                         Command::TurnOn => true,
                     };
                     day.grid.insert(point, new_value);
+
+                    let current_brightness = day.grid_brightness.get(&point).unwrap_or(&0);
+                    let new_brightness = match instruction.command {
+                        Command::Toggle => current_brightness + 2,
+                        Command::TurnOff => current_brightness.checked_sub(1).unwrap_or(0),
+                        Command::TurnOn => current_brightness + 1,
+                    };
+                    day.grid_brightness.insert(point, new_brightness);
                 }
             }
         }
@@ -101,18 +111,26 @@ impl Puzzle for Day06 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some((1_000_000 - 1000 - 4).to_string()),
-            false => None,
+            false => Some(400410.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut brightness = 0;
+        for x in 0..1000 {
+            for y in 0..1000 {
+                let point = UtilsPoint { x, y };
+                let current_value = self.grid_brightness.get(&point).unwrap_or(&0);
+                brightness += current_value;
+            }
+        }
+        Ok(brightness.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some((1_000_000 + 2000 - 4).to_string()),
+            false => Some(15343601.to_string()),
         }
     }
 }
