@@ -1,6 +1,7 @@
 // 2015 Day 5
 // https://adventofcode.com/2015/day/5
 // --- Day 5: Doesn't He Have Intern-Elves For This? ---
+// Parse strings for funny requirements like double letters
 
 use anyhow::Result;
 
@@ -16,6 +17,7 @@ pub struct Day05 {
     strings: Vec<String>,
 }
 
+/// Is a string naughty or nice for part 1
 fn is_string_nice(string: &str) -> bool {
     // Needs at least 3 vowels (aeiou)
     let mut vowel_count = 0;
@@ -58,14 +60,18 @@ fn is_string_nice(string: &str) -> bool {
     true
 }
 
+/// Is a string naughty or nice for part 2
 fn is_string_nice_part2(string: &str) -> bool {
     // Contains double pairs, like xy in xyxy, but no overlap like aaa
     let mut has_double_pair = false;
     for (i, char) in string.chars().enumerate() {
         if i < string.chars().count() - 2 {
+            // Build double pair
             let char2 = string.chars().nth(i + 1).unwrap();
-            let substring = string.split_at(i + 2).1;
             let pair = format!("{char}{char2}");
+
+            // Search rest of string
+            let substring = string.split_at(i + 2).1;
             if substring.contains(&pair) {
                 log::info!("{string} has double pair {pair}, second half {substring}");
                 has_double_pair = true;
@@ -82,6 +88,7 @@ fn is_string_nice_part2(string: &str) -> bool {
     let mut has_repeat = false;
     for (i, char) in string.chars().enumerate() {
         if i < string.chars().count() - 2 {
+            // Skip one letter, compare if same
             if char == string.chars().nth(i + 2).unwrap() {
                 log::info!("{string} has repeat {char}");
                 has_repeat = true;
@@ -141,7 +148,7 @@ impl Puzzle for Day05 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(2.to_string()),
-            false => None,
+            false => Some(55.to_string()),
         }
     }
 }
