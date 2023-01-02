@@ -7,12 +7,6 @@ use anyhow::Result;
 
 use crate::puzzle::Puzzle;
 
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
-
 enum Elevator {
     Up,
     Down,

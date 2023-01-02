@@ -7,14 +7,9 @@
 // subtract 1 or 2 to get the intended target.
 
 use anyhow::Result;
+use std::collections::VecDeque;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day25 {
     snafus: Vec<Snafu>,

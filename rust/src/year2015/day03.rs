@@ -9,12 +9,6 @@ use std::collections::HashMap;
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
 
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
-
 pub struct Day03 {
     commands: Vec<Direction>,
     board: Board<u32>,
