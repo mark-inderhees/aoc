@@ -4,15 +4,10 @@
 // For a list of chained bitwise operations, walk the chain and do the work
 
 use anyhow::Result;
+use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 #[derive(Clone)]
 pub struct Day07 {
@@ -40,7 +35,9 @@ struct Operation {
     rhs: String,
 }
 
+/// Solve for value a. Walk all needed operands to fined chained results.
 fn solve(day: &mut Day07) -> u16 {
+    // Start with the target
     let mut jobs = vec!["a".to_string()];
 
     while jobs.len() > 0 {
@@ -48,9 +45,11 @@ fn solve(day: &mut Day07) -> u16 {
         let mut operation = day.operations[&job].clone();
 
         if let Some(_) = operation.result {
-            // Do nothing
+            // Result is already known, do nothing
         } else {
-            // Need to find the value
+            // Need to find the value for this target
+
+            // Get the operands if known
             let lhs_value = if operation.lhs == "" {
                 None
             } else {
@@ -63,6 +62,7 @@ fn solve(day: &mut Day07) -> u16 {
                 day.operations[&operation.rhs].result
             };
 
+            // Compute the result if we have needed operands
             match operation.operator {
                 Operators::SetValue(x) => {
                     operation.result = Some(x);
@@ -106,6 +106,7 @@ fn solve(day: &mut Day07) -> u16 {
                 }
             }
 
+            // Either finalize this job or schedule more work to determine the missing operands
             if operation.result.is_none() {
                 // Need to schedule more work
                 jobs.push(job); // Reschedule this job so it runs after operands
@@ -122,6 +123,7 @@ fn solve(day: &mut Day07) -> u16 {
         }
     }
 
+    // Return value of a
     return day.operations["a"].result.unwrap();
 }
 
@@ -134,6 +136,7 @@ impl Puzzle for Day07 {
         };
 
         for line in input.lines() {
+            // Determine the operator
             let operator = if line.contains("AND") {
                 Operators::And
             } else if line.contains("OR") {
@@ -154,6 +157,7 @@ impl Puzzle for Day07 {
                 }
             };
 
+            // Determine the name and operands based on the operator
             let splits: Vec<&str> = line.split(" ").collect();
             let name = splits.last().unwrap().to_string();
             let mut lhs = "".to_string();
@@ -184,6 +188,7 @@ impl Puzzle for Day07 {
                 }
             }
 
+            // Add this operation to the map
             day.operations.insert(
                 name.clone(),
                 Operation {
@@ -195,9 +200,11 @@ impl Puzzle for Day07 {
                 },
             );
 
-            // If lhs or rhs were absolute values, insert dummy entries with results
+            // The lhs operand could be an absolute value, if so then insert a
+            // dummy entries with a known result to make things work.
             let test_lhs: Vec<u16> = find_vals(&lhs);
             if test_lhs.len() > 0 {
+                // lhs is a literal value and not a variable name
                 day.operations.insert(
                     lhs.clone(),
                     Operation {
@@ -215,6 +222,7 @@ impl Puzzle for Day07 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find value of a
         let answer = solve(self);
         Ok(answer.to_string())
     }
@@ -227,8 +235,11 @@ impl Puzzle for Day07 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find value of a
         let mut self_clone = self.clone();
         let b_value = solve(&mut self_clone);
+
+        // Now set value of b to be the value of a and rerun all logic
         let mut b = self.operations["b"].clone();
         b.result = Some(b_value);
         self.operations.insert("b".to_string(), b);
