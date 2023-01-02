@@ -40,7 +40,7 @@ struct Args {
         short,
         value_name = "BOOL",
         action = clap::ArgAction::Set,
-        default_value_t = true, // __BOOTSTRAP_TEST__
+        default_value_t = false, // __BOOTSTRAP_TEST__
     )]
     test: bool,
 
