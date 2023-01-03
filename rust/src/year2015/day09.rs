@@ -4,15 +4,10 @@
 // Find best (and worst!) paths given distances between cities.
 
 use anyhow::Result;
+use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day09 {
     locations: HashMap<String, HashMap<String, u32>>,
