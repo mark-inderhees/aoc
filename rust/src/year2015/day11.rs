@@ -1,16 +1,11 @@
 // 2015 Day 11
 // https://adventofcode.com/2015/day/11
 // --- Day 11: Corporate Policy ---
+// Find a new password while following silly rules
 
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day11 {
     current_password: String,
@@ -41,11 +36,12 @@ fn increment_password(current_password: &str) -> String {
     output
 }
 
+/// Find next password to use based on current password
+/// Keep incrementing like ay -> az -> ba until valid password found
+/// Must have one three char straight like "bcd"
+/// Cannont contain i, o, or l
+/// Must contain two unique pairs, like aa and jj
 fn find_next_password(current_password: &str) -> String {
-    // Keep incrementing like ay -> az -> ba until valid password found
-    // Must have one three char straight like "bcd"
-    // Cannont contain i, o, or l
-    // Must contain two unique pairs, like aa and jj
     let mut password = current_password.to_string();
 
     loop {
@@ -123,6 +119,7 @@ impl Puzzle for Day11 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find next password
         let answer = find_next_password(&self.current_password);
         Ok(answer)
     }
@@ -135,6 +132,7 @@ impl Puzzle for Day11 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find second next password
         let mut answer = find_next_password(&self.current_password);
         answer = find_next_password(&answer);
         Ok(answer)
