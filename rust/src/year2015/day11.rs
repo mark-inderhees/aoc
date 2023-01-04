@@ -12,34 +12,27 @@ pub struct Day11 {
 }
 
 /// Incrementing like ay -> az -> ba until valid password found
-fn increment_password(current_password: &str) -> String {
-    let mut ascii: Vec<u8> = current_password.chars().map(|char| char as u8).collect();
-    let mut i = ascii.len() - 1;
-    let max = 'z' as u8;
-    let min = 'a' as u8;
-
+fn increment_password(password: &mut Vec<char>) {
     // Increment with roll over
+    let mut i = password.len() - 1;
     loop {
-        let mut value = ascii[i] + 1;
+        let mut value = password[i] as u8 + 1;
 
         // Also skip i, o, or l as those are bad passwords
         if value == 'i' as u8 || value == 'o' as u8 || value == 'l' as u8 {
             value += 1;
         }
 
-        if value <= max {
-            ascii[i] = value;
+        if value <= 'z' as u8 {
+            // No roll over, done with increment
+            password[i] = value as char;
             break;
         }
 
-        // Keep going so next char is incremented
-        ascii[i] = min;
+        // Roll over detected, keep going so next char is incremented
+        password[i] = 'a';
         i -= 1;
     }
-
-    let output: String = ascii.iter().map(|value| *value as char).collect();
-    log::debug!("Increment {current_password} to {output}");
-    output
 }
 
 /// Find next password to use based on current password
@@ -48,11 +41,10 @@ fn increment_password(current_password: &str) -> String {
 /// Cannont contain i, o, or l
 /// Must contain two unique pairs, like aa and jj
 fn find_next_password(current_password: &str) -> String {
-    let mut password = current_password.to_string();
+    let mut chars: Vec<char> = current_password.chars().collect();
 
     loop {
-        password = increment_password(&password);
-        let chars: Vec<char> = password.chars().collect();
+        increment_password(&mut chars);
 
         // Must have one three char straight like "bcd"
         let mut has_straight = false;
@@ -61,13 +53,11 @@ fn find_next_password(current_password: &str) -> String {
             let char2 = chars[i + 1] as u8;
             let char3 = chars[i + 2] as u8;
             if char1 == char2 - 1 && char1 == char3 - 2 {
-                log::trace!("{password} has straight {}", char1 as char);
                 has_straight = true;
                 break;
             }
         }
         if !has_straight {
-            log::debug!("{password} has no straigt");
             continue;
         }
 
@@ -89,15 +79,12 @@ fn find_next_password(current_password: &str) -> String {
 
                 // Check if this is second pair
                 if pair_count == 2 {
-                    log::debug!("{password} contains double pairs {first_pair} and {char}");
                     break;
                 }
-                log::debug!("{password} found first pair {char}");
                 first_pair = char;
             }
         }
         if pair_count != 2 {
-            log::debug!("{password} has no double pair");
             continue;
         }
 
@@ -105,7 +92,7 @@ fn find_next_password(current_password: &str) -> String {
         break;
     }
 
-    password
+    chars.iter().collect()
 }
 
 impl Puzzle for Day11 {
