@@ -21,30 +21,44 @@ pub struct Day10 {
 // https://en.wikipedia.org/wiki/Look-and-say_sequence
 fn look_and_say(input: &str) -> String {
     log::debug!("Look and say for {input}");
+
+    // As this is brute force, make sure there are no allocations in the loop
     let chars: Vec<char> = input.chars().collect();
     let len = chars.len();
     let mut output = String::with_capacity(len * 2); // Give size so no reallocs
     let mut i = 0;
+    let mut count;
+    let mut char;
+    let mut count_char;
     while i < len {
-        let char = chars[i];
+        char = chars[i];
 
         // Count how many of this char there are
-        let mut count = 1;
-        let mut j = i + 1;
-        while j < len {
-            let next_char = chars[j];
-            if next_char != char {
+        count = 1;
+        while i + 1 < len {
+            if char != chars[i + 1] {
                 break;
             }
+
             // Found a matching char, increment counts
             count += 1;
-            j += 1;
             i += 1;
         }
 
-        // Done with this look and say section, build the output string
+        // Done with this look and say section
         log::debug!("There are {count} of {char}");
-        output.push_str(&count.to_string());
+
+        // Instead of using expensive i32.to_string(), use this optimized "to char"
+        // For look and say game, count will never be greater than 3
+        count_char = match count {
+            1 => '1',
+            2 => '2',
+            3 => '3',
+            _ => panic!("Unexpected count"),
+        };
+
+        // Build the output string and move to next char
+        output.push(count_char);
         output.push(char);
         i += 1;
     }
