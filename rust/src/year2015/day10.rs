@@ -1,6 +1,7 @@
 // 2015 Day 10
 // https://adventofcode.com/2015/day/10
 // --- Day 10: Elves Look, Elves Say ---
+// Brute force look and say game
 
 use anyhow::Result;
 
@@ -16,12 +17,14 @@ pub struct Day10 {
     input: String,
 }
 
+// For a given input, play one round of look and say and give output
+// https://en.wikipedia.org/wiki/Look-and-say_sequence
 fn look_and_say(input: &str) -> String {
     log::debug!("Look and say for {input}");
-    let len = input.chars().count();
-    let mut output = String::with_capacity(len * 2);
-    let mut i = 0;
     let chars: Vec<char> = input.chars().collect();
+    let len = chars.len();
+    let mut output = String::with_capacity(len * 2); // Give size so no reallocs
+    let mut i = 0;
     while i < len {
         let char = chars[i];
 
@@ -33,11 +36,13 @@ fn look_and_say(input: &str) -> String {
             if next_char != char {
                 break;
             }
+            // Found a matching char, increment counts
             count += 1;
             j += 1;
             i += 1;
         }
 
+        // Done with this look and say section, build the output string
         log::debug!("There are {count} of {char}");
         output.push_str(&count.to_string());
         output.push(char);
@@ -60,6 +65,7 @@ impl Puzzle for Day10 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Run it 40 times
         let mut input = self.input.clone();
         for i in 0..40 {
             input = look_and_say(&input);
@@ -77,6 +83,7 @@ impl Puzzle for Day10 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Run it 50 times
         let mut input = self.input.clone();
         for i in 0..50 {
             input = look_and_say(&input);
