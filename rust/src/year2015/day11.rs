@@ -20,7 +20,13 @@ fn increment_password(current_password: &str) -> String {
 
     // Increment with roll over
     loop {
-        let value = ascii[i] + 1;
+        let mut value = ascii[i] + 1;
+
+        // Also skip i, o, or l as those are bad passwords
+        if value == 'i' as u8 || value == 'o' as u8 || value == 'l' as u8 {
+            value += 1;
+        }
+
         if value <= max {
             ascii[i] = value;
             break;
@@ -65,12 +71,6 @@ fn find_next_password(current_password: &str) -> String {
             continue;
         }
 
-        // Cannont contain i, o, or l
-        if chars.contains(&'i') || chars.contains(&'o') || chars.contains(&'l') {
-            log::debug!("{password} contains i, o, or l");
-            continue;
-        }
-
         // Must contain two unique pairs, like aa and jj
         let mut pair_count = 0;
         let mut first_pair = ' ';
@@ -101,6 +101,7 @@ fn find_next_password(current_password: &str) -> String {
             continue;
         }
 
+        // We got passed all checks, end the loop
         break;
     }
 
