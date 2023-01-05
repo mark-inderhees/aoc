@@ -1,27 +1,28 @@
 // 2015 Day 13
 // https://adventofcode.com/2015/day/13
+// --- Day 13: Knights of the Dinner Table ---
+// Walk all permuatations for scores around a dinner table
 
 use anyhow::Result;
+use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
 
-use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::collections::VecDeque;
-
 pub struct Day13 {
+    /// Map of people scores when sitting next to other people
     people: HashMap<String, HashMap<String, i32>>,
 }
 
+/// Try all permuations of seating and return the best overall score
 fn find_best_seating(day: &Day13) -> i32 {
     struct Work {
         person: String,
         seated: Vec<String>,
         score: i32,
     }
+
+    // Start with Alice
     let first_person = "Alice".to_string();
     let mut jobs = vec![Work {
         person: first_person.clone(),
@@ -35,6 +36,7 @@ fn find_best_seating(day: &Day13) -> i32 {
 
         let mut started_work = false;
         for person in day.people.keys() {
+            // Tryout seating this person next to anyone who is not yet seated
             if job.seated.contains(person) {
                 continue;
             }
@@ -58,7 +60,7 @@ fn find_best_seating(day: &Day13) -> i32 {
                 + day.people[&job.person][&first_person]
                 + day.people[&first_person][&job.person];
 
-            // Save score
+            // Save score if a new best score
             high_score = std::cmp::max(high_score, score);
         }
     }
@@ -94,6 +96,7 @@ impl Puzzle for Day13 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find best seating arrangement
         let answer = find_best_seating(self);
         Ok(answer.to_string())
     }
@@ -106,7 +109,7 @@ impl Puzzle for Day13 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        // Add me to the party, with score 0
+        // Add me to the party, with score 0, and find the best arrangement
         let me = "MrMark".to_string();
         let persons: Vec<String> = self.people.keys().map(|p| p.clone()).collect();
         let my_entry = self.people.entry(me.clone()).or_default();
@@ -116,6 +119,7 @@ impl Puzzle for Day13 {
         for (_, entry) in self.people.iter_mut() {
             entry.insert(me.clone(), 0);
         }
+
         let answer = find_best_seating(self);
         Ok(answer.to_string())
     }
