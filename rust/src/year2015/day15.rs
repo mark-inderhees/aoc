@@ -18,6 +18,7 @@ pub struct Day15 {
 
 #[derive(Debug)]
 struct Ingredient {
+    #[allow(dead_code)]
     name: String,
     capacity: i32,
     durability: i32,
@@ -26,18 +27,7 @@ struct Ingredient {
     calories: i32,
 }
 
-fn mix(max: i32, depth: u32, values: Vec<i32>) {
-    let new_depth = depth - 1;
-    for x in 0..=max {
-        let mut new_values = values.clone();
-        new_values.push(x);
-        if new_depth > 0 {
-            mix(max - x, new_depth, new_values);
-        }
-    }
-}
-
-fn find_best_score(day: &Day15) -> i32 {
+fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
     let ingredient_count = day.ingredients.len();
     struct Work {
         values: Vec<i32>,
@@ -48,29 +38,50 @@ fn find_best_score(day: &Day15) -> i32 {
         jobs.push(Work { values: vec![x] });
     }
 
+    let mut max = 0;
+
     while jobs.len() > 0 {
         let job = jobs.pop().unwrap();
 
         if job.values.len() == ingredient_count {
             // Get the score
+            let mut capacity = 0;
+            let mut durability = 0;
+            let mut flavor = 0;
+            let mut texture = 0;
+            let mut calories = 0;
+            for (i, ingredient) in day.ingredients.iter().enumerate() {
+                let scaller = job.values[i];
+                capacity += ingredient.capacity * scaller;
+                durability += ingredient.durability * scaller;
+                flavor += ingredient.flavor * scaller;
+                texture += ingredient.texture * scaller;
+                calories += ingredient.calories * scaller;
+            }
+            if capacity <= 0 || durability <= 0 || flavor <= 0 || texture <= 0 {
+                continue;
+            }
+            if must_be_500_cal && calories != 500 {
+                continue;
+            }
+            let score = capacity * durability * flavor * texture;
+            if score > max {
+                log::debug!("New best score {:?} -> {score} [{capacity}, {durability}, {flavor}, {texture}]", job.values);
+            }
+            max = std::cmp::max(max, score);
             continue;
         }
 
         // Start new jobs
-    }
-
-    for a in 0..=100 {
-        for b in 0..=100 - a {
-            for c in 0..=100 - a - b {
-                let d = 100 - a - b - c;
-                if d > 0 {
-                    // This is a recipe
-                }
-            }
+        let sum: i32 = job.values.iter().sum();
+        for x in 0..=100 - sum {
+            let mut values = job.values.clone();
+            values.push(x);
+            jobs.push(Work { values });
         }
     }
 
-    0 // TODO
+    max
 }
 
 impl Puzzle for Day15 {
@@ -88,10 +99,10 @@ impl Puzzle for Day15 {
             day.ingredients.push(Ingredient {
                 name,
                 capacity: vals[0],
-                durability: vals[0],
-                flavor: vals[0],
-                texture: vals[0],
-                calories: vals[0],
+                durability: vals[1],
+                flavor: vals[2],
+                texture: vals[3],
+                calories: vals[4],
             })
         }
 
@@ -101,24 +112,26 @@ impl Puzzle for Day15 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_best_score(self, false);
+        Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(62842880.to_string()),
-            false => None,
+            false => Some(13882464.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_best_score(self, true);
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(57600000.to_string()),
+            false => Some(11171160.to_string()),
         }
     }
 }
