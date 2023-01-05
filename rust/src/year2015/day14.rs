@@ -1,15 +1,12 @@
 // 2015 Day 14
 // https://adventofcode.com/2015/day/14
+// --- Day 14: Reindeer Olympics ---
+// Calculate results from raindeer races
 
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day14 {
     raindeers: Vec<Raindeer>,
@@ -24,11 +21,18 @@ struct Raindeer {
     rest: u32,
 }
 
-/// Calculate how for a raindeer has flown after a given time
+/// Calculate how far a raindeer has flown after a given time.
+/// Rainder move in sprints, going at a certain speed for a max duartion.
+/// Then a raindeer needs to rest a certain time before it can move again.
 fn distance_after_time(raindeer: &Raindeer, time: u32) -> u32 {
+    // Get number of full intervalls this raindeer moved
     let full_time_interval = raindeer.duration + raindeer.rest;
     let full_intervals = time / full_time_interval;
+
+    // Get how far this rainder is into a partial interval
     let partial_time = std::cmp::min(time % full_time_interval, raindeer.duration);
+
+    // Calculate full distance
     let distance =
         full_intervals * raindeer.speed * raindeer.duration + raindeer.speed * partial_time;
     distance
@@ -64,6 +68,7 @@ impl Puzzle for Day14 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find the winner after a race of 2503 seconds, how far has the furthest raindeer gone?
         let mut max = 0;
         for raindeer in self.raindeers.iter() {
             max = std::cmp::max(max, distance_after_time(raindeer, 2503));
@@ -79,25 +84,43 @@ impl Puzzle for Day14 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find the winner, this time use a point system.
+        // After each second, find the raindeer in first place. Give them one point.
+        // Ties result in all raindeer getting one point.
+        // For the winner, how many points do they have?
+
+        // Keep a list of how many points each raindeer has
         let mut points = vec![0; self.raindeers.len()];
+
+        // Run one round for every second in the race
         for time in 1..=2503 {
+            // Find the maximum distance for this round and which raindeer that is
             let mut max = 0;
-            let mut max_i = vec![];
+            let mut max_i = vec![]; // There could be a tie in first, so use a list
+
+            // Test how far each raindeer has gone
             for (i, raindeer) in self.raindeers.iter().enumerate() {
                 let distance = distance_after_time(raindeer, time);
+
+                // Is this raindeer in first?
                 if distance == max {
+                    // It's a tie
                     max_i.push(i);
                 } else if distance > max {
+                    // This raindeer is winning
                     max_i.clear();
                     max_i.push(i);
                     max = distance;
                 }
             }
 
+            // For each raindeer in first, give them one point
             for i in max_i {
                 points[i] += 1;
             }
         }
+
+        // Find the best final score of all raindeer.
         let best = points.iter().max().unwrap();
         Ok(best.to_string())
     }
