@@ -16,17 +16,17 @@ pub struct Day13 {
 
 /// Try all permuations of seating and return the best overall score
 fn find_best_seating(day: &Day13) -> i32 {
-    struct Work {
-        person: String,
-        seated: Vec<String>,
+    struct Work<'a> {
+        person: &'a String,
+        seated: Vec<&'a String>,
         score: i32,
     }
 
     // Start with Alice
     let first_person = "Alice".to_string();
     let mut jobs = vec![Work {
-        person: first_person.clone(),
-        seated: vec![first_person.clone()],
+        person: &first_person,
+        seated: vec![&first_person],
         score: 0,
     }];
     let mut high_score = i32::MIN;
@@ -37,17 +37,16 @@ fn find_best_seating(day: &Day13) -> i32 {
         let mut started_work = false;
         for person in day.people.keys() {
             // Tryout seating this person next to anyone who is not yet seated
-            if job.seated.contains(person) {
+            if job.seated.contains(&person) {
                 continue;
             }
 
             // Seat these two together, modify score
-            let score =
-                job.score + day.people[&job.person][person] + day.people[person][&job.person];
+            let score = job.score + day.people[job.person][person] + day.people[person][job.person];
             let mut seated = job.seated.clone();
-            seated.push(person.clone());
+            seated.push(person);
             jobs.push(Work {
-                person: person.clone(),
+                person,
                 seated,
                 score,
             });
@@ -57,8 +56,8 @@ fn find_best_seating(day: &Day13) -> i32 {
         if !started_work {
             // All done, need to get score for last person seated next to first person
             let score = job.score
-                + day.people[&job.person][&first_person]
-                + day.people[&first_person][&job.person];
+                + day.people[job.person][&first_person]
+                + day.people[&first_person][job.person];
 
             // Save score if a new best score
             high_score = std::cmp::max(high_score, score);
