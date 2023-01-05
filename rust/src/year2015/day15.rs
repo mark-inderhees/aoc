@@ -1,6 +1,7 @@
 // 2015 Day 15
 // https://adventofcode.com/2015/day/15
 // --- Day 15: Science for Hungry People ---
+// For different ingredients, find the best score for different ingredient proportions
 
 use anyhow::Result;
 
@@ -27,6 +28,7 @@ struct Ingredient {
     calories: i32,
 }
 
+/// Mix ingredients and find best score
 fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
     let ingredient_count = day.ingredients.len();
     struct Work {
@@ -93,6 +95,8 @@ impl Puzzle for Day15 {
         };
 
         for line in input.lines() {
+            // Input looks like
+            // Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
             let splits: Vec<&str> = line.split(" ").collect();
             let name = splits[0].to_string();
             let vals: Vec<i32> = find_vals(line);
@@ -112,6 +116,7 @@ impl Puzzle for Day15 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find best combination of ingredients
         let answer = find_best_score(self, false);
         Ok(answer.to_string())
     }
@@ -124,6 +129,7 @@ impl Puzzle for Day15 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find best combination of ingredients where calories is exactly 500
         let answer = find_best_score(self, true);
         Ok(answer.to_string())
     }
