@@ -4,7 +4,6 @@
 // Find combinations that sum up to a specific capacity
 
 use anyhow::Result;
-use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
 use crate::utils::utils::*;
@@ -32,7 +31,8 @@ fn find_combinations(day: &Day17) -> (u32, u32) {
         available: day.containers.clone(),
     }];
 
-    let mut good = HashMap::new();
+    // Store list of good combinations
+    let mut good = vec![];
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
@@ -40,20 +40,21 @@ fn find_combinations(day: &Day17) -> (u32, u32) {
         if sum == day.target {
             // This is a good one
             log::debug!("Found good combo {:?} = {sum}", job.used);
-            good.insert(job.used, true);
+            good.push(job.used);
             continue;
         } else if sum > day.target {
             // This is no good
             continue;
         }
 
+        // Try new combinations
         while job.available.len() > 0 {
             let value = job.available.pop().unwrap();
             let mut new_job = Work {
                 used: job.used.clone(),
                 available: job.available.clone(),
             };
-            new_job.used.push(value.clone());
+            new_job.used.push(value);
             jobs.push(new_job);
         }
     }
@@ -64,10 +65,10 @@ fn find_combinations(day: &Day17) -> (u32, u32) {
     // Count of combinations that have fewest containers
     let mut count2 = 0;
     let mut min = usize::MAX;
-    for answer in good.keys() {
+    for answer in good.iter() {
         min = std::cmp::min(min, answer.len());
     }
-    for answer in good.keys() {
+    for answer in good.iter() {
         if answer.len() == min {
             count2 += 1;
         }
@@ -94,13 +95,13 @@ impl Puzzle for Day17 {
 
         day.target = if day.containers.len() > 10 { 150 } else { 25 };
 
-        day.containers.sort();
         log::debug!("{:#?}", day.containers);
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find number of good combinations
         let answer = find_combinations(self).0;
         Ok(answer.to_string())
     }
@@ -113,6 +114,7 @@ impl Puzzle for Day17 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find number of good combinations that use fewest containers
         let answer = find_combinations(self).1;
         Ok(answer.to_string())
     }
@@ -120,7 +122,7 @@ impl Puzzle for Day17 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(3.to_string()),
-            false => None,
+            false => Some(4.to_string()),
         }
     }
 }
