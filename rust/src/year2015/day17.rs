@@ -1,16 +1,13 @@
 // 2015 Day 17
 // https://adventofcode.com/2015/day/17
+// --- Day 17: No Such Thing as Too Much ---
+// Find combinations that sum up to a specific capacity
 
 use anyhow::Result;
+use std::collections::HashMap;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day17 {
     containers: Vec<Container>,
@@ -23,6 +20,7 @@ struct Container {
     capacity: u32,
 }
 
+/// Find how many combinations sum to the capacity. Also return how many use the fewest containers.
 fn find_combinations(day: &Day17) -> (u32, u32) {
     // Find all combinations that add up to target
     struct Work {
@@ -34,7 +32,6 @@ fn find_combinations(day: &Day17) -> (u32, u32) {
         available: day.containers.clone(),
     }];
 
-    let mut count = 0;
     let mut good = HashMap::new();
 
     while jobs.len() > 0 {
@@ -42,15 +39,7 @@ fn find_combinations(day: &Day17) -> (u32, u32) {
         let sum: u32 = job.used.iter().fold(0, |a, c| a + c.capacity);
         if sum == day.target {
             // This is a good one
-            job.used.sort();
             log::debug!("Found good combo {:?} = {sum}", job.used);
-            count += 1;
-            let capacities: Vec<String> = job
-                .used
-                .iter()
-                .map(|c| format!("{}:{}", c.id, c.capacity))
-                .collect();
-            log::info!("Found good {} vs {}, {:?}", count, good.len(), capacities);
             good.insert(job.used, true);
             continue;
         } else if sum > day.target {
@@ -69,14 +58,15 @@ fn find_combinations(day: &Day17) -> (u32, u32) {
         }
     }
 
-    // count
+    // Count of valid combinations
     let count = good.len() as u32;
 
+    // Count of combinations that have fewest containers
+    let mut count2 = 0;
     let mut min = usize::MAX;
     for answer in good.keys() {
         min = std::cmp::min(min, answer.len());
     }
-    let mut count2 = 0;
     for answer in good.keys() {
         if answer.len() == min {
             count2 += 1;
@@ -104,6 +94,7 @@ impl Puzzle for Day17 {
 
         day.target = if day.containers.len() > 10 { 150 } else { 25 };
 
+        day.containers.sort();
         log::debug!("{:#?}", day.containers);
 
         Ok(day)
