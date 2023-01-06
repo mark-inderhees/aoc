@@ -23,7 +23,7 @@ struct Container {
     capacity: u32,
 }
 
-fn find_combinations(day: &Day17) -> u32 {
+fn find_combinations(day: &Day17) -> (u32, u32) {
     // Find all combinations that add up to target
     struct Work {
         used: Vec<Container>,
@@ -35,7 +35,7 @@ fn find_combinations(day: &Day17) -> u32 {
     }];
 
     let mut count = 0;
-    // let mut good = HashMap::new();
+    let mut good = HashMap::new();
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
@@ -45,13 +45,13 @@ fn find_combinations(day: &Day17) -> u32 {
             job.used.sort();
             log::debug!("Found good combo {:?} = {sum}", job.used);
             count += 1;
-            // let capacities: Vec<String> = job
-            //     .used
-            //     .iter()
-            //     .map(|c| format!("{}:{}", c.id, c.capacity))
-            //     .collect();
-            // log::info!("Found good {} vs {}, {:?}", count, good.len(), capacities);
-            // good.insert(job.used, true);
+            let capacities: Vec<String> = job
+                .used
+                .iter()
+                .map(|c| format!("{}:{}", c.id, c.capacity))
+                .collect();
+            log::info!("Found good {} vs {}, {:?}", count, good.len(), capacities);
+            good.insert(job.used, true);
             continue;
         } else if sum > day.target {
             // This is no good
@@ -69,8 +69,21 @@ fn find_combinations(day: &Day17) -> u32 {
         }
     }
 
-    count
-    // good.len() as u32
+    // count
+    let count = good.len() as u32;
+
+    let mut min = usize::MAX;
+    for answer in good.keys() {
+        min = std::cmp::min(min, answer.len());
+    }
+    let mut count2 = 0;
+    for answer in good.keys() {
+        if answer.len() == min {
+            count2 += 1;
+        }
+    }
+
+    (count, count2)
 }
 
 impl Puzzle for Day17 {
@@ -97,24 +110,25 @@ impl Puzzle for Day17 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = find_combinations(self);
+        let answer = find_combinations(self).0;
         Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(4.to_string()),
-            false => None,
+            false => Some(4372.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_combinations(self).1;
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(3.to_string()),
             false => None,
         }
     }
