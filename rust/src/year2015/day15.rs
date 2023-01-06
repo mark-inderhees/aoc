@@ -17,7 +17,7 @@ pub struct Day15 {
     ingredients: Vec<Ingredient>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Ingredient {
     #[allow(dead_code)]
     name: String,
@@ -32,30 +32,46 @@ struct Ingredient {
 fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
     let mut max = 0;
 
-    let mut values = vec![-1; 4];
+    let mut ingredients = day.ingredients.clone();
+    if ingredients.len() < 4 {
+        // Add two dummy ingredients for test case
+        let dummy = Ingredient {
+            name: "Dummy".to_string(),
+            capacity: 0,
+            durability: 0,
+            flavor: 0,
+            texture: 0,
+            calories: 0,
+        };
+        ingredients.push(dummy.clone());
+        ingredients.push(dummy.clone());
+    }
+
     for a in 0..=100 {
         for b in 0..=100 - a {
             for c in 0..=100 - a - b {
                 for d in 0..=100 - a - b - c {
-                    values[0] = a;
-                    values[1] = b;
-                    values[2] = c;
-                    values[3] = d;
-
                     // Get the score
-                    let mut capacity = 0;
-                    let mut durability = 0;
-                    let mut flavor = 0;
-                    let mut texture = 0;
-                    let mut calories = 0;
-                    for (i, ingredient) in day.ingredients.iter().enumerate() {
-                        let scaller = values[i];
-                        capacity += ingredient.capacity * scaller;
-                        durability += ingredient.durability * scaller;
-                        flavor += ingredient.flavor * scaller;
-                        texture += ingredient.texture * scaller;
-                        calories += ingredient.calories * scaller;
-                    }
+                    let capacity = a * ingredients[0].capacity
+                        + b * ingredients[1].capacity
+                        + c * ingredients[2].capacity
+                        + d * ingredients[3].capacity;
+                    let durability = a * ingredients[0].durability
+                        + b * ingredients[1].durability
+                        + c * ingredients[2].durability
+                        + d * ingredients[3].durability;
+                    let flavor = a * ingredients[0].flavor
+                        + b * ingredients[1].flavor
+                        + c * ingredients[2].flavor
+                        + d * ingredients[3].flavor;
+                    let texture = a * ingredients[0].texture
+                        + b * ingredients[1].texture
+                        + c * ingredients[2].texture
+                        + d * ingredients[3].texture;
+                    let calories = a * ingredients[0].calories
+                        + b * ingredients[1].calories
+                        + c * ingredients[2].calories
+                        + d * ingredients[3].calories;
                     if capacity <= 0 || durability <= 0 || flavor <= 0 || texture <= 0 {
                         continue;
                     }
