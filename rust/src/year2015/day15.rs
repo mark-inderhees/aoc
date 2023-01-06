@@ -34,7 +34,7 @@ fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
 
     let mut ingredients = day.ingredients.clone();
     if ingredients.len() < 4 {
-        // Add two dummy ingredients for test case
+        // Add two dummy ingredients for test case so len is always 4
         let dummy = Ingredient {
             name: "Dummy".to_string(),
             capacity: 0,
@@ -47,6 +47,7 @@ fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
         ingredients.push(dummy.clone());
     }
 
+    // Just do nested loops. It's super fast.
     for a in 0..=100 {
         for b in 0..=100 - a {
             for c in 0..=100 - a - b {
