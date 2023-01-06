@@ -28,31 +28,6 @@ struct Ingredient {
     calories: i32,
 }
 
-fn calculate_score(day: &Day15, values: &Vec<i32>, must_be_500_cal: bool) -> i32 {
-    // Get the score
-    let mut capacity = 0;
-    let mut durability = 0;
-    let mut flavor = 0;
-    let mut texture = 0;
-    let mut calories = 0;
-    for (i, ingredient) in day.ingredients.iter().enumerate() {
-        let scaller = values[i];
-        capacity += ingredient.capacity * scaller;
-        durability += ingredient.durability * scaller;
-        flavor += ingredient.flavor * scaller;
-        texture += ingredient.texture * scaller;
-        calories += ingredient.calories * scaller;
-    }
-    if capacity <= 0 || durability <= 0 || flavor <= 0 || texture <= 0 {
-        return 0;
-    }
-    if must_be_500_cal && calories != 500 {
-        return 0;
-    }
-    let score = capacity * durability * flavor * texture;
-    score
-}
-
 /// Mix ingredients and find best score
 fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
     let mut max = 0;
@@ -66,7 +41,28 @@ fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
                     values[1] = b;
                     values[2] = c;
                     values[3] = d;
-                    let score = calculate_score(day, &values, must_be_500_cal);
+
+                    // Get the score
+                    let mut capacity = 0;
+                    let mut durability = 0;
+                    let mut flavor = 0;
+                    let mut texture = 0;
+                    let mut calories = 0;
+                    for (i, ingredient) in day.ingredients.iter().enumerate() {
+                        let scaller = values[i];
+                        capacity += ingredient.capacity * scaller;
+                        durability += ingredient.durability * scaller;
+                        flavor += ingredient.flavor * scaller;
+                        texture += ingredient.texture * scaller;
+                        calories += ingredient.calories * scaller;
+                    }
+                    if capacity <= 0 || durability <= 0 || flavor <= 0 || texture <= 0 {
+                        continue;
+                    }
+                    if must_be_500_cal && calories != 500 {
+                        continue;
+                    }
+                    let score = capacity * durability * flavor * texture;
                     max = std::cmp::max(max, score);
                 }
             }
