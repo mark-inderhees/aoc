@@ -28,58 +28,48 @@ struct Ingredient {
     calories: i32,
 }
 
+fn calculate_score(day: &Day15, values: &Vec<i32>, must_be_500_cal: bool) -> i32 {
+    // Get the score
+    let mut capacity = 0;
+    let mut durability = 0;
+    let mut flavor = 0;
+    let mut texture = 0;
+    let mut calories = 0;
+    for (i, ingredient) in day.ingredients.iter().enumerate() {
+        let scaller = values[i];
+        capacity += ingredient.capacity * scaller;
+        durability += ingredient.durability * scaller;
+        flavor += ingredient.flavor * scaller;
+        texture += ingredient.texture * scaller;
+        calories += ingredient.calories * scaller;
+    }
+    if capacity <= 0 || durability <= 0 || flavor <= 0 || texture <= 0 {
+        return 0;
+    }
+    if must_be_500_cal && calories != 500 {
+        return 0;
+    }
+    let score = capacity * durability * flavor * texture;
+    score
+}
+
 /// Mix ingredients and find best score
 fn find_best_score(day: &Day15, must_be_500_cal: bool) -> i32 {
-    let ingredient_count = day.ingredients.len();
-    struct Work {
-        values: Vec<i32>,
-    }
-    let mut jobs = vec![];
-
-    for x in 0..=100 {
-        jobs.push(Work { values: vec![x] });
-    }
-
     let mut max = 0;
 
-    while jobs.len() > 0 {
-        let job = jobs.pop().unwrap();
-
-        if job.values.len() == ingredient_count {
-            // Get the score
-            let mut capacity = 0;
-            let mut durability = 0;
-            let mut flavor = 0;
-            let mut texture = 0;
-            let mut calories = 0;
-            for (i, ingredient) in day.ingredients.iter().enumerate() {
-                let scaller = job.values[i];
-                capacity += ingredient.capacity * scaller;
-                durability += ingredient.durability * scaller;
-                flavor += ingredient.flavor * scaller;
-                texture += ingredient.texture * scaller;
-                calories += ingredient.calories * scaller;
+    let mut values = vec![-1; 4];
+    for a in 0..=100 {
+        for b in 0..=100 - a {
+            for c in 0..=100 - a - b {
+                for d in 0..=100 - a - b - c {
+                    values[0] = a;
+                    values[1] = b;
+                    values[2] = c;
+                    values[3] = d;
+                    let score = calculate_score(day, &values, must_be_500_cal);
+                    max = std::cmp::max(max, score);
+                }
             }
-            if capacity <= 0 || durability <= 0 || flavor <= 0 || texture <= 0 {
-                continue;
-            }
-            if must_be_500_cal && calories != 500 {
-                continue;
-            }
-            let score = capacity * durability * flavor * texture;
-            if score > max {
-                log::debug!("New best score {:?} -> {score} [{capacity}, {durability}, {flavor}, {texture}]", job.values);
-            }
-            max = std::cmp::max(max, score);
-            continue;
-        }
-
-        // Start new jobs
-        let sum: i32 = job.values.iter().sum();
-        for x in 0..=100 - sum {
-            let mut values = job.values.clone();
-            values.push(x);
-            jobs.push(Work { values });
         }
     }
 
