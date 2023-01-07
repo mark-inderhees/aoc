@@ -5,36 +5,29 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
-use crate::utils::utils::*;
+use crate::utils::molecule::*;
 
 use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day19 {
-    molecule: String,
+    molecule: Molecule,
     replacements: Vec<Replacement>,
     starts: Vec<String>,
 }
 
 #[derive(Debug)]
 struct Replacement {
-    start: String,
-    end: String,
+    from: Atom,
+    to: Molecule,
 }
 
 fn count_replacements(day: &Day19) -> usize {
-    let mut count: HashMap<String, bool> = HashMap::new();
+    let mut count: HashMap<Molecule, bool> = HashMap::new();
 
     for replacement in day.replacements.iter() {
-        for (i, _) in day.molecule.match_indices(&replacement.start) {
-            let splits = day.molecule.split_at(i);
-            let mut one = splits.0.to_string();
-            let two = splits.1.replacen(&replacement.start, &replacement.end, 1);
-            one.push_str(&two);
-            count.insert(one, true);
+        let molecules = day.molecule.replace(&replacement.from, &replacement.to);
+        for molecule in molecules {
+            count.insert(molecule, true);
         }
     }
 
@@ -46,9 +39,7 @@ fn count_replacements(day: &Day19) -> usize {
 fn find_best_replacement_path(day: &Day19) -> usize {
     let mut best = usize::MAX;
 
-    for start in day.starts.iter() {
-
-    }
+    for start in day.starts.iter() {}
 
     best
 }
@@ -60,7 +51,7 @@ impl Puzzle for Day19 {
 
         #[allow(unused_mut)]
         let mut day = Day19 {
-            molecule: split[1].to_string(),
+            molecule: Molecule::new_from_string(split[1].trim()),
             replacements: vec![],
             starts: vec![],
         };
@@ -71,13 +62,13 @@ impl Puzzle for Day19 {
                 day.starts.push(molecules[2].to_string());
             } else {
                 day.replacements.push(Replacement {
-                    start: molecules[0].to_string(),
-                    end: molecules[2].to_string(),
+                    from: Atom::new(molecules[0]),
+                    to: Molecule::new_from_string(molecules[2].trim()),
                 });
             }
         }
 
-        log::debug!("{}", day.molecule);
+        log::debug!("{:#?}", day.molecule);
         log::debug!("{:#?}", day.replacements);
 
         Ok(day)

@@ -5,6 +5,7 @@ pub mod crt;
 pub mod file_system;
 pub mod grid3d;
 pub mod linked_list;
+pub mod molecule;
 pub mod rock_paper_scissors;
 pub mod tetris;
 pub mod utils;
