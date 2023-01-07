@@ -83,17 +83,17 @@ impl Direction {
 impl ToString for Direction {
     /// Impl ToString trait to pretty print direction dir in small text format
     fn to_string(&self) -> String {
-        let dir_to_string = HashMap::from([
-            (Direction::Up, "U"),
-            (Direction::Down, "D"),
-            (Direction::Left, "L"),
-            (Direction::Right, "R"),
-            (Direction::UpLeft, "UL"),
-            (Direction::UpRight, "UR"),
-            (Direction::DownLeft, "DL"),
-            (Direction::DownRight, "DR"),
-        ]);
-        dir_to_string[self].to_string()
+        let dir_to_string = match self {
+            Direction::Up => "U",
+            Direction::Down => "D",
+            Direction::Left => "L",
+            Direction::Right => "R",
+            Direction::UpLeft => "UL",
+            Direction::UpRight => "UR",
+            Direction::DownLeft => "DL",
+            Direction::DownRight => "DR",
+        };
+        dir_to_string.to_string()
     }
 }
 
@@ -737,6 +737,6 @@ struct State {
     /// Most optimized step count so far at this square
     step_count: u32,
 
-    /// Which players are in this square, hashmap used for each remove, value is nothing
+    /// Which players are in this square, hashmap used for easy remove, value is nothing
     players_here: HashMap<PlayerId, bool>,
 }
