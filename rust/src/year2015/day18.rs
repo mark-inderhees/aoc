@@ -1,6 +1,7 @@
 // 2015 Day 18
 // https://adventofcode.com/2015/day/18
 // --- Day 18: Like a GIF For Your Yard ---
+// Toggle lights on a 100x100 grid
 
 use anyhow::Result;
 
@@ -17,11 +18,15 @@ pub struct Day18 {
     board: Board<char>,
 }
 
+/// Toggle the lights in the grid.
+/// A light which is on stays on when 2 or 3 neighbors are on, and turns off otherwise.
+/// A light which is off turns on if exactly 3 neighbors are on, and stays off otherwise.
 fn reset_lights(day: &mut Day18, corners_always_on: bool) {
-    // A light which is on stays on when 2 or 3 neighbors are on, and turns off otherwise.
-    // A light which is off turns on if exactly 3 neighbors are on, and stays off otherwise.
-    let player_id = 0;
+    // Store the next state of the lights
     let mut next_values = VecDeque::new();
+
+    // Look at all the lights and calculate the next state
+    let player_id = 0;
     for y in 0..day.board.height() {
         for x in 0..day.board.width() {
             let point = BoardPoint { x, y };
@@ -49,6 +54,7 @@ fn reset_lights(day: &mut Day18, corners_always_on: bool) {
         }
     }
 
+    // Now set the updated lights value
     for y in 0..day.board.height() {
         for x in 0..day.board.width() {
             let point = BoardPoint { x, y };
@@ -57,12 +63,31 @@ fn reset_lights(day: &mut Day18, corners_always_on: bool) {
     }
 
     if corners_always_on {
-        let dim = day.board.width() - 1; // Width and height are the same
-        day.board.set_at(BoardPoint { x: 0, y: 0 }, '#');
-        day.board.set_at(BoardPoint { x: dim, y: 0 }, '#');
-        day.board.set_at(BoardPoint { x: 0, y: dim }, '#');
-        day.board.set_at(BoardPoint { x: dim, y: dim }, '#');
+        turn_on_corners(day);
     }
+}
+
+/// Force the corner lights to be on
+fn turn_on_corners(day: &mut Day18) {
+    let dim = day.board.width() - 1; // Width and height are the same
+    day.board.set_at(BoardPoint { x: 0, y: 0 }, '#');
+    day.board.set_at(BoardPoint { x: dim, y: 0 }, '#');
+    day.board.set_at(BoardPoint { x: 0, y: dim }, '#');
+    day.board.set_at(BoardPoint { x: dim, y: dim }, '#');
+}
+
+/// Count how many lights are turned on
+fn count_lights_on(day: &Day18) -> u32 {
+    let mut count = 0;
+    for y in 0..day.board.height() {
+        for x in 0..day.board.width() {
+            let point = BoardPoint { x, y };
+            if day.board.value_at(point) == '#' {
+                count += 1;
+            }
+        }
+    }
+    count
 }
 
 impl Puzzle for Day18 {
@@ -78,27 +103,21 @@ impl Puzzle for Day18 {
             day.board.push_row(chars);
         }
 
+        // Add a player to easily find surrounding values when toggling lights
         day.board.add_player(BoardPoint { x: 0, y: 0 }, '?');
-        // day.board.print_board_with_players_pretty();
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Toggle the lights 100 times
         let steps = if self.board.width() > 50 { 100 } else { 4 };
         for _ in 0..steps {
             reset_lights(self, false);
         }
 
-        let mut count = 0;
-        for y in 0..self.board.height() {
-            for x in 0..self.board.width() {
-                let point = BoardPoint { x, y };
-                if self.board.value_at(point) == '#' {
-                    count += 1;
-                }
-            }
-        }
+        // Count how many lights are on
+        let count = count_lights_on(self);
         Ok(count.to_string())
     }
 
@@ -110,26 +129,17 @@ impl Puzzle for Day18 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let dim = self.board.width() - 1; // Width and height are the same
-        self.board.set_at(BoardPoint { x: 0, y: 0 }, '#');
-        self.board.set_at(BoardPoint { x: dim, y: 0 }, '#');
-        self.board.set_at(BoardPoint { x: 0, y: dim }, '#');
-        self.board.set_at(BoardPoint { x: dim, y: dim }, '#');
+        // Corners must always be on
+        turn_on_corners(self);
 
+        // Toggle the lights 100 times
         let steps = if self.board.width() > 50 { 100 } else { 5 };
         for _ in 0..steps {
             reset_lights(self, true);
         }
 
-        let mut count = 0;
-        for y in 0..self.board.height() {
-            for x in 0..self.board.width() {
-                let point = BoardPoint { x, y };
-                if self.board.value_at(point) == '#' {
-                    count += 1;
-                }
-            }
-        }
+        // Count how many lights are on
+        let count = count_lights_on(self);
         Ok(count.to_string())
     }
 
