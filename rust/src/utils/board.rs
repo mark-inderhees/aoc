@@ -509,7 +509,7 @@ where
         values
     }
 
-    /// Get the value of nearby squares in all directions including diagonal
+    /// Get the value of nearby squares in all directions including diagonal, near a player
     #[allow(dead_code)]
     pub fn nearby_values(&mut self, player: PlayerId) -> Vec<T> {
         let mut values = vec![];
@@ -519,6 +519,19 @@ where
                 values.push(value);
             }
             self.set_player_location(player, orig_point);
+        }
+
+        values
+    }
+
+    /// Get the value of nearby squares in all directions including diagonal, near a point
+    pub fn values_near_point(&mut self, point: BoardPoint) -> Vec<T> {
+        let mut values = vec![];
+        for direction in Direction::iter() {
+            let new_point = self.new_location_from_direction(&point, direction);
+            if self.is_valid_location(&new_point) {
+                values.push(self.value_at(new_point));
+            }
         }
 
         values

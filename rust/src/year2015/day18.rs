@@ -26,13 +26,11 @@ fn reset_lights(day: &mut Day18, corners_always_on: bool) {
     let mut next_values = VecDeque::new();
 
     // Look at all the lights and calculate the next state
-    let player_id = 0;
     for y in 0..day.board.height() {
         for x in 0..day.board.width() {
             let point = BoardPoint { x, y };
             let value = day.board.value_at(point);
-            day.board.set_player_location(player_id, point);
-            let values = day.board.nearby_values(player_id);
+            let values = day.board.values_near_point(point);
             let neighbors_on = values
                 .iter()
                 .fold(0, |a, v| if *v == '#' { a + 1 } else { a });
@@ -102,9 +100,6 @@ impl Puzzle for Day18 {
             let chars: Vec<char> = line.chars().collect();
             day.board.push_row(chars);
         }
-
-        // Add a player to easily find surrounding values when toggling lights
-        day.board.add_player(BoardPoint { x: 0, y: 0 }, '?');
 
         Ok(day)
     }
