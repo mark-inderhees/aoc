@@ -16,6 +16,7 @@ use std::collections::VecDeque;
 pub struct Day19 {
     molecule: String,
     replacements: Vec<Replacement>,
+    starts: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -51,14 +52,19 @@ impl Puzzle for Day19 {
         let mut day = Day19 {
             molecule: split[1].to_string(),
             replacements: vec![],
+            starts: vec![],
         };
 
         for line in split[0].lines() {
             let molecules: Vec<&str> = line.split(" ").collect();
-            day.replacements.push(Replacement {
-                start: molecules[0].to_string(),
-                end: molecules[2].to_string(),
-            });
+            if line.starts_with("e") {
+                day.starts.push(molecules[2].to_string());
+            } else {
+                day.replacements.push(Replacement {
+                    start: molecules[0].to_string(),
+                    end: molecules[2].to_string(),
+                });
+            }
         }
 
         log::debug!("{}", day.molecule);
