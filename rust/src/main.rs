@@ -4,6 +4,7 @@ use puzzle::Puzzle;
 use regex::Regex;
 use std::collections::VecDeque;
 use std::fs;
+use std::path::PathBuf;
 use std::time::Instant;
 
 mod puzzle;
@@ -68,9 +69,18 @@ struct Args {
         default_value_t = log::LevelFilter::Warn,
     )]
     logs: log::LevelFilter,
+
+    /// Save a comma seperated value (CSV) file with perf to a file
+    #[arg(long, short)]
+    sheet: Option<PathBuf>,
 }
 
-fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Result<()> {
+fn run_day<DayType: puzzle::Puzzle>(
+    part: u32,
+    input: String,
+    test: bool,
+    duration: &mut f64,
+) -> Result<()> {
     let start = Instant::now();
     let raw_input = fs::read_to_string(input).expect("Input file error");
     let mut day: DayType = Puzzle::from_input(&raw_input)?;
@@ -84,6 +94,7 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
         2 => day.answer_part2(test),
         _ => bail!("Invalid part"),
     };
+    *duration = start.elapsed().as_millis() as f64 / 1000f64;
     match expect {
         Some(expected_val) => {
             println!(
@@ -91,15 +102,11 @@ fn run_day<DayType: puzzle::Puzzle>(part: u32, input: String, test: bool) -> Res
                 output,
                 expected_val,
                 output == expected_val,
-                start.elapsed().as_millis() as f64 / 1000f64
+                duration
             );
             assert_eq!(output, expected_val);
         }
-        _ => println!(
-            "Solution: {} in {:.3} seconds\n\n",
-            output,
-            start.elapsed().as_millis() as f64 / 1000f64
-        ),
+        _ => println!("Solution: {} in {:.3} seconds\n\n", output, duration),
     }
 
     Ok(())
@@ -146,7 +153,7 @@ fn bootstrap(day: u32, year: u32) -> Result<()> {
     main = re_day.replace(&main, format!("{day}${{1}}")).to_string();
     main = re_part.replace(&main, "1${1}").to_string();
     main = re_test.replace(&main, "true${1}").to_string();
-    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<year{year}::day{day:02}::Day{day:02}>(part, input, test)?,\n${{1}}${{2}}")).to_string();
+    main = re_run.replace(&main, format!("${{1}}{day} => run_day::<year{year}::day{day:02}::Day{day:02}>(part, input, test, &mut duration)?,\n${{1}}${{2}}")).to_string();
     fs::write(main_rs, main)?;
 
     // Add a line to year's mod.rs
@@ -195,13 +202,27 @@ fn main() -> Result<()> {
         years = vec![2015, 2022];
     }
 
+    struct Run {
+        day: u32,
+        year: u32,
+        part: u32,
+        test: bool,
+        duration: f64,
+    }
+
     let mut runs = vec![];
     {
         for year in &years {
             for day in &days {
                 for part in &parts {
                     for test in &tests {
-                        runs.push((*day, *year, *part, *test));
+                        runs.push(Run {
+                            day: *day,
+                            year: *year,
+                            part: *part,
+                            test: *test,
+                            duration: 0f64,
+                        });
                     }
                 }
             }
@@ -211,13 +232,14 @@ fn main() -> Result<()> {
     println!("\n"); // Empty line
     let start = Instant::now();
     let mut year_filter = vec![];
-    for run in runs {
-        let day = run.0;
-        let year = run.1;
-        let part = run.2;
-        let test = run.3;
+    for run in runs.iter_mut() {
+        let day = run.day;
+        let year = run.year;
+        let part = run.part;
+        let test = run.test;
+        let mut duration = 0f64;
 
-        if year_filter.contains(&year){
+        if year_filter.contains(&year) {
             continue;
         }
 
@@ -230,24 +252,24 @@ fn main() -> Result<()> {
 
         match year {
             2015 => match day {
-                1 => run_day::<year2015::day01::Day01>(part, input, test)?,
-                2 => run_day::<year2015::day02::Day02>(part, input, test)?,
-                3 => run_day::<year2015::day03::Day03>(part, input, test)?,
-                4 => run_day::<year2015::day04::Day04>(part, input, test)?,
-                5 => run_day::<year2015::day05::Day05>(part, input, test)?,
-                6 => run_day::<year2015::day06::Day06>(part, input, test)?,
-                7 => run_day::<year2015::day07::Day07>(part, input, test)?,
-                8 => run_day::<year2015::day08::Day08>(part, input, test)?,
-                9 => run_day::<year2015::day09::Day09>(part, input, test)?,
-                10 => run_day::<year2015::day10::Day10>(part, input, test)?,
-                11 => run_day::<year2015::day11::Day11>(part, input, test)?,
-                12 => run_day::<year2015::day12::Day12>(part, input, test)?,
-                13 => run_day::<year2015::day13::Day13>(part, input, test)?,
-                14 => run_day::<year2015::day14::Day14>(part, input, test)?,
-                15 => run_day::<year2015::day15::Day15>(part, input, test)?,
-                16 => run_day::<year2015::day16::Day16>(part, input, test)?,
-                17 => run_day::<year2015::day17::Day17>(part, input, test)?,
-                18 => run_day::<year2015::day18::Day18>(part, input, test)?,
+                1 => run_day::<year2015::day01::Day01>(part, input, test, &mut duration)?,
+                2 => run_day::<year2015::day02::Day02>(part, input, test, &mut duration)?,
+                3 => run_day::<year2015::day03::Day03>(part, input, test, &mut duration)?,
+                4 => run_day::<year2015::day04::Day04>(part, input, test, &mut duration)?,
+                5 => run_day::<year2015::day05::Day05>(part, input, test, &mut duration)?,
+                6 => run_day::<year2015::day06::Day06>(part, input, test, &mut duration)?,
+                7 => run_day::<year2015::day07::Day07>(part, input, test, &mut duration)?,
+                8 => run_day::<year2015::day08::Day08>(part, input, test, &mut duration)?,
+                9 => run_day::<year2015::day09::Day09>(part, input, test, &mut duration)?,
+                10 => run_day::<year2015::day10::Day10>(part, input, test, &mut duration)?,
+                11 => run_day::<year2015::day11::Day11>(part, input, test, &mut duration)?,
+                12 => run_day::<year2015::day12::Day12>(part, input, test, &mut duration)?,
+                13 => run_day::<year2015::day13::Day13>(part, input, test, &mut duration)?,
+                14 => run_day::<year2015::day14::Day14>(part, input, test, &mut duration)?,
+                15 => run_day::<year2015::day15::Day15>(part, input, test, &mut duration)?,
+                16 => run_day::<year2015::day16::Day16>(part, input, test, &mut duration)?,
+                17 => run_day::<year2015::day17::Day17>(part, input, test, &mut duration)?,
+                18 => run_day::<year2015::day18::Day18>(part, input, test, &mut duration)?,
                 // __BOOTSTRAP_RUN__
                 _ => {
                     println!("Day {} not found, goodbye!\n", day);
@@ -255,31 +277,31 @@ fn main() -> Result<()> {
                 }
             },
             2022 => match day {
-                1 => run_day::<year2022::day01::Day01>(part, input, test)?,
-                2 => run_day::<year2022::day02::Day02>(part, input, test)?,
-                3 => run_day::<year2022::day03::Day03>(part, input, test)?,
-                4 => run_day::<year2022::day04::Day04>(part, input, test)?,
-                5 => run_day::<year2022::day05::Day05>(part, input, test)?,
-                6 => run_day::<year2022::day06::Day06>(part, input, test)?,
-                7 => run_day::<year2022::day07::Day07>(part, input, test)?,
-                8 => run_day::<year2022::day08::Day08>(part, input, test)?,
-                9 => run_day::<year2022::day09::Day09>(part, input, test)?,
-                10 => run_day::<year2022::day10::Day10>(part, input, test)?,
-                11 => run_day::<year2022::day11::Day11>(part, input, test)?,
-                12 => run_day::<year2022::day12::Day12>(part, input, test)?,
-                13 => run_day::<year2022::day13::Day13>(part, input, test)?,
-                14 => run_day::<year2022::day14::Day14>(part, input, test)?,
-                15 => run_day::<year2022::day15::Day15>(part, input, test)?,
-                16 => run_day::<year2022::day16::Day16>(part, input, test)?,
-                17 => run_day::<year2022::day17::Day17>(part, input, test)?,
-                18 => run_day::<year2022::day18::Day18>(part, input, test)?,
-                19 => run_day::<year2022::day19::Day19>(part, input, test)?,
-                20 => run_day::<year2022::day20::Day20>(part, input, test)?,
-                21 => run_day::<year2022::day21::Day21>(part, input, test)?,
-                22 => run_day::<year2022::day22::Day22>(part, input, test)?,
-                23 => run_day::<year2022::day23::Day23>(part, input, test)?,
-                24 => run_day::<year2022::day24::Day24>(part, input, test)?,
-                25 => run_day::<year2022::day25::Day25>(part, input, test)?,
+                1 => run_day::<year2022::day01::Day01>(part, input, test, &mut duration)?,
+                2 => run_day::<year2022::day02::Day02>(part, input, test, &mut duration)?,
+                3 => run_day::<year2022::day03::Day03>(part, input, test, &mut duration)?,
+                4 => run_day::<year2022::day04::Day04>(part, input, test, &mut duration)?,
+                5 => run_day::<year2022::day05::Day05>(part, input, test, &mut duration)?,
+                6 => run_day::<year2022::day06::Day06>(part, input, test, &mut duration)?,
+                7 => run_day::<year2022::day07::Day07>(part, input, test, &mut duration)?,
+                8 => run_day::<year2022::day08::Day08>(part, input, test, &mut duration)?,
+                9 => run_day::<year2022::day09::Day09>(part, input, test, &mut duration)?,
+                10 => run_day::<year2022::day10::Day10>(part, input, test, &mut duration)?,
+                11 => run_day::<year2022::day11::Day11>(part, input, test, &mut duration)?,
+                12 => run_day::<year2022::day12::Day12>(part, input, test, &mut duration)?,
+                13 => run_day::<year2022::day13::Day13>(part, input, test, &mut duration)?,
+                14 => run_day::<year2022::day14::Day14>(part, input, test, &mut duration)?,
+                15 => run_day::<year2022::day15::Day15>(part, input, test, &mut duration)?,
+                16 => run_day::<year2022::day16::Day16>(part, input, test, &mut duration)?,
+                17 => run_day::<year2022::day17::Day17>(part, input, test, &mut duration)?,
+                18 => run_day::<year2022::day18::Day18>(part, input, test, &mut duration)?,
+                19 => run_day::<year2022::day19::Day19>(part, input, test, &mut duration)?,
+                20 => run_day::<year2022::day20::Day20>(part, input, test, &mut duration)?,
+                21 => run_day::<year2022::day21::Day21>(part, input, test, &mut duration)?,
+                22 => run_day::<year2022::day22::Day22>(part, input, test, &mut duration)?,
+                23 => run_day::<year2022::day23::Day23>(part, input, test, &mut duration)?,
+                24 => run_day::<year2022::day24::Day24>(part, input, test, &mut duration)?,
+                25 => run_day::<year2022::day25::Day25>(part, input, test, &mut duration)?,
                 _ => {
                     println!("Day {} not found, goodbye!\n", day);
                     year_filter.push(year);
@@ -287,12 +309,25 @@ fn main() -> Result<()> {
             },
             _ => bail!("Year {} not found", year),
         }
+        run.duration = duration;
     }
     if args.validate || args.comprehensive || args.exhaustive {
         println!(
             "Full run took {:.3} seconds",
             start.elapsed().as_millis() as f64 / 1000f64
         );
+    }
+
+    if let Some(csv_path) = args.sheet {
+        let mut csv = vec![];
+        for run in runs {
+            csv.push(format!(
+                "{},{},{},{},{}",
+                run.year, run.day, run.part, run.test, run.duration
+            ));
+        }
+        println!("Wrote perf log to {}", csv_path.to_str().unwrap());
+        fs::write(csv_path, csv.join("\n"))?;
     }
 
     Ok(())
