@@ -4,15 +4,10 @@
 // Toggle lights on a 100x100 grid
 
 use anyhow::Result;
+use std::collections::VecDeque;
 
 use crate::puzzle::Puzzle;
 use crate::utils::board::*;
-
-#[allow(unused_imports)]
-use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day18 {
     board: Board<char>,
