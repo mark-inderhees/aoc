@@ -349,17 +349,16 @@ where
         location: &BoardPoint,
         direction: Direction,
     ) -> BoardPoint {
-        let step_offsets = HashMap::from([
-            (Direction::Up, BoardPoint { x: 0, y: -1 }),
-            (Direction::Down, BoardPoint { x: 0, y: 1 }),
-            (Direction::Left, BoardPoint { x: -1, y: 0 }),
-            (Direction::Right, BoardPoint { x: 1, y: 0 }),
-            (Direction::UpLeft, BoardPoint { x: -1, y: -1 }),
-            (Direction::UpRight, BoardPoint { x: 1, y: -1 }),
-            (Direction::DownLeft, BoardPoint { x: -1, y: 1 }),
-            (Direction::DownRight, BoardPoint { x: 1, y: 1 }),
-        ]);
-        let offset = step_offsets[&direction];
+        let offset = match direction {
+            Direction::Up => BoardPoint { x: 0, y: -1 },
+            Direction::Down => BoardPoint { x: 0, y: 1 },
+            Direction::Left => BoardPoint { x: -1, y: 0 },
+            Direction::Right => BoardPoint { x: 1, y: 0 },
+            Direction::UpLeft => BoardPoint { x: -1, y: -1 },
+            Direction::UpRight => BoardPoint { x: 1, y: -1 },
+            Direction::DownLeft => BoardPoint { x: -1, y: 1 },
+            Direction::DownRight => BoardPoint { x: 1, y: 1 },
+        };
         let new_location = BoardPoint {
             x: location.x + offset.x,
             y: location.y + offset.y,
