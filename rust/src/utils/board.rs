@@ -1,6 +1,6 @@
 use grid::*;
 use rusttype::Point;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::iter::zip;
 use strum::IntoEnumIterator;
@@ -128,7 +128,7 @@ where
         let empty = vec![
             State {
                 step_count: u32::MAX,
-                players_here: HashMap::new(),
+                players_here: vec![],
             };
             len
         ];
@@ -148,7 +148,7 @@ where
         let empty = vec![
             State {
                 step_count: u32::MAX,
-                players_here: HashMap::new(),
+                players_here: vec![],
             };
             len
         ];
@@ -169,7 +169,7 @@ where
         // Update state
         let x_: usize = point.x as usize;
         let y_: usize = point.y as usize;
-        self.grid_state[y_][x_].players_here.insert(player_id, true);
+        self.grid_state[y_][x_].players_here.push(player_id);
 
         player_id
     }
@@ -240,8 +240,7 @@ where
     pub fn which_player_is_here(&self, location: BoardPoint) -> Option<PlayerId> {
         let state = self.state(location);
         if state.players_here.len() > 0 {
-            let player_id = state.players_here.keys().collect::<Vec<&PlayerId>>()[0];
-            return Some(*player_id);
+            return Some(state.players_here[0]);
         }
 
         None
@@ -288,12 +287,15 @@ where
         let old_point = self.players[player].point;
         let old_x: usize = old_point.x as usize;
         let old_y: usize = old_point.y as usize;
-        self.grid_state[old_y][old_x].players_here.remove(&player);
+        let index = self.grid_state[old_y][old_x]
+            .players_here
+            .iter()
+            .position(|&x| x == player)
+            .unwrap();
+        self.grid_state[old_y][old_x].players_here.remove(index);
         let new_x: usize = point.x as usize;
         let new_y: usize = point.y as usize;
-        self.grid_state[new_y][new_x]
-            .players_here
-            .insert(player, true);
+        self.grid_state[new_y][new_x].players_here.push(player);
 
         self.players[player].point = point;
     }
@@ -737,6 +739,6 @@ struct State {
     /// Most optimized step count so far at this square
     step_count: u32,
 
-    /// Which players are in this square, hashmap used for easy remove, value is nothing
-    players_here: HashMap<PlayerId, bool>,
+    /// Which players are in this square
+    players_here: Vec<PlayerId>,
 }
