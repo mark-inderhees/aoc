@@ -43,6 +43,16 @@ fn count_replacements(day: &Day19) -> usize {
     count.len()
 }
 
+fn find_best_replacement_path(day: &Day19) -> usize {
+    let mut best = usize::MAX;
+
+    for start in day.starts.iter() {
+
+    }
+
+    best
+}
+
 impl Puzzle for Day19 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -86,12 +96,13 @@ impl Puzzle for Day19 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_best_replacement_path(self);
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(6.to_string()),
             false => None,
         }
     }
