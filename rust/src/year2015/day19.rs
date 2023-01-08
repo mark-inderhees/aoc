@@ -5,7 +5,9 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-use crate::utils::molecule::*;
+use crate::utils::molecule::{self, *};
+
+use std::cmp::Ordering;
 
 use std::collections::HashMap;
 
@@ -116,43 +118,37 @@ fn find_best_replacement_path(day: &Day19) -> usize {
     let mut best = usize::MAX;
     let mut best_map: HashMap<String, usize> = HashMap::new();
 
-    while jobs.len() > 0 {
-        let job = jobs.pop().unwrap();
+    let mut molecules = vec![day.molecule.to_string()];
 
-        if job.steps >= best {
-            continue;
-        }
+    loop {
+        best += 1;
 
-        if starts.contains(&job.molecule) {
-            log::info!("Found path after {} steps", job.steps);
-            best = std::cmp::min(best, job.steps);
-        }
+        let mut new_molecules = vec![];
+        for molecule in molecules.iter() {
+            if starts.contains(&molecule) {
+                log::info!("Found path after {} steps", best);
+                return best + 1;
+            }
 
-        if let Some(value) = best_map.get(&job.molecule) {
-            if *value <= job.steps {
-                continue;
+            for (key, value) in replacements.iter() {
+                let new_molecule = molecule.replacen(key, value, 1);
+                new_molecules.push(new_molecule);
             }
         }
-        best_map.insert(job.molecule.clone(), job.steps);
 
-        for (key, value) in replacements.iter() {
-            let count = job.molecule.matches(key).count();
-            if count > 0 {
-                let molecule = job.molecule.replace(key, value);
-                log::debug!(
-                    "Replacing {} -> {}, new len {}, count {}, {}",
-                    key,
-                    value,
-                    molecule.len(),
-                    job.steps + count,
-                    molecule
-                );
-                jobs.push(Work {
-                    steps: job.steps + count,
-                    molecule,
-                });
+        molecules = new_molecules;
+        molecules.sort_by(|a, b| {
+            if a.len() > b.len() {
+                Ordering::Greater
+            } else {
+                Ordering::Less
             }
+        });
+        molecules.dedup();
+        if molecules.len() > 100 {
+            molecules = molecules.split_at(100).0.to_vec();
         }
+        log::debug!("Round {best} and molecules {}", molecules.len());
     }
 
     best
