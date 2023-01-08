@@ -59,16 +59,19 @@ fn find_best_replacement_path(day: &Day19) -> u32 {
         let job = jobs.pop().unwrap();
 
         if job.molecule.len() > max_len {
+            log::trace!("Len too long");
             continue;
         }
 
         if job.steps >= best {
+            log::trace!("Steps too many");
             continue;
         }
 
         if job.molecule == day.molecule {
             log::debug!("Built correct molecule after {} steps", job.steps);
             best = std::cmp::min(best, job.steps);
+            continue;
         }
 
         for replacement in day.replacements.iter() {
