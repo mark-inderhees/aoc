@@ -43,6 +43,26 @@ fn count_replacements(day: &Day19) -> usize {
     count.len()
 }
 
+fn count_replacements_orig(day: &Day19) -> usize {
+    let mut count: HashMap<String, bool> = HashMap::new();
+
+    let molecule = day.molecule.to_string();
+
+    for replacement in day.replacements.iter() {
+        for (i, _) in molecule.match_indices(&replacement.from.to_string()) {
+            let splits = molecule.split_at(i);
+            let mut one = splits.0.to_string();
+            let two = splits.1.replacen(&replacement.from.to_string(), &replacement.to.to_string(), 1);
+            one.push_str(&two);
+            count.insert(one, true);
+        }
+    }
+
+    log::debug!("{:#?}", count);
+
+    count.len()
+}
+
 fn find_best_replacement_path(day: &Day19) -> usize {
     let mut best = usize::MAX;
 
@@ -82,7 +102,7 @@ impl Puzzle for Day19 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = count_replacements(self);
+        let answer = count_replacements_orig(self);
         Ok(answer.to_string())
     }
 
