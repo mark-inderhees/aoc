@@ -46,6 +46,19 @@ impl Molecule {
         self.atoms.push(atom);
     }
 
+    pub fn starts_with(&self, target: &Molecule) -> bool {
+        if target.len() > self.len() {
+            return false;
+        }
+
+        for (i, atom) in target.atoms().iter().enumerate() {
+            if *atom != self.atoms[i] {
+                return false;
+            }
+        }
+        true
+    }
+
     pub fn to_string(&self) -> String {
         self.atoms
             .iter()

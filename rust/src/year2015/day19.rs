@@ -38,49 +38,119 @@ fn count_replacements(day: &Day19) -> usize {
     count.len()
 }
 
-fn find_best_replacement_path(day: &Day19) -> u32 {
-    let mut best = u32::MAX;
-    let max_len = day.molecule.len();
+// fn find_best_replacement_path(day: &Day19) -> u32 {
+//     let mut best = u32::MAX;
+//     let max_len = day.molecule.len();
+
+//     struct Work {
+//         molecule: Molecule,
+//         steps: u32,
+//     }
+//     let mut jobs = vec![];
+
+//     for start in day.starts.iter() {
+//         jobs.push(Work {
+//             molecule: start.clone(),
+//             steps: 1,
+//         });
+//     }
+
+//     while jobs.len() > 0 {
+//         let job = jobs.pop().unwrap();
+
+//         if job.molecule.len() > max_len {
+//             log::trace!("Len too long");
+//             continue;
+//         }
+
+//         if job.steps >= best {
+//             log::trace!("Steps too many");
+//             continue;
+//         }
+
+//         if job.molecule == day.molecule {
+//             log::debug!("Built correct molecule after {} steps", job.steps);
+//             best = std::cmp::min(best, job.steps);
+//             continue;
+//         }
+
+//         for replacement in day.replacements.iter() {
+//             let molecules = job.molecule.replace(&replacement.from, &replacement.to);
+//             for molecule in molecules {
+//                 jobs.push(Work {
+//                     molecule,
+//                     steps: job.steps + 1,
+//                 })
+//             }
+//         }
+//     }
+
+//     best
+// }
+
+fn find_best_replacement_path(day: &Day19) -> usize {
+    // Build list of replacements
+    let mut replacements: HashMap<String, String> = HashMap::new();
+    for replacement in day.replacements.iter() {
+        if replacements.contains_key(&replacement.to.to_string()) {
+            panic!("Replacement collision");
+        }
+        replacements.insert(replacement.to.to_string(), replacement.from.to_string());
+    }
+
+    let mut starts = vec![];
+    for start in day.starts.iter() {
+        starts.push(start.to_string());
+    }
 
     struct Work {
-        molecule: Molecule,
-        steps: u32,
+        steps: usize,
+        molecule: String,
     }
     let mut jobs = vec![];
+    jobs.push(Work {
+        steps: 1,
+        molecule: day.molecule.to_string(),
+    });
 
-    for start in day.starts.iter() {
-        jobs.push(Work {
-            molecule: start.clone(),
-            steps: 1,
-        });
-    }
+    let mut best = usize::MAX;
+    let mut best_map: HashMap<String, usize> = HashMap::new();
 
     while jobs.len() > 0 {
         let job = jobs.pop().unwrap();
 
-        if job.molecule.len() > max_len {
-            log::trace!("Len too long");
-            continue;
-        }
-
         if job.steps >= best {
-            log::trace!("Steps too many");
             continue;
         }
 
-        if job.molecule == day.molecule {
-            log::debug!("Built correct molecule after {} steps", job.steps);
+        if starts.contains(&job.molecule) {
+            log::info!("Found path after {} steps", job.steps);
             best = std::cmp::min(best, job.steps);
-            continue;
         }
 
-        for replacement in day.replacements.iter() {
-            let molecules = job.molecule.replace(&replacement.from, &replacement.to);
-            for molecule in molecules {
+        if let Some(value) = best_map.get(&job.molecule) {
+            if *value <= job.steps {
+                continue;
+            }
+        }
+        best_map.insert(job.molecule.clone(), job.steps);
+
+        for (key, value) in replacements.iter() {
+            let count = job.molecule.matches(key).count();
+            if count > 0 {
+                let molecule = job.molecule.replace(key, value);
+                log::debug!(
+                    "Replacing {} -> {}, new len {}, count {}, {}",
+                    key,
+                    value,
+                    molecule.len(),
+                    job.steps + count,
+                    molecule
+                );
                 jobs.push(Work {
+                    steps: job.steps + count,
                     molecule,
-                    steps: job.steps + 1,
-                })
+                });
             }
         }
     }
