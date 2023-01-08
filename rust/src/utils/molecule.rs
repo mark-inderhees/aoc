@@ -1,91 +1,126 @@
-use strum_macros::Display;
-
+/// A molecule is made up of multiple atoms. This molecule struct and the Atom
+/// struct support to and from string conversions. The molecule struct also
+/// supports building the molecule and makeing "random like" replacements to
+/// atoms inside the molecule.
 #[derive(Debug, Clone, Hash, std::cmp::Eq, PartialEq)]
 pub struct Molecule {
     atoms: Vec<Atom>,
 }
 
+// Used for doing emun -> string
+use strum_macros::Display;
+
 impl Molecule {
+    /// Create an empty Molecule.
     pub fn new() -> Molecule {
         Molecule { atoms: vec![] }
     }
 
+    /// Build a molecule from a string of atoms.
     pub fn new_from_string(input: &str) -> Molecule {
-        let mut output = Molecule::new();
-        let mut abc = ['?'; 26];
-        for (i, char) in abc.iter_mut().enumerate() {
+        let mut molecule = Molecule::new();
+
+        // Build a slice of all capital letters, this is used to build atoms,
+        // as each new atom starts with a capital letter.
+        let mut capitals = ['?'; 26];
+        for (i, char) in capitals.iter_mut().enumerate() {
             *char = (i as u8 + 'A' as u8) as char;
         }
 
+        // Parse atoms out of the string and add them to the molecule
         let mut atom = String::new();
         for char in input.chars() {
-            if abc.contains(&char) {
-                // This is the start of a new string
+            if capitals.contains(&char) {
+                // This is the start of a new atom
+
+                // Store the finished atom
                 if atom.chars().count() > 0 {
-                    output.push_atom(Atom::new(&atom));
+                    molecule.push_atom(Atom::new(&atom));
                 }
+
+                // Start a new atom
                 atom = char.to_string();
             } else {
+                // Keep building the string for the current atom
                 atom.push(char);
             }
         }
-        output.push_atom(Atom::new(&atom));
+        // Store the last atom of the molecule
+        molecule.push_atom(Atom::new(&atom));
 
-        output
+        molecule
     }
 
+    /// The number of atoms in the molecule.
     pub fn len(&self) -> usize {
         self.atoms.len()
     }
 
+    /// The list of atoms currently in the molecule.
     pub fn atoms(&self) -> Vec<Atom> {
         self.atoms.clone()
     }
 
+    /// Add a new atom to the molecule.
     pub fn push_atom(&mut self, atom: Atom) {
         self.atoms.push(atom);
     }
 
+    /// Check if this molecule starts with the target molecule.
+    #[allow(dead_code)]
     pub fn starts_with(&self, target: &Molecule) -> bool {
+        // If the target is longer than this molecule, it cannot match
         if target.len() > self.len() {
             return false;
         }
 
+        // Loop throught each atom at the start and ensure matches
         for (i, atom) in target.atoms().iter().enumerate() {
             if *atom != self.atoms[i] {
                 return false;
             }
         }
+
+        // The target molecule is at the start of this molecule
         true
     }
 
+    /// Convert this molecule to a string.
     pub fn to_string(&self) -> String {
         self.atoms
             .iter()
             .fold(String::new(), |a, x| a + &x.to_string())
     }
 
-    /// For every from atom found in this module, change to the to partern.
+    /// For every from atom found in this module, change to the to pattern.
     /// Only change one atom at a time. If multiple from are present, then
     /// multiple Molecules will be in the output.
     pub fn replace(&self, from: &Atom, to: &Molecule) -> Vec<Molecule> {
-        let mut output = vec![];
+        let mut molecules = vec![];
 
+        // Check each atom in this molecule
         for (i, atom) in self.atoms.iter().enumerate() {
             if atom == from {
+                // This atom matches, do the replacement
                 let mut atoms = self.atoms.clone();
+
+                // Remove the old atom
                 atoms.remove(i);
+
+                // Add in each of the replacement atoms
                 for (j, replace) in to.atoms().iter().enumerate() {
                     atoms.insert(i + j, replace.clone());
                 }
-                output.push(Molecule { atoms });
+
+                molecules.push(Molecule { atoms });
             }
         }
 
-        output
+        molecules
     }
 }
 
+/// An enum of all the known Atoms. Supports to and from string conversion.
 #[derive(Debug, Clone, PartialEq, Hash, std::cmp::Eq, Display)]
 pub enum Atom {
     H,
