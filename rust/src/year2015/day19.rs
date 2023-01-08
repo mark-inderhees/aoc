@@ -3,17 +3,16 @@
 // --- Day 19: Medicine for Rudolph ---
 
 use anyhow::Result;
+use std::cmp::Ordering;
+use std::collections::HashSet;
 
 use crate::puzzle::Puzzle;
 use crate::utils::molecule::*;
 
-use std::cmp::Ordering;
-
-use std::collections::HashMap;
-
 pub struct Day19 {
     molecule: Molecule,
     replacements: Vec<Replacement>,
+    replacement_strings: Vec<ReplacementString>,
     starts: Vec<Molecule>,
 }
 
@@ -23,33 +22,31 @@ struct Replacement {
     to: Molecule,
 }
 
-fn count_replacements(day: &Day19) -> usize {
-    let mut count: HashMap<String, bool> = HashMap::new();
-    let mut count2 = 0;
+struct ReplacementString {
+    from: String,
+    to: String,
+}
 
+/// Count how many distinct molecules can be created by doing a single
+/// replacement on the medicine molecule.
+fn count_replacements(day: &Day19) -> usize {
+    // Use hash set to prevent duplicates
+    let mut count: HashSet<String> = HashSet::new();
+
+    // Run each replacement once
     for replacement in day.replacements.iter() {
         let molecules = day.molecule.replace(&replacement.from, &replacement.to);
+
+        // A replacement could happen at multiple locations, resulting in multiple molecules
         for molecule in molecules {
-            count.insert(molecule.to_string(), true);
-            count2 += 1;
+            count.insert(molecule.to_string());
         }
     }
-
-    log::debug!("Counts {} vs {count2}", count.len());
 
     count.len()
 }
 
 fn find_best_replacement_path(day: &Day19) -> usize {
-    // Build list of replacements
-    let mut replacements: HashMap<String, String> = HashMap::new();
-    for replacement in day.replacements.iter() {
-        if replacements.contains_key(&replacement.to.to_string()) {
-            panic!("Replacement collision");
-        }
-        replacements.insert(replacement.to.to_string(), replacement.from.to_string());
-    }
-
     let mut starts = vec![];
     for start in day.starts.iter() {
         starts.push(start.to_string());
@@ -68,8 +65,8 @@ fn find_best_replacement_path(day: &Day19) -> usize {
                 return best + 1;
             }
 
-            for (key, value) in replacements.iter() {
-                let new_molecule = molecule.replacen(key, value, 1);
+            for replacement in day.replacement_strings.iter() {
+                let new_molecule = molecule.replacen(&replacement.to, &replacement.from, 1);
                 new_molecules.push(new_molecule);
             }
         }
@@ -99,18 +96,23 @@ impl Puzzle for Day19 {
         let mut day = Day19 {
             molecule: Molecule::new_from_string(split[1].trim()),
             replacements: vec![],
+            replacement_strings: vec![],
             starts: vec![],
         };
 
         for line in split[0].lines() {
-            let molecules: Vec<&str> = line.split(" ").collect();
+            let molecules: Vec<&str> = line.trim().split(" ").collect();
             if line.starts_with("e") {
                 day.starts.push(Molecule::new_from_string(molecules[2]));
             } else {
                 day.replacements.push(Replacement {
                     from: Atom::new(molecules[0]),
-                    to: Molecule::new_from_string(molecules[2].trim()),
+                    to: Molecule::new_from_string(molecules[2]),
                 });
+                day.replacement_strings.push(ReplacementString {
+                    from: molecules[0].to_string(),
+                    to: molecules[2].to_string(),
+                })
             }
         }
 
@@ -140,7 +142,7 @@ impl Puzzle for Day19 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(6.to_string()),
-            false => None,
+            false => Some(195.to_string()),
         }
     }
 }
