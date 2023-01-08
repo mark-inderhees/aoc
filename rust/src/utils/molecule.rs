@@ -61,7 +61,10 @@ impl Molecule {
         for (i, atom) in self.atoms.iter().enumerate() {
             if atom == from {
                 let mut atoms = self.atoms.clone();
-                atoms.splice(i..i, to.atoms().clone());
+                atoms.remove(i);
+                for (j, replace) in to.atoms().iter().enumerate() {
+                    atoms.insert(i + j, replace.clone());
+                }
                 output.push(Molecule { atoms });
             }
         }
