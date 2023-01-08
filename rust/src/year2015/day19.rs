@@ -5,7 +5,7 @@
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-use crate::utils::molecule::{self, *};
+use crate::utils::molecule::*;
 
 use std::cmp::Ordering;
 
@@ -40,56 +40,6 @@ fn count_replacements(day: &Day19) -> usize {
     count.len()
 }
 
-// fn find_best_replacement_path(day: &Day19) -> u32 {
-//     let mut best = u32::MAX;
-//     let max_len = day.molecule.len();
-
-//     struct Work {
-//         molecule: Molecule,
-//         steps: u32,
-//     }
-//     let mut jobs = vec![];
-
-//     for start in day.starts.iter() {
-//         jobs.push(Work {
-//             molecule: start.clone(),
-//             steps: 1,
-//         });
-//     }
-
-//     while jobs.len() > 0 {
-//         let job = jobs.pop().unwrap();
-
-//         if job.molecule.len() > max_len {
-//             log::trace!("Len too long");
-//             continue;
-//         }
-
-//         if job.steps >= best {
-//             log::trace!("Steps too many");
-//             continue;
-//         }
-
-//         if job.molecule == day.molecule {
-//             log::debug!("Built correct molecule after {} steps", job.steps);
-//             best = std::cmp::min(best, job.steps);
-//             continue;
-//         }
-
-//         for replacement in day.replacements.iter() {
-//             let molecules = job.molecule.replace(&replacement.from, &replacement.to);
-//             for molecule in molecules {
-//                 jobs.push(Work {
-//                     molecule,
-//                     steps: job.steps + 1,
-//                 })
-//             }
-//         }
-//     }
-
-//     best
-// }
-
 fn find_best_replacement_path(day: &Day19) -> usize {
     // Build list of replacements
     let mut replacements: HashMap<String, String> = HashMap::new();
@@ -105,19 +55,7 @@ fn find_best_replacement_path(day: &Day19) -> usize {
         starts.push(start.to_string());
     }
 
-    struct Work {
-        steps: usize,
-        molecule: String,
-    }
-    let mut jobs = vec![];
-    jobs.push(Work {
-        steps: 1,
-        molecule: day.molecule.to_string(),
-    });
-
     let mut best = usize::MAX;
-    let mut best_map: HashMap<String, usize> = HashMap::new();
-
     let mut molecules = vec![day.molecule.to_string()];
 
     loop {
@@ -150,8 +88,6 @@ fn find_best_replacement_path(day: &Day19) -> usize {
         }
         log::debug!("Round {best} and molecules {}", molecules.len());
     }
-
-    best
 }
 
 impl Puzzle for Day19 {
