@@ -22,16 +22,23 @@ struct Replacement {
 }
 
 fn count_replacements(day: &Day19) -> usize {
-    let mut count: HashMap<Molecule, bool> = HashMap::new();
+    let mut count: HashMap<String, bool> = HashMap::new();
+    let mut count2 = 0;
 
     for replacement in day.replacements.iter() {
         let molecules = day.molecule.replace(&replacement.from, &replacement.to);
         for molecule in molecules {
-            count.insert(molecule, true);
+            log::debug!("Replacement {replacement:?} made new molecule {}", molecule.to_string());
+            if count.contains_key(&molecule.to_string()) {
+                log::debug!("Molecule already exists");
+            }
+            count.insert(molecule.to_string(), true);
+            count2 += 1;
         }
     }
 
-    log::debug!("{:#?}", count);
+    // log::debug!("{:#?}", count);
+    log::info!("Counts {} vs {count2}", count.len());
 
     count.len()
 }
@@ -68,8 +75,8 @@ impl Puzzle for Day19 {
             }
         }
 
-        log::debug!("{:#?}", day.molecule);
-        log::debug!("{:#?}", day.replacements);
+        log::debug!("{}", day.molecule.to_string());
+        log::trace!("{:#?}", day.replacements);
 
         Ok(day)
     }

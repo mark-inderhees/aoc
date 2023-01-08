@@ -1,3 +1,5 @@
+use strum_macros::Display;
+
 #[derive(Debug, Clone, Hash, std::cmp::Eq, PartialEq)]
 pub struct Molecule {
     atoms: Vec<Atom>,
@@ -14,9 +16,21 @@ impl Molecule {
         for (i, char) in abc.iter_mut().enumerate() {
             *char = (i as u8 + 'A' as u8) as char;
         }
-        for atom in input.split(abc) {
-            output.push_atom(Atom::new(atom));
+
+        let mut atom = String::new();
+        for char in input.chars() {
+            if abc.contains(&char) {
+                // This is the start of a new string
+                if atom.chars().count() > 0 {
+                    output.push_atom(Atom::new(&atom));
+                }
+                atom = char.to_string();
+            } else {
+                atom.push(char);
+            }
         }
+        output.push_atom(Atom::new(&atom));
+
         output
     }
 
@@ -30,6 +44,12 @@ impl Molecule {
 
     pub fn push_atom(&mut self, atom: Atom) {
         self.atoms.push(atom);
+    }
+
+    pub fn to_string(&self) -> String {
+        self.atoms
+            .iter()
+            .fold(String::new(), |a, x| a + &x.to_string())
     }
 
     /// For every from atom found in this module, change to the to partern.
@@ -50,7 +70,7 @@ impl Molecule {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash, std::cmp::Eq)]
+#[derive(Debug, Clone, PartialEq, Hash, std::cmp::Eq, Display)]
 pub enum Atom {
     H,
     He,
