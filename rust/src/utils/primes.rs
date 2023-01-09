@@ -4,6 +4,8 @@ pub struct Primes {
     primes: Vec<usize>,
 }
 
+use itertools::Itertools;
+
 impl Primes {
     pub fn new(up_to: usize) -> Primes {
         let mut primes = Primes {
@@ -72,6 +74,31 @@ impl Primes {
                 output.push(factor.clone());
             }
         }
+
+        output
+    }
+
+    /// Get all factors for a number.
+    /// For example 12's factors are [1, 2, 3, 4, 6, 12].
+    pub fn all_factors(&self, number: usize) -> Vec<usize> {
+        let mut output = vec![1, number];
+
+        let mut members = vec![1];
+        let factorization = self.factorization(number);
+        for factor in factorization.iter() {
+            for _ in 0..factor.exponent {
+                members.push(factor.base);
+            }
+        }
+        members.sort();
+        log::debug!("Comboify {:?}", members);
+        for len in 2..=members.len() {
+            for combo in members.iter().combinations(len) {
+                output.push(combo.iter().fold(1, |a, &x| a * x));
+            }
+        }
+        output.sort();
+        output.dedup();
 
         output
     }
