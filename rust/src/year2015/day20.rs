@@ -1,7 +1,8 @@
 // 2015 Day 20
 // https://adventofcode.com/2015/day/20
 // --- Day 20: Infinite Elves and Infinite Houses ---
-// Factorization!
+// Factorization! Or is it? Factorization worked but ended up being a little
+// slow, so this turned into an optimization question.
 
 use anyhow::Result;
 
