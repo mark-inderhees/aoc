@@ -15,36 +15,34 @@ pub struct Day20 {
 }
 
 // TODO clean this up
-// fn find_presents_per_house_to_target_old(day: &mut Day20) -> usize {
-//     // The number of presents for a house is like
-//     // sum_of_factors * 10
-//     // So house 8 is (1+2+4+8)*10 = 150
-//     // sum_of_factors can also be done as prime factorization:
-//     // sum_of_factors = x^n ---> sum(x^0,x^1,..,x^n)
-//     // So for house 6, (1+2+3+6)*10 = 120
-//     // or 2^1*3^1 -> (1+2)*(1+3) = 12  then *10=120
+fn find_presents_per_house_to_target_old(day: &mut Day20) -> usize {
+    // The number of presents for a house is like
+    // sum_of_factors * 10
+    // So house 8 is (1+2+4+8)*10 = 150
+    // sum_of_factors can also be done as prime factorization:
+    // sum_of_factors = x^n ---> sum(x^0,x^1,..,x^n)
+    // So for house 6, (1+2+3+6)*10 = 120
+    // or 2^1*3^1 -> (1+2)*(1+3) = 12  then *10=120
 
-//     day.presents_per_hosue.push(10); // Hack for house 1 as 1 is not prime
+    for house in 2..day.target {
+        let factors = day.primes.prime_factors(house);
+        let mut sum_factors = 1;
+        for factor in factors.iter() {
+            let mut sum = 0;
+            for power in 0..=factor.exponent {
+                sum += factor.base.pow(power as u32);
+            }
+            sum_factors *= sum;
+        }
+        let presents = sum_factors * 10;
+        log::debug!("House {house} got {}", presents);
+        if presents >= day.target {
+            return house;
+        }
+    }
 
-//     for house in 2..day.target {
-//         let factors = day.primes.factorization(house);
-//         let mut sum_factors = 1;
-//         for factor in factors.iter() {
-//             let mut sum = 0;
-//             for power in 0..=factor.exponent {
-//                 sum += factor.base.pow(power as u32);
-//             }
-//             sum_factors *= sum;
-//         }
-//         day.presents_per_hosue.push(sum_factors * 10);
-//         log::debug!("House {house} got {}", day.presents_per_hosue[house - 1]);
-//         if day.presents_per_hosue[house - 1] >= day.target {
-//             return house;
-//         }
-//     }
-
-//     0 // TODO THis isbaaaaaaaaaad
-// }
+    0 // TODO THis isbaaaaaaaaaad
+}
 
 /// Find the house that receives at least the target number of presents.
 /// A house recieves presents = sum_of_factors * scaler
@@ -96,7 +94,8 @@ impl Puzzle for Day20 {
 
     fn solve_part1(&mut self) -> Result<String> {
         // Find target house, using scaler 10 and infinite elf present delivery
-        let answer = find_target_house(self, 10, false);
+        let answer = find_presents_per_house_to_target_old(self);
+        // let answer = find_target_house(self, 10, false);
         Ok(answer.to_string())
     }
 
