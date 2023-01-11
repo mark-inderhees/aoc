@@ -49,8 +49,9 @@ impl Primes {
     /// Get the prime factorization of this number. This uses recursion.
     pub fn prime_factors(&self, number: usize) -> Vec<Power> {
         assert_ne!(number, 0, "Cannot factorize 0");
+        assert_ne!(number, 1, "1 has no prime factors");
 
-        if self.is_prime(number) || number == 1 {
+        if self.is_prime(number) {
             // All prime factors have been found
             return vec![Power {
                 base: number,
@@ -98,6 +99,11 @@ impl Primes {
     /// Get all factors for a number.
     /// For example 12's factors are [1, 2, 3, 4, 6, 12].
     pub fn all_factors(&self, number: usize) -> Vec<usize> {
+        if number == 1 {
+            // 1 is a special case, it's not prime factorable so just do it manually
+            return vec![1];
+        }
+
         let mut output = vec![];
 
         // Find the prime factors
@@ -109,10 +115,10 @@ impl Primes {
             for _ in 0..prime_factor.exponent {
                 prime_factor_bases.push(prime_factor.base);
             }
-        }
 
-        // Ensure 1 is in the list, its not actually prime but is a factor
-        prime_factor_bases.push(1);
+            // Each prime factor is also a factor, ensure they are in the output
+            output.push(prime_factor.base);
+        }
 
         // Find all factors by multiple all combinations of prime factors
         // So 1*2*2*3 --> 1*2, 1*3, 2*2, 2*3, and 2*2*3 --> 2, 3, 4, 6, 12
