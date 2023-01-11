@@ -89,13 +89,14 @@ fn calc_stats(weapon: &Item, armor: &Vec<&Item>, rings: &Vec<&Item>) -> Stats {
     stats
 }
 
-fn find_cheapest_win(day: &Day21) -> u32 {
+fn find_cheapest_win(day: &Day21) -> (u32, u32) {
     // Search all combinations of shop config for which win costs the least
     // Must buy one weapon
     // Can by at most one armor, but it's optional
     // Can buy 0 to 2 rings, but no duplicate items
     let mut me = day.me.clone();
     let mut lowest_cost = u32::MAX;
+    let mut highest_cost_lost = u32::MIN;
 
     for weapon in day.weapons.iter() {
         for armor in day.armor.iter() {
@@ -106,12 +107,16 @@ fn find_cheapest_win(day: &Day21) -> u32 {
                     me.stats = calc_stats(weapon, &armor, &rings);
                     if did_i_win(&me, &day.boss) {
                         lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
+                    } else {
+                        highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
                     }
 
                     // Todo also try these weapon and rings with no armor
                     me.stats = calc_stats(weapon, &vec![], &rings);
                     if did_i_win(&me, &day.boss) {
                         lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
+                    } else {
+                        highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
                     }
                 }
             }
@@ -119,6 +124,8 @@ fn find_cheapest_win(day: &Day21) -> u32 {
             me.stats = calc_stats(weapon, &armor, &vec![]);
             if did_i_win(&me, &day.boss) {
                 lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
+            } else {
+                highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
             }
         }
 
@@ -126,10 +133,12 @@ fn find_cheapest_win(day: &Day21) -> u32 {
         me.stats = calc_stats(weapon, &vec![], &vec![]);
         if did_i_win(&me, &day.boss) {
             lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
+        } else {
+            highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
         }
     }
 
-    lowest_cost
+    (lowest_cost, highest_cost_lost)
 }
 
 impl Puzzle for Day21 {
@@ -235,25 +244,26 @@ impl Puzzle for Day21 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = find_cheapest_win(self);
+        let answer = find_cheapest_win(self).0;
         Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(65.to_string()),
             false => Some(121.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_cheapest_win(self).1;
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(188.to_string()),
+            false => Some(201.to_string()),
         }
     }
 }
