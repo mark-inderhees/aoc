@@ -14,40 +14,13 @@ pub struct Day20 {
     target: usize,
 }
 
-// TODO clean this up
-fn find_presents_per_house_to_target_old(day: &mut Day20) -> usize {
-    // The number of presents for a house is like
-    // sum_of_factors * 10
-    // So house 8 is (1+2+4+8)*10 = 150
-    // sum_of_factors can also be done as prime factorization:
-    // sum_of_factors = x^n ---> sum(x^0,x^1,..,x^n)
-    // So for house 6, (1+2+3+6)*10 = 120
-    // or 2^1*3^1 -> (1+2)*(1+3) = 12  then *10=120
-
-    for house in 2..day.target {
-        let factors = day.primes.prime_factors(house);
-        let mut sum_factors = 1;
-        for factor in factors.iter() {
-            let mut sum = 0;
-            for power in 0..=factor.exponent {
-                sum += factor.base.pow(power as u32);
-            }
-            sum_factors *= sum;
-        }
-        let presents = sum_factors * 10;
-        log::debug!("House {house} got {}", presents);
-        if presents >= day.target {
-            return house;
-        }
-    }
-
-    0 // TODO THis isbaaaaaaaaaad
-}
-
+/// NOTE this is unused as it's a little slow, 5 seconds to answer.
+/// But I asume the idea was to use factorization, so I'll keep the logic.
 /// Find the house that receives at least the target number of presents.
 /// A house recieves presents = sum_of_factors * scaler
 /// Execpt with stop_after_50_houses, a factor is removed from the sum if it
 /// has already been used at 50 other houses.
+#[allow(dead_code)]
 fn find_target_house(day: &mut Day20, scaler: usize, stop_after_50_houses: bool) -> usize {
     // House present calculation is sum_of_factors * scaler
     // So house 8 is (1+2+4+8)*10 = 150
@@ -77,6 +50,36 @@ fn find_target_house(day: &mut Day20, scaler: usize, stop_after_50_houses: bool)
     panic!("Did not find target house");
 }
 
+/// Find the house that receives at least the target number of presents.
+fn find_target_house_via_elf(day: &mut Day20, scaler: usize, stop_after_50_houses: bool) -> usize {
+    // A little bit of optimization magic, but max = day.target is still pretty fast
+    let max = 1_000_000;
+
+    let mut presents_at_house = vec![0; max];
+
+    // Instead of iterting over houses, iterate over elfs.
+    // This ends up being faster than trying to find factors as the logic can
+    // step by a known value instead of hunting for factors.
+    for elf in 1..max {
+        let mut houses_visited = 0;
+        for house in (elf..max).step_by(elf) {
+            presents_at_house[house] += elf * scaler;
+
+            houses_visited += 1;
+            if stop_after_50_houses && houses_visited >= 50 {
+                break;
+            }
+        }
+
+        // Check if this is the target house
+        if presents_at_house[elf] >= day.target {
+            return elf;
+        }
+    }
+
+    panic!("Did not find target house");
+}
+
 impl Puzzle for Day20 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -94,8 +97,8 @@ impl Puzzle for Day20 {
 
     fn solve_part1(&mut self) -> Result<String> {
         // Find target house, using scaler 10 and infinite elf present delivery
-        let answer = find_presents_per_house_to_target_old(self);
         // let answer = find_target_house(self, 10, false);
+        let answer = find_target_house_via_elf(self, 10, false);
         Ok(answer.to_string())
     }
 
@@ -108,7 +111,8 @@ impl Puzzle for Day20 {
 
     fn solve_part2(&mut self) -> Result<String> {
         // Find target house, using scaler 11 and elfs stop after 50 houses
-        let answer = find_target_house(self, 11, true);
+        // let answer = find_target_house(self, 11, true);
+        let answer = find_target_house_via_elf(self, 11, true);
         Ok(answer.to_string())
     }
 
