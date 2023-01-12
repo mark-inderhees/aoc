@@ -43,7 +43,13 @@ struct Player {
 }
 
 /// Given a player and a boss, who won this duel?
-fn did_i_win(me: &Player, boss: &Player) -> bool {
+/// Also update cost arguments, given this function is called many times.
+fn did_i_win(
+    me: &Player,
+    boss: &Player,
+    lowest_cost_win: &mut u32,
+    highest_cost_lost: &mut u32,
+) -> bool {
     // A player losses at least 1 HP per round
     let my_loss_per_round = std::cmp::max(
         1,
@@ -64,6 +70,12 @@ fn did_i_win(me: &Player, boss: &Player) -> bool {
     log::debug!(
         "Result {result}. Round {my_death_round} vs {boss_death_round}. Me {me:?} vs boss {boss:?}"
     );
+
+    if result {
+        *lowest_cost_win = std::cmp::min(*lowest_cost_win, me.stats.cost);
+    } else {
+        *highest_cost_lost = std::cmp::max(*highest_cost_lost, me.stats.cost);
+    }
 
     result
 }
@@ -99,7 +111,7 @@ fn find_cheapest_win_and_expensive_loss(day: &Day21) -> (u32, u32) {
     // Can by at most one armor, but it's optional
     // Can buy 0 to 2 rings, but no duplicate items
     let mut me = day.me.clone();
-    let mut lowest_cost = u32::MAX;
+    let mut lowest_cost_win = u32::MAX;
     let mut highest_cost_lost = u32::MIN;
 
     // Try each weapon
@@ -113,40 +125,24 @@ fn find_cheapest_win_and_expensive_loss(day: &Day21) -> (u32, u32) {
                 for rings in day.rings.iter().combinations(ring_len) {
                     // Try this weapon, armor and rings
                     me.stats = calc_stats(weapon, &armor, &rings);
-                    if did_i_win(&me, &day.boss) {
-                        lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
-                    } else {
-                        highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
-                    }
+                    did_i_win(&me, &day.boss, &mut lowest_cost_win, &mut highest_cost_lost);
 
                     // Try these weapon and rings with no armor
                     me.stats = calc_stats(weapon, &vec![], &rings);
-                    if did_i_win(&me, &day.boss) {
-                        lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
-                    } else {
-                        highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
-                    }
+                    did_i_win(&me, &day.boss, &mut lowest_cost_win, &mut highest_cost_lost);
                 }
             }
             // Try this weapon and armor with no rings
             me.stats = calc_stats(weapon, &armor, &vec![]);
-            if did_i_win(&me, &day.boss) {
-                lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
-            } else {
-                highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
-            }
+            did_i_win(&me, &day.boss, &mut lowest_cost_win, &mut highest_cost_lost);
         }
 
         // Try this weapon with no armor and no ring
         me.stats = calc_stats(weapon, &vec![], &vec![]);
-        if did_i_win(&me, &day.boss) {
-            lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
-        } else {
-            highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
-        }
+        did_i_win(&me, &day.boss, &mut lowest_cost_win, &mut highest_cost_lost);
     }
 
-    (lowest_cost, highest_cost_lost)
+    (lowest_cost_win, highest_cost_lost)
 }
 
 impl Puzzle for Day21 {
