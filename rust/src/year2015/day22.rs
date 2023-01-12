@@ -1,16 +1,13 @@
 // 2015 Day 22
 // https://adventofcode.com/2015/day/22
 // --- Day 22: Wizard Simulator 20XX ---
+// Fight an RPG battle like day 21. But now I'm a wizzard that casts spells and
+// has no armor. This uses path finding now.
 
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day22 {
     boss: Boss,
@@ -18,6 +15,7 @@ pub struct Day22 {
     spells: Vec<Spell>,
 }
 
+/// An effect is a spell that lasts multiple turns
 #[derive(Debug, Clone)]
 struct Effect {
     name: String,
@@ -54,14 +52,16 @@ struct Spell {
 }
 
 /// Find the win that results in using the least amount of mana.
+/// For hard mode, I take 1hp damage extra each round.
 fn find_cheapest_win(day: &Day22, hard_mode: bool) -> u32 {
     // This is path finding
-    // I wear no armor, but i have spell effects that give armor
+    // I wear no armor, but I have spell effects that give armor
     // Boss has no armor
     // The boss always does at least 1 damage
     // I must cast a spell every round, if I have no mana then I lose
     // Effects happen at the start of both my and boss turns
     // I cannot cast an effect that is already running
+    // In hard mode, I take one damage at the very start of my turn
 
     #[derive(Debug, Clone)]
     struct Work {
@@ -74,6 +74,7 @@ fn find_cheapest_win(day: &Day22, hard_mode: bool) -> u32 {
         boss: day.boss.clone(),
         my_turn: true,
     }];
+
     let mut min_mana_spent = u32::MAX;
 
     while jobs.len() > 0 {
@@ -111,7 +112,7 @@ fn find_cheapest_win(day: &Day22, hard_mode: bool) -> u32 {
             continue;
         }
 
-        // Do turn of me (cast spell) OR do turn of boss
+        // Do a player turn
         if job.my_turn {
             // Cast a new spell
             'spell_loop: for spell in day.spells.iter() {
@@ -164,7 +165,7 @@ fn find_cheapest_win(day: &Day22, hard_mode: bool) -> u32 {
                 jobs.push(new_job);
             }
         } else {
-            // Boss attacks
+            // Boss attacks, my armor only comes from effects
             let my_armor = job.me.effects.iter().fold(0, |a, x| a + x.armor);
 
             // Attack always does at least 1 damage
@@ -188,6 +189,7 @@ fn find_cheapest_win(day: &Day22, hard_mode: bool) -> u32 {
 impl Puzzle for Day22 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
+        // Input is simple stats for the boss
         let lines: Vec<&str> = input.trim().lines().collect();
         let hit_points = find_val(lines[0]);
         let damage = find_val(lines[1]);
@@ -210,6 +212,7 @@ impl Puzzle for Day22 {
             day.me.mana = 250;
         }
 
+        // Spells are staticaly defined
         day.spells.push(Spell {
             name: "Magic Missle".to_string(),
             effect: false,
@@ -254,6 +257,7 @@ impl Puzzle for Day22 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find least amount of mana needed to win in normal mode
         let answer = find_cheapest_win(self, false);
         Ok(answer.to_string())
     }
@@ -266,6 +270,7 @@ impl Puzzle for Day22 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Find least amount of mana needed to win in hard mode
         let answer = find_cheapest_win(self, true);
         Ok(answer.to_string())
     }
