@@ -54,7 +54,7 @@ struct Spell {
 }
 
 /// Find the win that results in using the least amount of mana.
-fn find_cheapest_win(day: &Day22) -> u32 {
+fn find_cheapest_win(day: &Day22, hard_mode: bool) -> u32 {
     // This is path finding
     // I wear no armor, but i have spell effects that give armor
     // Boss has no armor
@@ -78,6 +78,16 @@ fn find_cheapest_win(day: &Day22) -> u32 {
 
     while jobs.len() > 0 {
         let mut job = jobs.pop().unwrap();
+
+        // For hard mode, player loses 1hp each round
+        if job.my_turn && hard_mode {
+            job.me.hit_points -= 1;
+
+            // Am I dead?
+            if job.me.hit_points <= 0 {
+                continue;
+            }
+        }
 
         // Apply effects
         for effect in job.me.effects.iter_mut() {
@@ -244,25 +254,26 @@ impl Puzzle for Day22 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = find_cheapest_win(self);
+        let answer = find_cheapest_win(self, false);
         Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(226.to_string()),
+            false => Some(900.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_cheapest_win(self, true);
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(u32::MAX.to_string()), // There were no test cases, so this is lame
+            false => Some(1216.to_string()),
         }
     }
 }
