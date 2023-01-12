@@ -1,16 +1,14 @@
 // 2015 Day 21
 // https://adventofcode.com/2015/day/21
+// --- Day 21: RPG Simulator 20XX ---
+// Play a basic RPG game with attack and defensive points. Who dies?
+// What is best equipment combo for cost?
 
 use anyhow::Result;
 use itertools::Itertools;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day21 {
     me: Player,
@@ -20,6 +18,7 @@ pub struct Day21 {
     rings: Vec<Item>,
 }
 
+/// An item in the shop
 #[derive(Debug, Clone)]
 struct Item {
     #[allow(dead_code)]
@@ -29,6 +28,7 @@ struct Item {
     armor: u32,
 }
 
+/// Stats of all the items the player has equipped
 #[derive(Debug, Clone)]
 struct Stats {
     damage: u32,
@@ -42,6 +42,7 @@ struct Player {
     stats: Stats,
 }
 
+/// Given a player and a boss, who won this duel?
 fn did_i_win(me: &Player, boss: &Player) -> bool {
     // A player losses at least 1 HP per round
     let my_loss_per_round = std::cmp::max(
@@ -67,6 +68,7 @@ fn did_i_win(me: &Player, boss: &Player) -> bool {
     result
 }
 
+/// Given a bunch of items, what is the sumed stats.
 fn calc_stats(weapon: &Item, armor: &Vec<&Item>, rings: &Vec<&Item>) -> Stats {
     let mut stats = Stats {
         damage: weapon.damage,
@@ -89,8 +91,10 @@ fn calc_stats(weapon: &Item, armor: &Vec<&Item>, rings: &Vec<&Item>) -> Stats {
     stats
 }
 
-fn find_cheapest_win(day: &Day21) -> (u32, u32) {
+/// Find both the cheapest way to win and the most expensive way to lose.
+fn find_cheapest_win_and_expensive_loss(day: &Day21) -> (u32, u32) {
     // Search all combinations of shop config for which win costs the least
+    // And which loss cost the most
     // Must buy one weapon
     // Can by at most one armor, but it's optional
     // Can buy 0 to 2 rings, but no duplicate items
@@ -98,12 +102,16 @@ fn find_cheapest_win(day: &Day21) -> (u32, u32) {
     let mut lowest_cost = u32::MAX;
     let mut highest_cost_lost = u32::MIN;
 
+    // Try each weapon
     for weapon in day.weapons.iter() {
+        // Try each armor (or zero armor)
         for armor in day.armor.iter() {
             let armor = vec![armor];
+
+            // Try ring combos (0 to 2)
             for ring_len in 1..=2 {
                 for rings in day.rings.iter().combinations(ring_len) {
-                    // todo try this weapon, armor and rings
+                    // Try this weapon, armor and rings
                     me.stats = calc_stats(weapon, &armor, &rings);
                     if did_i_win(&me, &day.boss) {
                         lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
@@ -111,7 +119,7 @@ fn find_cheapest_win(day: &Day21) -> (u32, u32) {
                         highest_cost_lost = std::cmp::max(highest_cost_lost, me.stats.cost);
                     }
 
-                    // Todo also try these weapon and rings with no armor
+                    // Try these weapon and rings with no armor
                     me.stats = calc_stats(weapon, &vec![], &rings);
                     if did_i_win(&me, &day.boss) {
                         lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
@@ -120,7 +128,7 @@ fn find_cheapest_win(day: &Day21) -> (u32, u32) {
                     }
                 }
             }
-            // Todo als run this weapon and armor with no rings
+            // Try this weapon and armor with no rings
             me.stats = calc_stats(weapon, &armor, &vec![]);
             if did_i_win(&me, &day.boss) {
                 lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
@@ -129,7 +137,7 @@ fn find_cheapest_win(day: &Day21) -> (u32, u32) {
             }
         }
 
-        // Todo also run this weapon with no armor and no ring
+        // Try this weapon with no armor and no ring
         me.stats = calc_stats(weapon, &vec![], &vec![]);
         if did_i_win(&me, &day.boss) {
             lowest_cost = std::cmp::min(lowest_cost, me.stats.cost);
@@ -167,6 +175,7 @@ impl Puzzle for Day21 {
             rings: vec![],
         };
 
+        // Read in boss stats from input
         let lines: Vec<&str> = input.lines().collect();
         day.boss.hit_points = find_val(lines[0]);
         day.boss.stats.damage = find_val(lines[1]);
@@ -177,6 +186,7 @@ impl Puzzle for Day21 {
             day.me.hit_points = 8;
         }
 
+        // The shop is static info
         let mut shop = "
         Weapons:    Cost  Damage  Armor
         Dagger        8     4       0
@@ -201,6 +211,7 @@ impl Puzzle for Day21 {
         Defense_3   80     0       3";
         shop = shop.trim();
 
+        // Parse the above shop info
         let item_groups: Vec<&str> = shop.split("\n\n").collect();
         let mut item_lists: Vec<Vec<Item>> = vec![vec![]; 3];
         let mut i = 0;
@@ -209,6 +220,7 @@ impl Puzzle for Day21 {
             for line in item_group.lines() {
                 j += 1;
                 if j == 1 {
+                    // Skip the first line as it is the header
                     continue;
                 }
                 let name = line.split(" ").collect::<Vec<&str>>()[0].to_string();
@@ -230,21 +242,12 @@ impl Puzzle for Day21 {
         day.armor = item_lists[1].clone();
         day.rings = item_lists[2].clone();
 
-        // Add empty items to armor and rings as those are optional
-        // let empty = Item {
-        //     name: "Empty".to_string(),
-        //     cost: 0,
-        //     damage: 0,
-        //     armor: 0,
-        // };
-        // day.armor.push(empty.clone());
-        // day.rings.push(empty.clone());
-
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let answer = find_cheapest_win(self).0;
+        // Find cheapest win
+        let answer = find_cheapest_win_and_expensive_loss(self).0;
         Ok(answer.to_string())
     }
 
@@ -256,7 +259,8 @@ impl Puzzle for Day21 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        let answer = find_cheapest_win(self).1;
+        // Find most expensive loss
+        let answer = find_cheapest_win_and_expensive_loss(self).1;
         Ok(answer.to_string())
     }
 
