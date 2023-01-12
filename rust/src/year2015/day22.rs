@@ -24,7 +24,7 @@ struct Effect {
     time_left: u32,
     armor: i32,
     damage: i32,
-    mana: u32,
+    mana_recharge: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -80,6 +80,26 @@ fn find_cheapest_win(day: &Day22) -> u32 {
         let mut job = jobs.pop().unwrap();
 
         // Apply effects
+        for effect in job.me.effects.iter_mut() {
+            effect.time_left -= 1;
+            job.boss.hit_points -= effect.damage; // Poison damage
+            job.me.mana += effect.mana_recharge; // Reacharge gain mana
+        }
+
+        // Remove expired effects
+        job.me.effects.retain(|x| x.time_left > 0);
+
+        // Is boss dead?
+        if job.boss.hit_points <= 0 {
+            log::debug!("Boss is dead!");
+            min_mana_spent = std::cmp::min(min_mana_spent, job.me.mana_spent);
+            continue;
+        }
+
+        // Is this a bad path?
+        if job.me.mana_spent > min_mana_spent {
+            continue;
+        }
 
         // Do turn of me (cast spell) OR do turn of boss
         if job.my_turn {
@@ -115,7 +135,7 @@ fn find_cheapest_win(day: &Day22) -> u32 {
                         time_left: spell.effect_length,
                         armor: spell.armor,
                         damage: spell.damage,
-                        mana: spell.mana_recharge,
+                        mana_recharge: spell.mana_recharge,
                     });
                 } else {
                     // Apply the spell immediately
@@ -129,6 +149,8 @@ fn find_cheapest_win(day: &Day22) -> u32 {
                         continue;
                     }
                 }
+
+                // Schedule the job
                 jobs.push(new_job);
             }
         } else {
@@ -138,6 +160,15 @@ fn find_cheapest_win(day: &Day22) -> u32 {
             // Attack always does at least 1 damage
             let attack = std::cmp::max(1, job.boss.damage - my_armor);
             job.me.hit_points -= attack;
+
+            // Am I dead?
+            if job.me.hit_points <= 0 {
+                continue;
+            }
+
+            // Reschedule the job
+            job.my_turn = true;
+            jobs.push(job);
         }
     }
 
@@ -213,7 +244,8 @@ impl Puzzle for Day22 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let answer = find_cheapest_win(self);
+        Ok(answer.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
