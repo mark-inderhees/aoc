@@ -130,6 +130,11 @@ impl Cpu {
         self.state.registers[register as usize]
     }
 
+    /// Set the value of a register.
+    pub fn set_reg(&mut self, register: Register, value: i32) {
+        self.state.registers[register as usize] = value;
+    }
+
     /// Add a new instruction to the program.
     pub fn add_instruction(&mut self, instruction: &Instruction) {
         self.program.push(instruction.clone());

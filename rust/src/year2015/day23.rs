@@ -47,12 +47,11 @@ impl Puzzle for Day23 {
             day.cpu.add_instruction(&instruction);
         }
 
-        day.cpu.run();
-
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        self.cpu.run();
         let answer = self.cpu.reg(Register::B);
         Ok(answer.to_string())
     }
@@ -60,18 +59,21 @@ impl Puzzle for Day23 {
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some(0.to_string()),
-            false => None,
+            false => Some(255.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        self.cpu.set_reg(Register::A, 1);
+        self.cpu.run();
+        let answer = self.cpu.reg(Register::B);
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(0.to_string()),
+            false => Some(334.to_string()),
         }
     }
 }
