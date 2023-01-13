@@ -1,22 +1,19 @@
 // 2015 Day 23
 // https://adventofcode.com/2015/day/23
 // --- Day 23: Opening the Turing Lock ---
+// Run a program. Reading comprehension, jio is jump if ONE.
 
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
 use crate::utils::cpu::*;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day23 {
     cpu: Cpu,
 }
 
+/// Helper to parse input, find the register from a string
 fn register_from_str(string: &str) -> Register {
     match string {
         "a" => Register::A,
@@ -32,6 +29,7 @@ impl Puzzle for Day23 {
         let mut day = Day23 { cpu: Cpu::new() };
 
         for line in input.lines() {
+            // Each line is a basic instruction
             let line = line.replace(",", "");
             let splits: Vec<&str> = line.split(" ").collect();
             let register = splits[1];
@@ -51,6 +49,7 @@ impl Puzzle for Day23 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // What is in reg B at the end?
         self.cpu.run();
         let answer = self.cpu.reg(Register::B);
         Ok(answer.to_string())
@@ -64,6 +63,7 @@ impl Puzzle for Day23 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // What is in reg B at the end, if A starts a 1?
         self.cpu.set_reg(Register::A, 1);
         self.cpu.run();
         let answer = self.cpu.reg(Register::B);
