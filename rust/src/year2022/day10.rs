@@ -30,14 +30,14 @@ impl Puzzle for Day10 {
                 _ => {
                     let parts: Vec<&str> = line.split(" ").collect();
                     let i: i32 = parts[1].parse()?;
-                    Instruction::Addx(i)
+                    Instruction::Add(Register::X, i)
                 }
             };
 
             // Run this instruction and drive CRT
-            let reg_x = day.cpu.reg_x();
+            let reg_x = day.cpu.reg(Register::X);
             day.crt.print_sprite(reg_x as usize);
-            let count = Cpu::cycle_count(&instruction);
+            let count = day.cpu.cycle_count(&instruction);
             for _ in 0..count {
                 day.crt.step(reg_x);
             }
@@ -51,9 +51,9 @@ impl Puzzle for Day10 {
         let mut count = 0;
         // Sum reg_x at certain times in history
         for x in (19..220).step_by(40) {
-            let state = self.cpu.state_history[x];
-            log::debug!("{:#?}", state.reg_x);
-            count += (1 + x as i32) * state.reg_x;
+            let state = self.cpu.state_history[x].clone();
+            log::debug!("{:#?}", state.registers[Register::X as usize]);
+            count += (1 + x as i32) * state.registers[Register::X as usize];
         }
 
         Ok(count.to_string())
