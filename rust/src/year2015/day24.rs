@@ -25,6 +25,49 @@ fn remove_vec_items(original: &Vec<u64>, to_remove: &Vec<u64>) -> Vec<u64> {
     output
 }
 
+fn is_good_sum(group_weight: u64, presents: &Vec<u64>) -> bool {
+    let sum: u64 = presents.iter().sum();
+    if sum != group_weight {
+        return false;
+    }
+    return true;
+}
+
+fn is_good_group(
+    group_weight: u64,
+    input_presents: &Vec<u64>,
+    output_presents: &mut Vec<u64>,
+    count: u64,
+) -> bool {
+    if count == 0 {
+        return is_good_sum(group_weight, input_presents);
+    }
+
+    for len in 1..input_presents.len() - 1 {
+        for group in input_presents.iter().combinations(len) {
+            let group: Vec<u64> = group.iter().map(|&&x| x.clone()).collect();
+
+            // Is this group the correct weight
+            if !is_good_sum(group_weight, &group) {
+                continue;
+            }
+
+            output_presents.extend(remove_vec_items(&input_presents, &group));
+            let mut next_output_presents: Vec<u64> = vec![];
+            if is_good_group(
+                group_weight,
+                output_presents,
+                &mut next_output_presents,
+                count - 1,
+            ) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
 /// Balance the presents in the sled. Put the fewest possible presents in the
 /// front seat. Find the smalles quantum of the possible front seat
 /// configuration. The number of groups in the sled can be 3 or 4.
@@ -43,10 +86,8 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(
     let mut smallest_front_len = usize::MAX;
     let mut smallest_front_quantum = u64::MAX;
 
-    // Try combinations of the front group
-    'loop_len1: for len1 in 1..presents.len() - 2 {
-        'loop_group1: for group1 in presents.iter().combinations(len1) {
-            log::trace!("Group1 {group1:?}");
+    for len1 in 1..presents.len() - 1 {
+        for group1 in presents.iter().combinations(len1) {
             let group1: Vec<u64> = group1.iter().map(|&&x| x.clone()).collect();
 
             // Is the front group the correct weight?
@@ -58,7 +99,7 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(
             // Check if smallest front group is already found
             if len1 > smallest_front_len {
                 // There are no more small front groups, all done
-                break 'loop_len1;
+                return smallest_front_quantum;
             }
 
             // Is this front group quantum too large?
@@ -67,67 +108,16 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(
                 continue;
             }
 
-            // Try combinations for the second group
             let back_presents = remove_vec_items(presents, &group1);
-            for len2 in 1..back_presents.len() - 1 {
-                for group2 in back_presents.iter().combinations(len2) {
-                    let group2: Vec<u64> = group2.iter().map(|&&x| x.clone()).collect();
-
-                    // Is this second group the correct weight?
-                    let sum2: u64 = group2.iter().sum();
-                    if sum2 != group_weight {
-                        continue;
-                    }
-
-                    // There could be either 3 or 4 groups
-                    let mut good = false;
-                    if groups == 3 {
-                        // There are only 3 groups
-                        let group3 = remove_vec_items(&back_presents, &group2);
-
-                        // Is this group 3 the correct weight?
-                        let sum3: u64 = group3.iter().sum();
-                        if sum3 != group_weight {
-                            continue;
-                        }
-                        good = true;
-                    } else {
-                        // There are 4 groups
-                        // Try combinations for group 3
-                        let trunk = remove_vec_items(&back_presents, &group2);
-                        'loop_len3: for len3 in 1..trunk.len() - 1 {
-                            for group3 in trunk.iter().combinations(len3) {
-                                let group3: Vec<u64> = group3.iter().map(|&&x| x.clone()).collect();
-
-                                // Is this group 3 the correct weight
-                                let sum3: u64 = group3.iter().sum();
-                                if sum3 != group_weight {
-                                    continue;
-                                }
-
-                                // Is this group 4 the correct weight?
-                                let group4 = remove_vec_items(&trunk, &group3);
-                                let sum4: u64 = group4.iter().sum();
-                                if sum4 != group_weight {
-                                    continue;
-                                }
-
-                                // We found a good grooup, stop looking
-                                good = true;
-                                break 'loop_len3;
-                            }
-                        }
-                    }
-
-                    if good {
-                        smallest_front_len = std::cmp::min(smallest_front_len, len1);
-                        smallest_front_quantum = std::cmp::min(smallest_front_quantum, quantum);
-
-                        // Don't need any more group1s as exact make up of group2
-                        // and group3 (and group4) are not important.
-                        continue 'loop_group1;
-                    }
-                }
+            let mut trunk_presents: Vec<u64> = vec![];
+            if is_good_group(
+                group_weight,
+                &back_presents,
+                &mut trunk_presents,
+                groups - 2,
+            ) {
+                smallest_front_len = std::cmp::min(smallest_front_len, len1);
+                smallest_front_quantum = std::cmp::min(smallest_front_quantum, quantum);
             }
         }
     }
