@@ -34,31 +34,57 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(presents: &Vec<u32
     let total_weight: u32 = presents.iter().sum();
     assert_eq!(total_weight % 3, 0);
     let group_weight = total_weight / 3;
+    log::debug!("Total weight {total_weight}, looking for group weight {group_weight}");
 
     let mut balanced_sets = vec![];
 
-    for len1 in 1..presents.len() - 2 {
-        for group1 in presents.iter().combinations(len1) {
+    let mut smallest_front_len = usize::MAX;
+    let mut smallest_front_quantum = u32::MAX;
+
+    'loop_len1: for len1 in 1..presents.len() - 2 {
+        'loop_group1: for group1 in presents.iter().combinations(len1) {
+            log::trace!("Group1 {group1:?}");
             let group1: Vec<u32> = group1.iter().map(|&&x| x.clone()).collect();
-            let sum1: u32 = group1.iter().fold(0, |a, x| a + x);
+            let sum1: u32 = group1.iter().sum();
             if sum1 != group_weight {
                 continue;
             }
+
+            if len1 > smallest_front_len {
+                // There are no more small front groups, all done
+                break 'loop_len1;
+            }
+            let quantum: u32 = group1.iter().product();
+            if quantum > smallest_front_quantum {
+                continue;
+            }
+
             let back_presents = remove_vec_items(presents, &group1);
             for len2 in 1..back_presents.len() - 1 {
                 for group2 in back_presents.iter().combinations(len2) {
                     let group2: Vec<u32> = group2.iter().map(|&&x| x.clone()).collect();
-                    let sum2: u32 = group2.iter().fold(0, |a, x| a + x);
+                    let sum2: u32 = group2.iter().sum();
                     if sum2 != group_weight {
                         continue;
                     }
                     let group3 = remove_vec_items(&back_presents, &group2);
-                    let sum3: u32 = group3.iter().fold(0, |a, &x| a + x);
+                    let sum3: u32 = group3.iter().sum();
                     if sum3 != group_weight {
                         continue;
                     }
                     balanced_sets.push((group1.clone(), group2, group3));
-                    log::debug!("Found balanced set {:?}", balanced_sets.last().unwrap());
+                    log::debug!(
+                        "Found balanced set {:?}, QE {}",
+                        balanced_sets.last().unwrap(),
+                        quantum
+                    );
+
+                    smallest_front_len = std::cmp::min(smallest_front_len, len1);
+                    smallest_front_quantum = std::cmp::min(smallest_front_quantum, quantum);
+
+                    // Don't need any more group1s as exact make up of group2
+                    // and group3 are not important.
+                    continue 'loop_group1;
                 }
             }
         }
