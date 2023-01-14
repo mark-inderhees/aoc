@@ -1,16 +1,12 @@
 // 2015 Day 25
 // https://adventofcode.com/2015/day/25
 // --- Day 25: Let It Snow ---
+// Simply move through a grid diagonally.
 
 use anyhow::Result;
 
 use crate::puzzle::Puzzle;
-
-#[allow(unused_imports)]
 use crate::utils::utils::*;
-
-#[allow(unused_imports)]
-use std::collections::VecDeque;
 
 pub struct Day25 {
     x_target: u32,
@@ -20,6 +16,7 @@ pub struct Day25 {
 impl Puzzle for Day25 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
+        // Input is simply the x,y target
         let vals: Vec<u32> = find_vals(input.trim());
         #[allow(unused_mut)]
         let mut day = Day25 {
@@ -31,7 +28,7 @@ impl Puzzle for Day25 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        // Try to find a pattern
+        // There is no patterns as we are using big prime numbers, need to brute force
         let mut current = 20151125u64;
         let mut x = 1;
         let mut y = 1;
@@ -43,6 +40,8 @@ impl Puzzle for Day25 {
             }
 
             let next = (current * 252533u64) % 33554393u64;
+
+            // Do the diagonal move, this is the main key part of the day
             if y == 1 {
                 // Start new diagonal
                 x = 1;
