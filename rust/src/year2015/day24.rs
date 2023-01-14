@@ -25,6 +25,7 @@ fn remove_vec_items(original: &Vec<u64>, to_remove: &Vec<u64>) -> Vec<u64> {
     output
 }
 
+/// Check if the sum of the presents in this group is good.
 fn is_good_sum(group_weight: u64, presents: &Vec<u64>) -> bool {
     let sum: u64 = presents.iter().sum();
     if sum != group_weight {
@@ -33,6 +34,15 @@ fn is_good_sum(group_weight: u64, presents: &Vec<u64>) -> bool {
     return true;
 }
 
+/// Recursive function. Check for count number of groups, make sure they are
+/// all balanced. Return as soon as one good organization is found.
+///
+/// # Arguments
+///
+/// * `group_weight` - The target group weight.
+/// * `input_presents` - The presents that still need dividing.
+/// * `output_presents` - The presents in the remaining groups to divide.
+/// * `count` - The number of groups to form.
 fn is_good_group(
     group_weight: u64,
     input_presents: &Vec<u64>,
@@ -43,6 +53,7 @@ fn is_good_group(
         return is_good_sum(group_weight, input_presents);
     }
 
+    // Find a good combination for this group
     for len in 1..input_presents.len() - 1 {
         for group in input_presents.iter().combinations(len) {
             let group: Vec<u64> = group.iter().map(|&&x| x.clone()).collect();
@@ -52,6 +63,7 @@ fn is_good_group(
                 continue;
             }
 
+            // Use recursion to check remaining groups
             output_presents.extend(remove_vec_items(&input_presents, &group));
             let mut next_output_presents: Vec<u64> = vec![];
             if is_good_group(
@@ -60,8 +72,11 @@ fn is_good_group(
                 &mut next_output_presents,
                 count - 1,
             ) {
+                // Found a good combination in recursion, return now
                 return true;
             }
+
+            // Did not find a good combination, keep looking
         }
     }
 
@@ -86,13 +101,13 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(
     let mut smallest_front_len = usize::MAX;
     let mut smallest_front_quantum = u64::MAX;
 
+    // Check for good front group
     for len1 in 1..presents.len() - 1 {
         for group1 in presents.iter().combinations(len1) {
             let group1: Vec<u64> = group1.iter().map(|&&x| x.clone()).collect();
 
             // Is the front group the correct weight?
-            let sum1: u64 = group1.iter().sum();
-            if sum1 != group_weight {
+            if !is_good_sum(group_weight, &group1) {
                 continue;
             }
 
@@ -109,6 +124,9 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(
             }
 
             let back_presents = remove_vec_items(presents, &group1);
+
+            // Use recursive for remaing groups. Don't care about the actual
+            // makeup, just need one balanced configuration.
             let mut trunk_presents: Vec<u64> = vec![];
             if is_good_group(
                 group_weight,
@@ -116,6 +134,7 @@ fn find_lowest_quantum_of_fewest_front_seat_balanced_presents(
                 &mut trunk_presents,
                 groups - 2,
             ) {
+                // Found a good combination, update state.
                 smallest_front_len = std::cmp::min(smallest_front_len, len1);
                 smallest_front_quantum = std::cmp::min(smallest_front_quantum, quantum);
             }
