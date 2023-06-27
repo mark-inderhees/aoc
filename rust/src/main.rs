@@ -10,6 +10,7 @@ use std::time::Instant;
 mod puzzle;
 mod utils;
 mod year2015;
+mod year2016;
 mod year2022;
 
 /// Runner for Advent of Code
@@ -19,7 +20,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 25, // __BOOTSTRAP_DAY__
+        default_value_t = 1, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -32,7 +33,7 @@ struct Args {
     part: u32,
 
     /// Which year to run for
-    #[arg(long, short, default_value_t = 2015)]
+    #[arg(long, short, default_value_t = 2016)]
     year: u32,
 
     /// Run test data instead of input
@@ -277,6 +278,13 @@ fn main() -> Result<()> {
                 23 => run_day::<year2015::day23::Day23>(part, input, test, &mut duration)?,
                 24 => run_day::<year2015::day24::Day24>(part, input, test, &mut duration)?,
                 25 => run_day::<year2015::day25::Day25>(part, input, test, &mut duration)?,
+                _ => {
+                    println!("Day {} not found, goodbye!\n", day);
+                    year_filter.push(year);
+                }
+            },
+            2016 => match day {
+                1 => run_day::<year2016::day01::Day01>(part, input, test, &mut duration)?,
                 // __BOOTSTRAP_RUN__
                 _ => {
                     println!("Day {} not found, goodbye!\n", day);
