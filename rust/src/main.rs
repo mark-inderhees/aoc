@@ -200,7 +200,7 @@ fn main() -> Result<()> {
         days = (1..=25).collect();
         parts = (1..=2).collect();
         tests = vec![true, false];
-        years = vec![2015, 2022];
+        years = vec![2015, 2016, 2022];
     }
 
     struct Run {
