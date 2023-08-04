@@ -17,17 +17,21 @@ use std::collections::VecDeque;
 
 pub struct Day01 {
     grid: Board<char>,
+    part2: Vec<Point<i32>>,
 }
 
 impl Puzzle for Day01 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = Day01 { grid: Board::new() };
+        let mut day = Day01 {
+            grid: Board::new(),
+            part2: vec![],
+        };
 
         let width = 1000i32;
         for _ in 0..width {
-            day.grid.push_row(vec!['.'; width as usize]);
+            day.grid.push_row(vec!['0'; width as usize]);
         }
         let p1 = day.grid.add_player(
             BoardPoint {
@@ -65,6 +69,13 @@ impl Puzzle for Day01 {
             let steps = find_val(bob.as_str());
             for _ in 0..steps {
                 day.grid.step_player(p1, direction);
+                let loc = day.grid.player_location(p1);
+                let value = day.grid.value_at(loc);
+                if value != '0' {
+                    log::debug!("Done at {:?}", loc);
+                    day.part2.push(loc)
+                }
+                day.grid.set_at(loc, '1');
             }
         }
 
@@ -82,19 +93,24 @@ impl Puzzle for Day01 {
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
-            true => Some(12.to_string()),
+            true => Some(8.to_string()),
             false => Some(273.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let start1 = self.grid.player_location(1);
+        let m = self.part2[0];
+        let x = m.x - start1.x;
+        let y = m.y - start1.y;
+        let answer = x.abs() + y.abs();
+        Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(4.to_string()),
+            false => Some(115.to_string()),
         }
     }
 }
