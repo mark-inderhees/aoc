@@ -1,5 +1,7 @@
 // 2016 Day 2
 // https://adventofcode.com/2016/day/2
+// --- Day 2: Bathroom Security ---
+// Find code to bathroom door given moves on a grid
 
 use anyhow::Result;
 
@@ -22,6 +24,8 @@ impl Puzzle for Day02 {
         #[allow(unused_mut)]
         let mut day = Day02 { commands: vec![] };
 
+        // Input is which direction to move. Each line will end on a key, that
+        // part of the code.
         for line in input.trim().split('\n') {
             let mut command = vec![];
             for direction_char in line.chars() {
@@ -41,6 +45,7 @@ impl Puzzle for Day02 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Part one has normal keypad
         let mut grid = Board::new();
         let mut values = vec![];
         grid.push_row(vec!['1', '2', '3']);
@@ -49,6 +54,7 @@ impl Puzzle for Day02 {
         let middle = BoardPoint { x: 1, y: 1 };
         let p1 = grid.add_player(middle, 'x');
 
+        // Now move around this grid and find the key for each command sequence
         for command in self.commands.iter() {
             for direction in command {
                 grid.step_player(p1, *direction);
@@ -68,6 +74,7 @@ impl Puzzle for Day02 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Part 2 has a funky keypad
         let mut grid = Board::new();
         let mut values = vec![];
         grid.push_row(vec![' ', ' ', '1', ' ', ' ']);
@@ -79,6 +86,7 @@ impl Puzzle for Day02 {
         let middle = BoardPoint { x: 0, y: 2 };
         let p1 = grid.add_player(middle, 'x');
 
+        // Now move around this funky grid and find the code
         for command in self.commands.iter() {
             for direction in command {
                 grid.step_player(p1, *direction);
@@ -93,7 +101,7 @@ impl Puzzle for Day02 {
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some("5DB3".to_string()),
-            false => None,
+            false => Some("A7AC3".to_string()),
         }
     }
 }
