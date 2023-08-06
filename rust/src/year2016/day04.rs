@@ -1,5 +1,7 @@
 // 2016 Day 4
 // https://adventofcode.com/2016/day/4
+// --- Day 4: Security Through Obscurity ---
+// Decode room names with checksums and char math
 
 use anyhow::Result;
 
@@ -15,7 +17,6 @@ use std::collections::VecDeque;
 struct Room {
     name: String,
     sector_id: u32,
-    checksum: String,
     valid: bool,
 }
 
@@ -23,17 +24,24 @@ pub struct Day04 {
     rooms: Vec<Room>,
 }
 
-fn add_chars(c: char, value: u32) -> char {
+// Given a char and a offset value, incremente the char value. Lower case only,
+// if goes beyond z, then wrap around to a. Also convert - to space.
+fn add_to_char(c: char, value: u32) -> char {
+    // Convert dash to space
     if c == '-' {
         return ' ';
     }
 
+    // Check for wrap around
     let u = c as u32;
     let z = 'z' as u32;
     if u + value > z {
+        // There is wrap around, add the extra to a
         let extra = u + value - z - 1;
         return char::from_u32('a' as u32 + extra).unwrap();
     }
+
+    // No wrap around, simple math
     char::from_u32(u + value).unwrap()
 }
 
@@ -44,6 +52,8 @@ impl Puzzle for Day04 {
         let mut day = Day04 { rooms: vec![] };
 
         for line in input.trim().split('\n') {
+            // Read in the room info, it contains a roomname-sectorid[checksum]
+            // Where roomname has dashes in it
             let mut line_str = line.to_string();
             let last_dash = line_str.rfind("-").unwrap();
             let name: String = line_str.drain(..last_dash).collect();
@@ -53,6 +63,11 @@ impl Puzzle for Day04 {
             let last_bracket = line_str.find("]").unwrap();
             let checksum: String = line_str.drain(2..last_bracket).collect();
 
+            // Now validate the checksum to see if it's a real room
+            // Check sum is the frequency of the chars sorted in order
+            // If a char count is the same, then sort alphabetical
+
+            // Start by counting how many of each letter there are
             let mut letters: Vec<(char, u32)> = vec![];
             for letter in 'a'..='z' {
                 let mut count = 0;
@@ -63,18 +78,20 @@ impl Puzzle for Day04 {
                 }
                 letters.push((letter, count));
             }
+
+            // Now sort the letters by frequency then alphabetical
             letters.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+
+            // Now build the checksum and check if it's valid
             let checksum2 = &letters[0..5];
-            let mut dst = [0u8];
             let checksum2 = checksum2
                 .iter()
-                .fold("".to_string(), |acc, x| acc + x.0.encode_utf8(&mut dst));
+                .fold("".to_string(), |acc, x| acc + &x.0.to_string());
             let valid = checksum == checksum2;
 
             day.rooms.push(Room {
                 name,
                 sector_id,
-                checksum,
                 valid,
             });
         }
@@ -83,7 +100,8 @@ impl Puzzle for Day04 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let mut sum = self.rooms.iter().fold(0, |acc, x| match x.valid {
+        // Sum the sector ids of valid rooms
+        let sum = self.rooms.iter().fold(0, |acc, x| match x.valid {
             true => acc + x.sector_id,
             false => acc,
         });
@@ -92,18 +110,20 @@ impl Puzzle for Day04 {
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
-            true => Some(1514.to_string()),
+            true => Some(2841.to_string()),
             false => Some(185371.to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // Decode the room name and look for "northpole object storage"
+        // To decode, increment each char by sector_id
         let mut sector_id = 0;
         for room in &self.rooms {
             let offset = room.sector_id % 26;
             if room.valid {
                 let real_name = room.name.chars().fold("".to_string(), |acc, x| {
-                    acc + &add_chars(x, offset).to_string()
+                    acc + &add_to_char(x, offset).to_string()
                 });
                 if real_name == "northpole object storage" {
                     sector_id = room.sector_id;
@@ -115,7 +135,7 @@ impl Puzzle for Day04 {
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(984.to_string()),
             false => Some(984.to_string()),
         }
     }
