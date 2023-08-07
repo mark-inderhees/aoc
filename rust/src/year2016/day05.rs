@@ -14,13 +14,14 @@ use crate::utils::utils::*;
 use std::collections::VecDeque;
 
 pub struct Day05 {
-    input: String,
+    part1: String,
+    part2: String,
 }
 
 /// Find what needs to be appended to input to create hash with leading zeros.
 /// To make this as fast as possible, reduce logic in the main loop like
 /// allocations and formatting. Iterations means find the nth iteration.
-fn hash_for_zeros(input: &str, five_zeros: bool, iterations: u32) -> String {
+fn hash_for_zeros(input: &str, five_zeros: bool, iterations: u32) -> (String, String) {
     // Look for 5 or 6 zeros
     let mask = match five_zeros {
         true => 0xF0,
@@ -42,6 +43,8 @@ fn hash_for_zeros(input: &str, five_zeros: bool, iterations: u32) -> String {
     let len = hash_input.len();
 
     let mut answer = "".to_string();
+    let mut answer2 = vec!["".to_string(); 8];
+    let mut answer2_map = vec![false; 8];
 
     // Brute force, increment number and keep trying
     loop {
@@ -59,17 +62,31 @@ fn hash_for_zeros(input: &str, five_zeros: bool, iterations: u32) -> String {
         let digest = md5::compute(hash_input.clone());
         if digest.0[0] == 0 && digest.0[1] == 0 && (digest.0[2] & mask) == 0 {
             iteration += 1;
-            let s = format!("{:x}", digest.0[2]);
-            answer += &s;
+            let digit = digest.0[2];
+            let s = format!("{:x}", digit);
+            if iteration <= iterations {
+                answer += &s;
+            }
             log::debug!(
-                "MARK!! {:?} {} {:?} {} {}",
+                "MARK!! {:?} {} {:?} {} {} {}",
                 hash_input,
                 number,
                 digest,
                 digest.0[2],
-                s
+                s,
+                digest.0[3],
             );
-            if iteration == iterations {
+
+            if digit < 8 {
+                if !answer2_map[digit as usize] {
+                    let digit2 = digest.0[3] >> 4;
+                    let s = format!("{:x}", digit2);
+                    answer2[digit as usize] = s;
+                    answer2_map[digit as usize] = true;
+                }
+            }
+
+            if answer2_map.iter().all(|&x| x) {
                 break;
             }
         }
@@ -78,41 +95,38 @@ fn hash_for_zeros(input: &str, five_zeros: bool, iterations: u32) -> String {
         number += 1;
     }
 
-    answer
+    (answer, answer2.join(""))
 }
 
 impl Puzzle for Day05 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
         #[allow(unused_mut)]
-        let mut day = Day05 {
-            input: input.trim().to_string(),
-        };
+        let (part1, part2) = hash_for_zeros(input.trim(), true, 8);
+        let mut day = Day05 { part1, part2 };
 
         Ok(day)
     }
 
     fn solve_part1(&mut self) -> Result<String> {
-        let bob = hash_for_zeros(&self.input, true, 8);
-
-        Ok(bob.to_string())
+        Ok(self.part1.to_string())
     }
 
     fn answer_part1(&mut self, test: bool) -> Option<String> {
         match test {
             true => Some("18f47a30".to_string()),
-            false => None,
+            false => Some("2414bc77".to_string()),
         }
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        Ok(self.part2.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some("05ace8e3".to_string()),
+            false => Some("437e60fc".to_string()),
         }
     }
 }
