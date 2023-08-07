@@ -82,13 +82,56 @@ impl Puzzle for Day07 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut valid_count = 0;
+        for ip in &self.ips {
+            let mut valid = false;
+            let mut in_brackets = false;
+            let mut matches_inside = vec![];
+            let mut matches_outside = vec![];
+            let chars: Vec<char> = ip.chars().collect();
+            log::debug!("IP {}", ip);
+            for window in chars.windows(3) {
+                log::debug!("Window {:?}", window);
+                if window.contains(&'[') {
+                    log::debug!("Start brackets");
+                    in_brackets = true;
+                } else if window.contains(&']') {
+                    log::debug!("End brackets");
+                    in_brackets = false;
+                } else {
+                    log::debug!("Testing chars {} {} {}", window[0], window[1], window[2]);
+                    if (window[0] == window[2]) && (window[0] != window[1]) {
+                        let opposite: &[char] = &[window[1], window[0], window[1]];
+                        if in_brackets {
+                            matches_inside.push(window);
+                            if matches_outside.contains(&opposite) {
+                                log::debug!("Found both inside and out, done!");
+                                valid = true;
+                                break;
+                            }
+                        } else {
+                            matches_outside.push(window);
+                            if matches_inside.contains(&opposite) {
+                                log::debug!("Found both outside and in, done!");
+                                valid = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if valid {
+                valid_count += 1;
+            }
+        }
+
+        Ok(valid_count.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
-            false => None,
+            true => Some(3.to_string()),
+            false => Some(242.to_string()),
         }
     }
 }
