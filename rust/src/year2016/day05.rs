@@ -1,5 +1,8 @@
 // 2016 Day 5
 // https://adventofcode.com/2016/day/5
+// --- Day 5: How About a Nice Game of Chess? ---
+// Use md5 hash to get passcodes. Crypto time, what do we append to get leading
+// zeros into the hash? Brute force. Copy solution from 2015 day 4.
 
 use anyhow::Result;
 use md5;
@@ -21,7 +24,7 @@ pub struct Day05 {
 /// To make this as fast as possible, reduce logic in the main loop like
 /// allocations and formatting. Use map is for part2.
 fn hash_for_zeros(input: &str, use_map: bool) -> String {
-    // Look for 5
+    // Look for 5 leading zeros
     let mask = 0xF0;
 
     // The number of valid hashes found
@@ -61,6 +64,8 @@ fn hash_for_zeros(input: &str, use_map: bool) -> String {
         // Comput hash and check for 5 zeros
         let digest = md5::compute(hash_input.clone());
         if digest.0[0] == 0 && digest.0[1] == 0 && (digest.0[2] & mask) == 0 {
+            // For part one, just append the first non zero value to a string
+            // for the first 8 valid soultions to get the passcode
             iteration += 1;
             let digit1 = digest.0[2];
             let digit1_str = format!("{:x}", digit1);
@@ -71,25 +76,21 @@ fn hash_for_zeros(input: &str, use_map: bool) -> String {
                 break;
             }
 
-            log::debug!(
-                "MARK!! {:?} {} {:?} {} {} {}",
-                hash_input,
-                number,
-                digest,
-                digit1,
-                digit1_str,
-                digest.0[3],
-            );
-
+            // For part two, the first non zero hash value is the index into
+            // a string for the passcode. Only use index that are valid. And
+            // only write an index once.
+            // Check if index is valid
             if digit1 < 8 {
+                // Check if index has been used
                 if !answer2_map[digit1 as usize] {
-                    let digit2 = digest.0[3] >> 4;
-                    let digit2_str = format!("{:x}", digit2);
-                    answer2[digit1 as usize] = digit2_str;
-                    answer2_map[digit1 as usize] = true;
+                    let digit2 = digest.0[3] >> 4; // Only want the nibble
+                    let digit2_str = format!("{:x}", digit2); // Convert to str
+                    answer2[digit1 as usize] = digit2_str; // Place in vector
+                    answer2_map[digit1 as usize] = true; // Mark as used
                 }
             }
 
+            // Check if part2 is done
             if answer2_map.iter().all(|&x| x) {
                 break;
             }
@@ -99,6 +100,7 @@ fn hash_for_zeros(input: &str, use_map: bool) -> String {
         number += 1;
     }
 
+    // Return answer for part1 or part2
     match use_map {
         false => answer1,
         true => answer2.join(""),
