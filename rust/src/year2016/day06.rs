@@ -1,5 +1,8 @@
 // 2016 Day 6
 // https://adventofcode.com/2016/day/6
+// --- Day 6: Signals and Noise ---
+// Given a bunch of repeated messages, find the most and least common letters
+// at each index (column)
 
 use anyhow::Result;
 
@@ -45,6 +48,8 @@ fn decipher(messages: &Vec<String>, most_common: bool) -> String {
                 min_index = index;
             }
         }
+
+        // Build the answer string
         let index = match most_common {
             true => max_index,
             false => min_index,
