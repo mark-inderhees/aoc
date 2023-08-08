@@ -1,5 +1,7 @@
 // 2016 Day 8
 // https://adventofcode.com/2016/day/8
+// --- Day 8: Two-Factor Authentication ---
+// Run some simple commands to display pixels on a screen
 
 use anyhow::Result;
 use regex::Regex;
@@ -18,6 +20,7 @@ struct Rotate {
     count: usize,
 }
 
+// There are just three commands
 enum Command {
     DrawRect(Point<usize>),
     RotateRow(Rotate),
@@ -40,6 +43,7 @@ impl Puzzle for Day08 {
 
         for line in input.lines() {
             log::debug!("Line {}", line);
+            // Parse the three command types to command enum
             if line.starts_with("rect") {
                 let re = Regex::new(r"rect (\d*)x(\d*)").unwrap();
                 let matches = re.captures(line).unwrap();
@@ -71,7 +75,9 @@ impl Puzzle for Day08 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // Find out how many pixels are set after all commands are run
         for command in self.commands.iter() {
+            // Run the commands on the screen
             match command {
                 Command::DrawRect(point) => {
                     self.screen
