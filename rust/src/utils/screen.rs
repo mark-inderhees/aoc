@@ -57,13 +57,19 @@ impl Screen {
         self.debug_print();
     }
 
-    /// Print the grid values.
-    pub fn debug_print(&self) {
-        let mut string = "".to_string();
+    /// Convert pixels to a string for easy display
+    pub fn to_string(&self) -> String {
+        let mut string = "\n".to_string();
         for row in 0..self.grid.rows() {
             string += &self.grid.iter_row(row).map(|x| *x).collect::<String>();
             string += "\n";
         }
+        string
+    }
+
+    /// Print the grid values.
+    pub fn debug_print(&self) {
+        let string = self.to_string();
         log::debug!("{}", string);
     }
 

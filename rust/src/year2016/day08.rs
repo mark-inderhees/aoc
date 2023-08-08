@@ -32,6 +32,17 @@ pub struct Day08 {
     commands: Vec<Command>,
 }
 
+fn run_commands(commands: &Vec<Command>, screen: &mut Screen) {
+    for command in commands.iter() {
+        // Run the commands on the screen
+        match command {
+            Command::DrawRect(point) => screen.set_pixels(Point { x: 0, y: 0 }, point.x, point.y),
+            Command::RotateRow(rotate) => screen.rotate_row(rotate.target, rotate.count),
+            Command::RotateColumn(rotate) => screen.rotate_column(rotate.target, rotate.count),
+        }
+    }
+}
+
 impl Puzzle for Day08 {
     #[allow(unused_variables)]
     fn from_input(input: &str) -> Result<Self> {
@@ -76,20 +87,7 @@ impl Puzzle for Day08 {
 
     fn solve_part1(&mut self) -> Result<String> {
         // Find out how many pixels are set after all commands are run
-        for command in self.commands.iter() {
-            // Run the commands on the screen
-            match command {
-                Command::DrawRect(point) => {
-                    self.screen
-                        .set_pixels(Point { x: 0, y: 0 }, point.x, point.y)
-                }
-                Command::RotateRow(rotate) => self.screen.rotate_row(rotate.target, rotate.count),
-                Command::RotateColumn(rotate) => {
-                    self.screen.rotate_column(rotate.target, rotate.count)
-                }
-            }
-        }
-        self.screen.debug_print();
+        run_commands(&self.commands, &mut self.screen);
         let answer = self.screen.count_set_pixels();
         Ok(answer.to_string())
     }
@@ -103,17 +101,17 @@ impl Puzzle for Day08 {
 
     fn solve_part2(&mut self) -> Result<String> {
         // Look at final screen debug print from part 1 and physically read in the display
-        let answer = match self.commands.len() > 10 {
-            true => "EOARGPHYAO".to_string(),
-            false => "No Test Case".to_string(),
-        };
+        run_commands(&self.commands, &mut self.screen);
+        let answer = self.screen.to_string();
         Ok(answer.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => Some("No Test Case".to_string()),
-            false => Some("EOARGPHYAO".to_string()),
+            // Test data does not actually display stuff
+            true => Some("\n.#..#.#...........................................\n#.#...............................................\n..................................................\n..................................................\n..................................................\n.#................................................\n".to_string()),
+            // Real data reads like EOARGPHYAO
+            false => Some("\n####..##...##..###...##..###..#..#.#...#.##...##..\n#....#..#.#..#.#..#.#..#.#..#.#..#.#...##..#.#..#.\n###..#..#.#..#.#..#.#....#..#.####..#.#.#..#.#..#.\n#....#..#.####.###..#.##.###..#..#...#..####.#..#.\n#....#..#.#..#.#.#..#..#.#....#..#...#..#..#.#..#.\n####..##..#..#.#..#..###.#....#..#...#..#..#..##..\n".to_string()),
         }
     }
 }
