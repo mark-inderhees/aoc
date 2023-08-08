@@ -8,5 +8,6 @@ pub mod linked_list;
 pub mod molecule;
 pub mod primes;
 pub mod rock_paper_scissors;
+pub mod screen;
 pub mod tetris;
 pub mod utils;
