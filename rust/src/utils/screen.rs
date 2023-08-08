@@ -1,6 +1,8 @@
 use grid::*;
 use rusttype::Point;
 
+// A screen to display pixels. Supports setting blocks of pixels and shifting
+// pixeles by rows or columns. And can print them to the console for easy debug.
 pub struct Screen {
     grid: Grid<char>,
 }
@@ -12,6 +14,7 @@ impl Screen {
             grid: Grid::new(height, width),
         };
 
+        // Init all pixels to off as '.', where '#' where be on
         for x in 0..width {
             for y in 0..height {
                 screen.grid[y][x] = '.';
@@ -73,6 +76,7 @@ impl Screen {
         log::debug!("{}", string);
     }
 
+    // Count how many pixels are on
     pub fn count_set_pixels(&self) -> usize {
         let mut count = 0;
         for x in 0..self.grid.cols() {
