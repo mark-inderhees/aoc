@@ -56,12 +56,23 @@ impl Puzzle for Day01 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
-        Ok("to do".to_string())
+        let mut similarity = 0;
+        for a in self.list1.iter() {
+            let mut count = 0;
+            for b in self.list2.iter() {
+                if a == b {
+                    count += 1;
+                }
+            }
+            similarity += count * a;
+        }
+
+        Ok(similarity.to_string())
     }
 
     fn answer_part2(&mut self, test: bool) -> Option<String> {
         match test {
-            true => None,
+            true => Some(31.to_string()),
             false => None,
         }
     }
