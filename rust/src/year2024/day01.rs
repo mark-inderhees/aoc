@@ -35,6 +35,7 @@ impl Puzzle for Day01 {
     }
 
     fn solve_part1(&mut self) -> Result<String> {
+        // From two sorted list, find the sum of differences of each row
         self.list1.sort();
         self.list2.sort();
         let mut distance = 0;
@@ -56,6 +57,8 @@ impl Puzzle for Day01 {
     }
 
     fn solve_part2(&mut self) -> Result<String> {
+        // From two lists, find the count of occurances of the left item in the right list.
+        // Then calculated a similarity value where which is sum of item times that count.
         let mut similarity = 0;
         for a in self.list1.iter() {
             let mut count = 0;
