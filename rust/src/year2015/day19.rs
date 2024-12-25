@@ -61,13 +61,12 @@ fn find_best_replacement_path(day: &Day19) -> usize {
     // Instead of brute force path finding by starting form an initial molecule
     // and trying to build the target molecule, go from the target molecule and
     // shrink it to a start molecule.
-    let mut steps = usize::MAX;
+    let mut steps = 0;
 
     // Start with the target and shrink it
     let mut molecules = vec![day.molecule.to_string()];
 
     loop {
-        steps += 1;
         let mut new_molecules = vec![];
 
         // We keep state of multiple paths simultaneously, check each path at
@@ -82,8 +81,15 @@ fn find_best_replacement_path(day: &Day19) -> usize {
 
             // Find all new molecules by doing a single reverse replacement
             for replacement in day.replacement_strings.iter() {
-                let new_molecule = molecule.replacen(&replacement.to, &replacement.from, 1);
-                new_molecules.push(new_molecule);
+                let matches: Vec<_> = molecule.match_indices(&replacement.to).collect();
+                for (matches_i, _) in matches {
+                    let mut new_molecule = molecule.clone();
+                    new_molecule.replace_range(
+                        matches_i..matches_i + replacement.to.len(),
+                        &replacement.from,
+                    );
+                    new_molecules.push(new_molecule)
+                }
             }
         }
 
@@ -91,7 +97,7 @@ fn find_best_replacement_path(day: &Day19) -> usize {
         // trim down the size, so keep only the 100 shortest paths.
         molecules = new_molecules;
         molecules.sort_by(|a, b| {
-            if a == b {
+            if a.len() == b.len() {
                 Ordering::Equal
             } else if a.len() > b.len() {
                 Ordering::Greater
@@ -104,6 +110,7 @@ fn find_best_replacement_path(day: &Day19) -> usize {
             molecules = molecules.split_at(100).0.to_vec();
         }
         log::debug!("Round {steps} and molecules {}", molecules.len());
+        steps += 1;
     }
 }
 
