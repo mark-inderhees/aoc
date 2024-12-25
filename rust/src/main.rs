@@ -12,6 +12,7 @@ mod utils;
 mod year2015;
 mod year2016;
 mod year2022;
+mod year2024;
 
 /// Runner for Advent of Code
 #[derive(Parser, Debug)]
@@ -20,7 +21,7 @@ struct Args {
     #[arg(
         long,
         short,
-        default_value_t = 10, // __BOOTSTRAP_DAY__
+        default_value_t = 1, // __BOOTSTRAP_DAY__
     )]
     day: u32,
 
@@ -33,7 +34,7 @@ struct Args {
     part: u32,
 
     /// Which year to run for
-    #[arg(long, short, default_value_t = 2016)]
+    #[arg(long, short, default_value_t = 2024)]
     year: u32,
 
     /// Run test data instead of input
@@ -294,7 +295,6 @@ fn main() -> Result<()> {
                 8 => run_day::<year2016::day08::Day08>(part, input, test, &mut duration)?,
                 9 => run_day::<year2016::day09::Day09>(part, input, test, &mut duration)?,
                 10 => run_day::<year2016::day10::Day10>(part, input, test, &mut duration)?,
-                // __BOOTSTRAP_RUN__
                 _ => {
                     println!("Day {} not found, goodbye!\n", day);
                     year_filter.push(year);
@@ -326,6 +326,14 @@ fn main() -> Result<()> {
                 23 => run_day::<year2022::day23::Day23>(part, input, test, &mut duration)?,
                 24 => run_day::<year2022::day24::Day24>(part, input, test, &mut duration)?,
                 25 => run_day::<year2022::day25::Day25>(part, input, test, &mut duration)?,
+                _ => {
+                    println!("Day {} not found, goodbye!\n", day);
+                    year_filter.push(year);
+                }
+            },
+            2024 => match day {
+                1 => run_day::<year2024::day01::Day01>(part, input, test, &mut duration)?,
+                // __BOOTSTRAP_RUN__
                 _ => {
                     println!("Day {} not found, goodbye!\n", day);
                     year_filter.push(year);
