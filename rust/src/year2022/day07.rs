@@ -62,6 +62,8 @@ impl Puzzle for Day07 {
             }
         }
 
+        day.file_system.print();
+
         Ok(day)
     }
 

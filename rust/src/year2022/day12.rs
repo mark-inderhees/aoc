@@ -33,7 +33,7 @@ impl Puzzle for Day12 {
         };
 
         for (i, mut line) in input.lines().enumerate() {
-            let line_orig = line.clone();
+            let line_orig = line;
             // Convert start and end into respective heights
             let line2 = &line.replace("S", "a");
             line = line2;

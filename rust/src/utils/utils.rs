@@ -18,7 +18,7 @@ where
     T: FromStr,
 {
     let mut values: Vec<T> = vec![];
-    let mut line: String = s.clone().to_string();
+    let mut line: String = s.to_string();
 
     // Remove common text seperators
     let remove = [';', ',', '=', ':', '.'];

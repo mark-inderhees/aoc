@@ -112,4 +112,13 @@ impl FileSystem {
     pub fn current_directory_size(&self, path: &PathBuf) -> u32 {
         self.directories[path].size
     }
+
+    pub fn print(&self) {
+        for dir in self.iter_directories() {
+            log::debug!("Directory {}", dir.name);
+            for file in &dir.files {
+                log::debug!("File {} is size {}", file.name, file.size)
+            }
+        }
+    }
 }
